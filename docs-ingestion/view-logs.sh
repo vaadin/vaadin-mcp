@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# View logs script for Vaadin Documentation Ingestion Pipeline and MCP Server
-# This script displays the logs for the ingestion pipeline and MCP server
+# View logs script for Vaadin Documentation Ingestion Pipeline
+# This script displays the logs for the ingestion pipeline
 
 # Change to the project directory
 cd "$(dirname "$0")"
@@ -17,7 +17,7 @@ if [ $# -eq 1 ]; then
   if [ ! -f "$LOG_FILE" ]; then
     echo "Log file $LOG_FILE not found"
     echo "Available log files:"
-    ls -1 logs/ | grep -v "\.pid$"
+    ls -1 logs/
     exit 1
   fi
   
@@ -35,22 +35,8 @@ fi
 
 # List available log files
 echo "Available log files:"
-ls -1 logs/ | grep -v "\.pid$"
+ls -1 logs/
 
-# Check if the server is running
-if [ -f logs/server.pid ]; then
-  PID=$(cat logs/server.pid)
-  
-  # Check if the process is still running
-  if ps -p $PID > /dev/null; then
-    echo ""
-    echo "MCP server is running with PID $PID"
-    echo "Today's server log: logs/server-$(date +%Y-%m-%d).log"
-    echo ""
-    echo "To view a specific log file, run:"
-    echo "  ./view-logs.sh <log-file-name>"
-    echo ""
-    echo "To view the current server log, run:"
-    echo "  ./view-logs.sh server-$(date +%Y-%m-%d).log"
-  fi
-fi
+echo ""
+echo "To view a specific log file, run:"
+echo "  ./view-logs.sh <log-file-name>"

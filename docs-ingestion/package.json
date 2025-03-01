@@ -3,8 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "ingest": "bun run src/index.ts",
-    "mcp-server": "cd mcp-server && bun run src/index.ts"
+    "ingest": "bun run src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

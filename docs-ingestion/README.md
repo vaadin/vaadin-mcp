@@ -1,6 +1,6 @@
 # Vaadin Documentation Ingestion Pipeline
 
-This project provides a pipeline for ingesting Vaadin documentation from the official GitHub repository into a Pinecone vector database. The ingested documentation can then be used for semantic search and retrieval through an MCP (Model Context Protocol) server.
+This project provides a pipeline for ingesting Vaadin documentation from the official GitHub repository into a Pinecone vector database. The ingested documentation can then be used for semantic search and retrieval through the separate MCP (Model Context Protocol) server.
 
 ## Features
 
@@ -63,7 +63,7 @@ Before running the ingestion pipeline, you need to set up a Pinecone index:
 
 ## Usage
 
-You can use the provided run script to run the ingestion pipeline, MCP server, or example:
+You can use the provided run script to run the ingestion pipeline:
 
 ```bash
 # Make the script executable
@@ -71,21 +71,6 @@ chmod +x run.sh
 
 # Run the ingestion pipeline
 ./run.sh ingest
-
-# Run the MCP server
-./run.sh server
-
-# Start the MCP server as a background process
-./run.sh start-server
-
-# Check the status of the MCP server
-./run.sh server-status
-
-# Restart the MCP server
-./run.sh restart-server
-
-# Stop the MCP server running in the background
-./run.sh stop-server
 
 # View available log files
 ./run.sh view-logs
@@ -101,22 +86,13 @@ chmod +x run.sh
 
 # Check the Pinecone index status
 ./run.sh check-pinecone
-
-# Run the Claude example
-./run.sh example
 ```
 
-Alternatively, you can run the commands directly:
+Alternatively, you can run the ingestion pipeline directly:
 
 ```bash
 # Run the ingestion pipeline
 bun run src/index.ts
-
-# Run the MCP server
-cd mcp-server && bun run src/index.ts
-
-# Run the Claude example
-bun run examples/claude-example.ts
 ```
 
 The ingestion pipeline will:
@@ -137,7 +113,7 @@ You can modify the configuration in `src/config.ts` to adjust:
 
 ## Project Structure
 
-- `src/index.ts` - Main entry point
+- `src/index.ts` - Main entry point for the ingestion pipeline
 - `src/config.ts` - Configuration settings
 - `src/git-operations.ts` - GitHub repository operations
 - `src/metadata-parser.ts` - Front matter parsing
@@ -175,82 +151,9 @@ The script will:
 
 ## MCP Server
 
-This project also includes an MCP (Model Context Protocol) server that provides access to the Vaadin documentation through semantic search. The MCP server allows IDE assistants and developers to retrieve relevant documentation for their tasks.
+The MCP (Model Context Protocol) server has been extracted to a separate project. The MCP server provides access to the Vaadin documentation through semantic search, allowing IDE assistants and developers to retrieve relevant documentation for their tasks.
 
-### MCP Server Setup
-
-1. Navigate to the MCP server directory:
-   ```bash
-   cd mcp-server
-   ```
-
-2. Install dependencies:
-   ```bash
-   bun install
-   ```
-
-3. Set up environment variables:
-   ```bash
-   export OPENAI_API_KEY=your_openai_api_key
-   export PINECONE_API_KEY=your_pinecone_api_key
-   export PINECONE_INDEX=your_pinecone_index_name
-   ```
-
-4. Run the MCP server:
-
-   You can run the server directly:
-   ```bash
-   bun run src/index.ts
-   ```
-   
-   Or use the provided scripts to run the server as a background process:
-   ```bash
-   # Make the scripts executable
-   chmod +x start-server.sh stop-server.sh
-   
-   # Start the server in the background
-   ./start-server.sh
-   
-   # Stop the server
-   ./stop-server.sh
-   ```
-   
-   The server logs will be written to the logs directory.
-
-### MCP Integration
-
-To use this server with an MCP-compatible client, add it to your MCP settings file:
-
-```json
-{
-  "mcpServers": {
-    "vaadin-docs": {
-      "command": "bun",
-      "args": ["/path/to/vaadin-docs-ingestion/mcp-server/src/index.ts"],
-      "env": {
-        "OPENAI_API_KEY": "your_openai_api_key",
-        "PINECONE_API_KEY": "your_pinecone_api_key",
-        "PINECONE_INDEX": "your_pinecone_index_name"
-      }
-    }
-  }
-}
-```
-
-### Available Tools
-
-The MCP server provides the following tools:
-
-#### search_vaadin_docs
-
-Search Vaadin documentation for relevant information.
-
-**Parameters:**
-- `query` (required): The search query or question about Vaadin
-- `max_results` (optional): Maximum number of results to return (default: 5, range: 1-20)
-- `max_tokens` (optional): Maximum number of tokens to return (default: 1500, range: 100-5000)
-
-For more details, see the [MCP Server README](mcp-server/README.md).
+For more details, see the [MCP Server README](../mcp-server/README.md).
 
 ## License
 

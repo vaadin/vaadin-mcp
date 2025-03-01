@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Check environment variables script for Vaadin Documentation Ingestion Pipeline and MCP Server
+# Check environment variables script for Vaadin Documentation Ingestion Pipeline
 # This script checks if all the required environment variables are set
 
 # Change to the project directory
@@ -35,13 +35,6 @@ else
   echo "✅ PINECONE_INDEX is set"
 fi
 
-# Check Claude API key (only needed for the example script)
-if [ -z "$CLAUDE_API_KEY" ]; then
-  echo "⚠️ CLAUDE_API_KEY is not set (only needed for the example script)"
-else
-  echo "✅ CLAUDE_API_KEY is set"
-fi
-
 # Check if all required environment variables are set
 if [ -z "$OPENAI_API_KEY" ] || [ -z "$PINECONE_API_KEY" ] || [ -z "$PINECONE_INDEX" ]; then
   echo ""
@@ -52,7 +45,6 @@ if [ -z "$OPENAI_API_KEY" ] || [ -z "$PINECONE_API_KEY" ] || [ -z "$PINECONE_IND
   echo "OPENAI_API_KEY=your_openai_api_key"
   echo "PINECONE_API_KEY=your_pinecone_api_key"
   echo "PINECONE_INDEX=your_pinecone_index_name"
-  echo "CLAUDE_API_KEY=your_claude_api_key"
   exit 1
 else
   echo ""
