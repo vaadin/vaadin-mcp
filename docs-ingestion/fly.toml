@@ -1,0 +1,21 @@
+app = "vaadin-docs-ingestion"
+primary_region = "sjc" # San Jose, CA - change as needed
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # Environment variables will be set through fly secrets
+  # Do not put sensitive information here
+
+[processes]
+  # This is a scheduled job, not a continuously running service
+  # It will run once and exit
+  app = "bun run src/index.ts"
+
+# No HTTP service for this app
+# This is a scheduled job that runs periodically
+
+[mounts]
+  source = "vaadin_docs_data"
+  destination = "/app/vaadin-docs"
