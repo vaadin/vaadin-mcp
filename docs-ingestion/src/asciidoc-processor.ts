@@ -22,7 +22,9 @@ export function processAsciiDoc(content: string): string {
         'source-highlighter': 'highlight.js',
         'icons': 'font',
         'experimental': '',
-        'toc': 'macro'
+        'toc': 'macro',
+        // Add root attribute pointing to the articles folder in the docs
+        'root': '../vaadin-docs/articles'
       }
     });
     

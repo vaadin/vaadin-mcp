@@ -31,7 +31,20 @@ export async function generateEmbeddings(chunks: Chunk[]): Promise<DocumentWithE
   // Process in batches to avoid rate limits
   for (let i = 0; i < chunks.length; i += config.openai.batchSize) {
     const batch = chunks.slice(i, i + config.openai.batchSize);
-    const texts = batch.map(chunk => chunk.text);
+    
+    // Filter out empty or invalid texts
+    const validChunks = batch.filter(chunk => 
+      chunk.text && 
+      typeof chunk.text === 'string' && 
+      chunk.text.trim().length > 0
+    );
+    
+    if (validChunks.length === 0) {
+      console.warn(`Skipping batch ${i / config.openai.batchSize + 1} - no valid texts found`);
+      continue;
+    }
+    
+    const texts = validChunks.map(chunk => chunk.text.trim());
     
     try {
       console.log(`Processing batch ${i / config.openai.batchSize + 1}/${Math.ceil(chunks.length / config.openai.batchSize)}`);
@@ -42,10 +55,10 @@ export async function generateEmbeddings(chunks: Chunk[]): Promise<DocumentWithE
         encoding_format: "float"
       });
       
-      for (let j = 0; j < batch.length; j++) {
+      for (let j = 0; j < validChunks.length; j++) {
         if (response.data[j] && response.data[j].embedding) {
           results.push({
-            ...batch[j],
+            ...validChunks[j],
             embedding: response.data[j].embedding
           });
         } else {

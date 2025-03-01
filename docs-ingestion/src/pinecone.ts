@@ -114,6 +114,13 @@ export async function deleteFromPineconeBySource(source: string): Promise<void> 
     
     console.log(`Successfully deleted documents with source ${source} from Pinecone`);
   } catch (error) {
+    // Check if it's a 404 error (index not found)
+    if (error instanceof Error && error.message && error.message.includes('404')) {
+      console.warn(`Warning: Pinecone index not found when trying to delete documents. This may be expected for first-time runs.`);
+      // Continue processing without failing
+      return;
+    }
+    
     console.error(`Error deleting documents with source ${source} from Pinecone:`, error);
     throw error;
   }
