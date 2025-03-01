@@ -1,0 +1,23 @@
+{
+  "name": "vaadin-docs-ingestion",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "ingest": "bun run src/index.ts",
+    "mcp-server": "cd mcp-server && bun run src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^22.13.8"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@pinecone-database/pinecone": "^5.1.0",
+    "asciidoctor": "^3.0.4",
+    "front-matter": "^4.0.2",
+    "openai": "^4.86.1",
+    "simple-git": "^3.27.0"
+  }
+}
