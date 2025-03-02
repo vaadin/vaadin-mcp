@@ -34,4 +34,16 @@ export const config = {
     rateLimitDelay: 500, // Delay between batches in ms
   },
   
+  // AsciiDoc processor settings
+  asciidoc: {
+    safe: 'unsafe',
+    attributes: {
+      'source-highlighter': 'highlight.js',
+      'icons': 'font',
+      'experimental': '',
+      'toc': 'macro',
+      'root': './vaadin-docs',
+      'articles': '../vaadin-docs/articles'
+    }
+  },
 };

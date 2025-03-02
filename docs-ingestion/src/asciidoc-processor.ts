@@ -3,6 +3,7 @@
  */
 
 import asciidoctor from 'asciidoctor';
+import { config } from './config';
 
 // Initialize Asciidoctor processor
 const processor = asciidoctor();
@@ -14,19 +15,8 @@ const processor = asciidoctor();
  */
 export function processAsciiDoc(content: string): string {
   try {
-    // Load the document
-    const document = processor.load(content, {
-      safe: 'unsafe',
-      attributes: {
-        // Common attributes for Vaadin docs
-        'source-highlighter': 'highlight.js',
-        'icons': 'font',
-        'experimental': '',
-        'toc': 'macro',
-        'root': './vaadin-docs',
-        'articles': '../vaadin-docs/articles'
-      }
-    });
+    // Load the document using configuration from config.ts
+    const document = processor.load(content, config.asciidoc);
     
     // Convert to HTML
     const html = document.convert();
