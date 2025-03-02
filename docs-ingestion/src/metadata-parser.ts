@@ -58,7 +58,25 @@ export function enhanceMetadata(
   
   // Add source information
   enhancedMetadata.source = filePath.replace(repoPath, '');
-  enhancedMetadata.url = `https://github.com/vaadin/docs/blob/main${enhancedMetadata.source}`;
+  
+  // Generate direct Vaadin docs URL
+  const sourcePath = enhancedMetadata.source;
+  if (sourcePath && sourcePath.includes('vaadin-docs/articles/')) {
+    // Extract the path after 'vaadin-docs/articles/'
+    const match = sourcePath.match(/vaadin-docs\/articles\/(.+)/);
+    if (match) {
+      const path = match[1];
+      // Remove index.adoc or .adoc extension
+      const cleanPath = path.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
+      enhancedMetadata.url = `https://vaadin.com/docs/${cleanPath}`;
+    } else {
+      // Fallback to GitHub URL if pattern doesn't match
+      enhancedMetadata.url = `https://github.com/vaadin/docs/blob/main/${sourcePath}`;
+    }
+  } else {
+    // Fallback to GitHub URL if not in articles directory
+    enhancedMetadata.url = `https://github.com/vaadin/docs/blob/main/${sourcePath}`;
+  }
   
   // Add timestamp
   enhancedMetadata.processed_at = new Date().toISOString();

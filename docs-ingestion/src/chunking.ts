@@ -189,35 +189,7 @@ function htmlToMarkdown(html: string): string {
  * @param metadata - The document metadata
  * @returns Array of chunks
  */
-/**
- * Transform GitHub URL to docs.vaadin.com URL
- * @param url - GitHub URL
- * @returns Transformed URL
- */
-function transformUrl(url: string): string {
-  if (!url || !url.includes('github.com/vaadin/docs/blob/main')) {
-    return url;
-  }
-  
-  // Extract the path after 'vaadin-docs/'
-  const match = url.match(/github\.com\/vaadin\/docs\/blob\/mainvaadin-docs\/articles\/(.+)/);
-  if (!match) {
-    return url;
-  }
-  
-  const path = match[1];
-  
-  // Remove 
-  const cleanPath = path.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
-  
-  return `https://vaadin.com/docs/${cleanPath}`;
-}
-
 export function chunkDocument(content: string, metadata: Record<string, string>): Chunk[] {
-  // Transform URL if present
-  if (metadata.url) {
-    metadata.url = transformUrl(metadata.url);
-  }
   
   // Extract headings with their content
   const headingsWithContent = extractHeadingsWithContent(content);
