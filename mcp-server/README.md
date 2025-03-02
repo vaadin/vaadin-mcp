@@ -1,232 +1,110 @@
 # Vaadin Documentation MCP Server
 
-This MCP (Model Context Protocol) server provides access to Vaadin documentation through semantic search. It allows IDE assistants and developers to retrieve relevant documentation for their tasks.
-
-## Features
-
-- Semantic search of Vaadin documentation
-- Control over the number of results and token limits
-- Integration with IDE assistants through the Model Context Protocol
-- HTTP/SSE transport for remote access without requiring API keys
+This server provides access to Vaadin documentation through the Model Context Protocol (MCP). It allows IDE assistants and developers to search for relevant documentation.
 
 ## Prerequisites
 
 - [Bun](https://bun.sh/) runtime
 - OpenAI API key
-- Pinecone API key and index (populated with Vaadin documentation)
+- Pinecone API key and index
 
-## Setup
+## Environment Variables
 
-1. Clone this repository:
-   ```bash
-   git clone <repository-url>
-   cd vaadin-docs-mcp-server
-   ```
-
-2. Install dependencies:
-   ```bash
-   bun install
-   ```
-
-3. Set up environment variables:
-   
-   Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit the `.env` file with your API keys:
-   ```bash
-   # OpenAI API key for embeddings
-   OPENAI_API_KEY=your_openai_api_key
-   
-   # Pinecone API key and index name
-   PINECONE_API_KEY=your_pinecone_api_key
-   PINECONE_INDEX=your_pinecone_index_name
-   ```
-
-## Standalone Deployment
-
-This MCP server can be deployed independently from the ingestion pipeline. Both services share the same Pinecone database, but can run on different machines or in different directories.
-
-### Directory Structure
-
-For a standalone deployment, you can use the following directory structure:
+Create a `.env` file in the project root with the following variables:
 
 ```
-/path/to/vaadin-docs-mcp-server/  # MCP server directory
-  ├── src/                        # Server source code
-  ├── .env                        # Environment variables
-  ├── package.json                # Dependencies
-  ├── run.sh                      # Run script
-  └── ...
-
-/path/to/vaadin-docs-ingestion/   # Ingestion pipeline directory (separate)
-  ├── src/                        # Ingestion source code
-  ├── .env                        # Environment variables
-  └── ...
+OPENAI_API_KEY=your_openai_api_key
+PINECONE_API_KEY=your_pinecone_api_key
+PINECONE_INDEX=your_pinecone_index_name
 ```
 
-### Running the Server
-
-You can run the MCP server in several ways:
-
-#### Using the run script
+## Installation
 
 ```bash
-# Make the script executable
-chmod +x run.sh
-
-# Run the MCP server with stdio transport
-./run.sh server
-
-# Run the MCP server with HTTP transport
-./run.sh server --http
+bun install
 ```
 
-#### Running directly
+## Usage
+
+### Starting the Server
+
+To start the server in the foreground:
 
 ```bash
-# Run the server with stdio transport
-bun run src/index.ts
-
-# Run the server with HTTP transport
-bun run start:http
+bun run start
 ```
 
-#### Running as a background process
+To start the server in the background:
 
 ```bash
-# Make the scripts executable
-chmod +x start-server.sh stop-server.sh server-status.sh
-
-# Start the server in the background (stdio transport)
-./start-server.sh
-
-# Start the server in the background with HTTP transport
-./start-server.sh --http
-
-# Check the status of the server
-./server-status.sh
-
-# Restart the server
-./restart-server.sh
-
-# Stop the server
-./stop-server.sh
+bun run start:background
 ```
 
-When running as a background process, the server logs will be written to the logs directory. The server-status.sh script provides information about the server's uptime and process ID. You can view the logs using the view-logs.sh script:
+### Managing the Server
+
+Check server status:
 
 ```bash
-# View available log files
-./view-logs.sh
-
-# View a specific log file
-./view-logs.sh server-2025-03-01.log
-
-# Clean up log files
-./clean-logs.sh
-
-# Check if all required environment variables are set
-./check-env.sh
-
-# Check the Pinecone index status
-./run.sh check-pinecone
+bun run status
 ```
 
-When running with stdio transport, the server will listen on stdio for MCP requests.
-When running with HTTP transport, the server will start an HTTP server and listen for MCP requests over HTTP/SSE.
+Stop the server:
 
-## MCP Integration
-
-### Local Integration
-
-To use this server locally with an MCP-compatible client, add it to your MCP settings file:
-
-```json
-{
-  "mcpServers": {
-    "vaadin-docs": {
-      "command": "bun",
-      "args": ["/path/to/vaadin-docs-mcp-server/src/index.ts"],
-      "env": {
-        "OPENAI_API_KEY": "your_openai_api_key",
-        "PINECONE_API_KEY": "your_pinecone_api_key",
-        "PINECONE_INDEX": "your_pinecone_index_name"
-      }
-    }
-  }
-}
+```bash
+bun run stop
 ```
 
-### Remote Integration
+Restart the server:
 
-For remote integration, you can deploy the server to a cloud provider and access it over HTTP. This way, end users don't need to provide their own API keys or set up a server.
-
-1. Deploy the server to a cloud provider (e.g., AWS, Google Cloud, Heroku)
-2. Set the required environment variables on the server:
-   - `OPENAI_API_KEY`
-   - `PINECONE_API_KEY`
-   - `PINECONE_INDEX`
-   - `HTTP_PORT` (optional, defaults to 3000)
-
-3. Start the server with HTTP transport:
-   ```bash
-   bun run start:http:prod
-   ```
-
-4. Connect to the server using the MCP client's HTTP/SSE transport:
-   ```typescript
-   import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-   import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
-
-   const transport = new SSEClientTransport({
-     sseUrl: 'https://your-server-url.com/sse',
-     postUrl: 'https://your-server-url.com/messages',
-   });
-
-   const client = new Client(
-     {
-       name: 'example-client',
-       version: '1.0.0',
-     },
-     {
-       capabilities: {
-         tools: {},
-       },
-     }
-   );
-
-   await client.connect(transport);
-   ```
-
-## Available Tools
-
-### search_vaadin_docs
-
-Search Vaadin documentation for relevant information.
-
-**Parameters:**
-- `query` (required): The search query or question about Vaadin
-- `max_results` (optional): Maximum number of results to return (default: 5, range: 1-20)
-- `max_tokens` (optional): Maximum number of tokens to return (default: 1500, range: 100-5000)
-
-**Example:**
-```json
-{
-  "query": "How to use domain primitives in Vaadin?",
-  "max_results": 3,
-  "max_tokens": 1000
-}
+```bash
+bun run restart
 ```
 
-## Project Structure
+### Managing Logs
 
-- `src/index.ts` - Main MCP server implementation
-- `src/config.ts` - Configuration settings
-- `src/pinecone-service.ts` - Pinecone integration for semantic search
+List available log files:
 
-## License
+```bash
+bun run logs
+```
 
-[MIT](LICENSE)
+View a specific log file:
+
+```bash
+bun run logs:view server-2025-03-01.log
+```
+
+Clean up log files:
+
+```bash
+bun run logs:clean
+```
+
+### Checking Environment
+
+Check if all required environment variables are set:
+
+```bash
+bun run check:env
+```
+
+Check Pinecone index status:
+
+```bash
+bun run check:pinecone
+```
+
+## Development
+
+The server is implemented in TypeScript and uses the MCP SDK to provide a search tool for Vaadin documentation. The server forwards search requests to a REST server that handles the actual search logic.
+
+### Project Structure
+
+- `src/index.ts`: Main server implementation
+- `src/config.ts`: Configuration settings
+- `src/pinecone-service.ts`: Pinecone service interface
+- `check-pinecone.ts`: Script to check Pinecone index status
+
+### Adding New Tools
+
+To add a new tool to the server, modify the `setupToolHandlers` method in `src/index.ts`.

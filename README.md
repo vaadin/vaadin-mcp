@@ -15,11 +15,20 @@ The ingestion pipeline handles the process of extracting, processing, and indexi
 - Stores embeddings and metadata in Pinecone vector database
 - Supports incremental updates to keep documentation current
 
-### 2. MCP Server (`mcp-server/`)
+### 2. REST Server (`rest-server/`)
+
+The REST server provides an HTTP API for searching Vaadin documentation:
+
+- Exposes a `/search` endpoint for querying documentation
+- Connects to Pinecone vector database for semantic search
+- Handles parameter validation and error handling
+- Returns search results in JSON format
+
+### 3. MCP Server (`mcp-server/`)
 
 The Model Context Protocol (MCP) server provides a standardized interface for accessing the indexed documentation:
 
-- Enables semantic search of Vaadin documentation
+- Enables semantic search of Vaadin documentation via the REST server
 - Integrates with IDE assistants through the Model Context Protocol
 - Provides control over search parameters (results count, token limits)
 - Runs as a standalone service that communicates via stdio
@@ -27,8 +36,9 @@ The Model Context Protocol (MCP) server provides a standardized interface for ac
 ## How It Works
 
 1. The ingestion pipeline processes Vaadin documentation and stores it in a Pinecone vector database
-2. The MCP server connects to the same Pinecone database to retrieve relevant documentation
-3. IDE assistants and tools can query the MCP server to get contextual Vaadin documentation
+2. The REST server provides an HTTP API to search the Pinecone database
+3. The MCP server forwards search requests to the REST server and formats the results
+4. IDE assistants and tools can query the MCP server to get contextual Vaadin documentation
 
 ## Prerequisites
 
@@ -38,15 +48,16 @@ The Model Context Protocol (MCP) server provides a standardized interface for ac
 
 ## Quick Start
 
-1. Set up environment variables in both components:
+1. Set up environment variables:
    ```bash
    # In docs-ingestion directory
    cp .env.example .env
    # Edit .env with your API keys
 
-   # In mcp-server directory
-   cp .env.example .env
-   # Edit .env with your API keys
+   # Create .env file in the root directory
+   echo "OPENAI_API_KEY=your_openai_api_key" > .env
+   echo "PINECONE_API_KEY=your_pinecone_api_key" >> .env
+   echo "PINECONE_INDEX=your_pinecone_index" >> .env
    ```
 
 2. Run the ingestion pipeline:
@@ -55,10 +66,13 @@ The Model Context Protocol (MCP) server provides a standardized interface for ac
    ./run.sh ingest
    ```
 
-3. Start the MCP server:
+3. Start both the REST server and MCP server:
    ```bash
-   cd mcp-server
-   ./start-server.sh
+   # Export environment variables
+   export $(cat .env | xargs)
+   
+   # Run both servers
+   ./run-servers.sh
    ```
 
 4. Integrate with your IDE by adding the MCP server to your MCP settings file.
@@ -82,13 +96,6 @@ Search Vaadin documentation for relevant information.
 - `query` (required): The search query or question about Vaadin
 - `max_results` (optional): Maximum number of results to return (default: 5)
 - `max_tokens` (optional): Maximum number of tokens to return (default: 1500)
-
-## Maintenance
-
-- Use the provided scripts to manage the services:
-  - `start-server.sh`, `stop-server.sh`, `restart-server.sh`
-  - `server-status.sh`, `view-logs.sh`, `clean-logs.sh`
-- Set up a cron job using `update-daily.sh` to keep documentation current
 
 ## For More Information
 

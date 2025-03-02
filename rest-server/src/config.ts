@@ -1,18 +1,13 @@
 /**
- * Configuration settings for the Vaadin docs MCP server
+ * Configuration settings for the Vaadin docs REST server
  */
 
 export const config = {
   // Server settings
   server: {
-    name: 'vaadin-docs-server',
+    name: 'vaadin-docs-rest-server',
     version: '0.1.0',
-    httpPort: parseInt(process.env.HTTP_PORT || '3000', 10),
-  },
-  
-  // REST server settings
-  restServer: {
-    url: process.env.REST_SERVER_URL || 'http://localhost:3001',
+    port: parseInt(process.env.REST_PORT || '3001', 10),
   },
   
   // Pinecone settings
