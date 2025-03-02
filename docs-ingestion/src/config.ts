@@ -3,11 +3,19 @@
  */
 
 export const config = {
-  // GitHub repository settings
-  github: {
+  // Documentation repository settings
+  docs: {
     repoUrl: 'https://github.com/vaadin/docs.git',
     localPath: './vaadin-docs',
     articlesPath: 'articles',
+    // Patterns for files and paths to skip, relative to the articlesPath
+    skipPatterns: [
+      // Skip files starting with underscore as they used for imports
+      '_*',
+      'hilla/lit/**',
+      '404.adoc',
+      'contributing/**'
+    ],
   },
   
   // OpenAI settings

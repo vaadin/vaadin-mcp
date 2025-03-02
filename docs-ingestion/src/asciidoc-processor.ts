@@ -23,7 +23,7 @@ export function processAsciiDoc(content: string): string {
         'icons': 'font',
         'experimental': '',
         'toc': 'macro',
-        'root': '../vaadin-docs',
+        'root': './vaadin-docs',
         'articles': '../vaadin-docs/articles'
       }
     });

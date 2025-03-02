@@ -8,7 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import { config } from './config';
-import { cloneOrPullRepo } from './git-operations';
+import { cloneOrPullRepo } from './docs-repository';
 import { parseMetadata, enhanceMetadata } from './metadata-parser';
 import { processAsciiDoc } from './asciidoc-processor';
 import { chunkDocument, prepareChunksForEmbedding } from './chunking';
@@ -34,7 +34,7 @@ async function processFile(filePath: string): Promise<number> {
     const enhancedMetadata = enhanceMetadata(
       metadata, 
       filePath, 
-      config.github.localPath
+      config.docs.localPath
     );
     
     // Process AsciiDoc content to HTML
@@ -72,8 +72,8 @@ async function processFile(filePath: string): Promise<number> {
 function getBuildingAppsFiles(): string[] {
   const files: string[] = [];
   const buildingAppsDir = path.join(
-    config.github.localPath, 
-    config.github.articlesPath,
+    config.docs.localPath, 
+    config.docs.articlesPath,
     'building-apps',
     // 'application-layer',
     // 'background-jobs'

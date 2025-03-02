@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { config } from './config';
-import { cloneOrPullRepo, getAsciiDocFiles } from './git-operations';
+import { cloneOrPullRepo, getAsciiDocFiles } from './docs-repository';
 import { parseMetadata, enhanceMetadata } from './metadata-parser';
 import { processAsciiDoc, extractTextFromHtml } from './asciidoc-processor';
 import { chunkDocument, prepareChunksForEmbedding } from './chunking';
@@ -33,7 +33,7 @@ async function processFile(filePath: string): Promise<number> {
     const enhancedMetadata = enhanceMetadata(
       metadata, 
       filePath, 
-      config.github.localPath
+      config.docs.localPath
     );
     
     // Process AsciiDoc content to HTML

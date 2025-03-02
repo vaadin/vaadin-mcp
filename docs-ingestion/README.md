@@ -115,7 +115,7 @@ You can modify the configuration in `src/config.ts` to adjust:
 
 - `src/index.ts` - Main entry point for the ingestion pipeline
 - `src/config.ts` - Configuration settings
-- `src/git-operations.ts` - GitHub repository operations
+- `src/docs-repository.ts` - Documentation repository operations
 - `src/metadata-parser.ts` - Front matter parsing
 - `src/asciidoc-processor.ts` - AsciiDoc processing
 - `src/chunking.ts` - Document chunking strategy

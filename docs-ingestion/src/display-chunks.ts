@@ -8,7 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import { config } from './config';
-import { cloneOrPullRepo } from './git-operations';
+import { cloneOrPullRepo } from './docs-repository';
 import { parseMetadata, enhanceMetadata } from './metadata-parser';
 import { processAsciiDoc } from './asciidoc-processor';
 import { chunkDocument } from './chunking';
@@ -42,7 +42,7 @@ async function processAndDisplayFile(filePath: string): Promise<void> {
     const enhancedMetadata = enhanceMetadata(
       metadata, 
       filePath, 
-      config.github.localPath
+      config.docs.localPath
     );
     
     // Process AsciiDoc content to HTML
@@ -80,8 +80,8 @@ async function processAndDisplayFile(filePath: string): Promise<void> {
 function getBuildingAppsFiles(): string[] {
   const files: string[] = [];
   const buildingAppsDir = path.join(
-    config.github.localPath, 
-    config.github.articlesPath,
+    config.docs.localPath, 
+    config.docs.articlesPath,
     'building-apps'
   );
   
