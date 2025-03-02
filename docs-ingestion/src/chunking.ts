@@ -153,22 +153,21 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
   // Extract headings for context and summary
   const headings = extractHeadingsHierarchy(content);
   
-  // First, add a document-level chunk with comprehensive summary information
+  // Extract top-level headings for context in other chunks
   const topLevelHeadings = headings
     .filter(h => h.level <= 2)
     .map(h => h.text)
     .slice(0, 5)
     .join(' | ');
   
-  chunks.push({
-    text: `${metadata.title || 'Untitled'}: ${metadata.description || ''}\n\nMain topics: ${topLevelHeadings}`,
-    metadata: {
-      ...metadata,
-      chunk_type: 'document_summary',
-      document_length: content.length,
-      heading_count: headings.length,
-    }
-  });
+  // Store document info in a variable for use in chunk metadata
+  const documentInfo = {
+    document_length: content.length,
+    heading_count: headings.length,
+    top_level_headings: topLevelHeadings
+  };
+  
+  // We no longer create a separate document summary chunk as it doesn't add value beyond metadata
   
   // Identify code blocks to preserve them
   const codeBlocks = identifyCodeBlocks(content);
