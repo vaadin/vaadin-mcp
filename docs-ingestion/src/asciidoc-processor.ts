@@ -23,8 +23,8 @@ export function processAsciiDoc(content: string): string {
         'icons': 'font',
         'experimental': '',
         'toc': 'macro',
-        // Add root attribute pointing to the articles folder in the docs
-        'root': '../vaadin-docs/articles'
+        'root': '../vaadin-docs',
+        'articles': '../vaadin-docs/articles'
       }
     });
     
