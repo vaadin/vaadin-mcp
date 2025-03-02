@@ -63,45 +63,30 @@ The Model Context Protocol (MCP) server provides a standardized interface for ac
 2. Run the ingestion pipeline:
    ```bash
    cd docs-ingestion
-   ./run.sh ingest
+   ./burn run ingest
    ```
 
-3. Start both the REST server and MCP server:
+3. Start the REST server:
    ```bash
-   # Export environment variables
-   export $(cat .env | xargs)
-   
-   # Run both servers
-   ./run-servers.sh
+   cd rest-server
+   bun run start
    ```
 
-4. Integrate with your IDE by adding the MCP server to your MCP settings file.
+4. Integrate with your IDE by adding the MCP server to your MCP settings file (locally).
 
-## Deployment Options
-
-Both components can be deployed together or independently:
-
-- **Combined deployment**: Run both components on the same machine, sharing configuration
-- **Split deployment**: Run the ingestion pipeline periodically on one machine, and the MCP server continuously on another
-
-## Available Tools
-
-The MCP server provides the following tool:
-
-### search_vaadin_docs
-
-Search Vaadin documentation for relevant information.
-
-**Parameters:**
-- `query` (required): The search query or question about Vaadin
-- `max_results` (optional): Maximum number of results to return (default: 5)
-- `max_tokens` (optional): Maximum number of tokens to return (default: 1500)
-
-## For More Information
-
-See the individual README files in each component directory for detailed information:
-- [Documentation Ingestion Pipeline](docs-ingestion/README.md)
-- [MCP Server](mcp-server/README.md)
+```
+{
+    "mcpServers": {
+        "vaadin": {
+            "command": "/full/path/to/bun",
+            "args": [
+                "run",
+                "/full/path/to/vaadin-mcp/mcp-server/src/index.ts"
+            ]
+        }
+    }
+}
+```
 
 ## License
 
