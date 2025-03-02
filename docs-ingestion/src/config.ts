@@ -28,8 +28,9 @@ export const config = {
   
   // Chunking settings
   chunking: {
-    minParagraphLength: 100, // Minimum length for paragraph chunks
-    maxSectionLength: 1000, // Maximum length for section chunks before further chunking
+    minParagraphLength: 150, // Minimum length for paragraph chunks (increased to avoid tiny chunks)
+    maxSectionLength: 1500, // Maximum length for section chunks before further chunking (increased for better context)
+    overlapSize: 50, // Number of characters to overlap between chunks for context continuity
   },
   
   // Metadata settings

@@ -1,5 +1,10 @@
 /**
  * Chunking strategy for dividing documents into appropriate chunks for embedding
+ * Implements best practices for documentation chunking for RAG:
+ * 1. Preserves semantic units (especially code blocks)
+ * 2. Maintains context by keeping headings with content
+ * 3. Optimizes chunk size for relevance
+ * 4. Uses document structure to guide chunking
  */
 
 import { config } from './config';
@@ -10,6 +15,130 @@ import { config } from './config';
 export interface Chunk {
   text: string;
   metadata: Record<string, any>;
+}
+
+/**
+ * Identifies code blocks in HTML content
+ * @param content - HTML content
+ * @returns Array of code block positions {start, end}
+ */
+export function identifyCodeBlocks(content: string): Array<{start: number, end: number}> {
+  const codeBlocks: Array<{start: number, end: number}> = [];
+  
+  // Match pre tags which typically contain code blocks
+  const preRegex = /<pre\b[^>]*>([\s\S]*?)<\/pre>/gi;
+  let match;
+  
+  while ((match = preRegex.exec(content)) !== null) {
+    codeBlocks.push({
+      start: match.index,
+      end: match.index + match[0].length
+    });
+  }
+  
+  // Also match code tags
+  const codeRegex = /<code\b[^>]*>([\s\S]*?)<\/code>/gi;
+  while ((match = codeRegex.exec(content)) !== null) {
+    // Check if this code block is already inside a pre tag we found
+    const isInsidePre = codeBlocks.some(block => 
+      match!.index >= block.start && match!.index + match![0].length <= block.end
+    );
+    
+    if (!isInsidePre) {
+      codeBlocks.push({
+        start: match.index,
+        end: match.index + match[0].length
+      });
+    }
+  }
+  
+  // Match AsciiDoc-specific listing blocks (used for code examples)
+  const listingBlockRegex = /<div class="listingblock">([\s\S]*?)<\/div>/gi;
+  while ((match = listingBlockRegex.exec(content)) !== null) {
+    // Check if this block contains a pre or code tag
+    const blockContent = match[1];
+    if (blockContent.includes('<pre') || blockContent.includes('<code')) {
+      codeBlocks.push({
+        start: match.index,
+        end: match.index + match[0].length
+      });
+    }
+  }
+  
+  // Match highlightjs blocks which are used for syntax highlighting
+  const highlightjsRegex = /<pre class="highlightjs[^"]*">([\s\S]*?)<\/pre>/gi;
+  while ((match = highlightjsRegex.exec(content)) !== null) {
+    // Check if this block is already inside a listing block we found
+    const isInsideListingBlock = codeBlocks.some(block => 
+      match!.index >= block.start && match!.index + match![0].length <= block.end
+    );
+    
+    if (!isInsideListingBlock) {
+      codeBlocks.push({
+        start: match.index,
+        end: match.index + match[0].length
+      });
+    }
+  }
+  
+  return codeBlocks;
+}
+
+/**
+ * Extracts headings hierarchy from HTML content
+ * @param content - HTML content
+ * @returns Array of headings with their level and position
+ */
+function extractHeadingsHierarchy(content: string): Array<{text: string, level: number, position: number}> {
+  const headings: Array<{text: string, level: number, position: number}> = [];
+  const headingRegex = /<h([1-6])[^>]*>(.*?)<\/h\1>/gi;
+  let match;
+  
+  while ((match = headingRegex.exec(content)) !== null) {
+    const level = parseInt(match[1]);
+    const text = match[2].replace(/<[^>]*>/g, '').trim();
+    
+    headings.push({
+      text,
+      level,
+      position: match.index
+    });
+  }
+  
+  return headings;
+}
+
+/**
+ * Gets the context heading for a given position in the content
+ * @param position - Position in content
+ * @param headings - Array of extracted headings
+ * @returns Heading context as a string
+ */
+function getHeadingContext(position: number, headings: Array<{text: string, level: number, position: number}>): string {
+  // Find the most recent heading before this position
+  const relevantHeadings = headings
+    .filter(h => h.position <= position)
+    .sort((a, b) => b.position - a.position); // Sort in reverse order
+  
+  if (relevantHeadings.length === 0) return '';
+  
+  // Get the most immediate heading
+  const immediateHeading = relevantHeadings[0];
+  
+  // Find parent headings (with lower level numbers = higher in hierarchy)
+  const parentHeadings = relevantHeadings
+    .filter(h => h.level < immediateHeading.level)
+    .sort((a, b) => a.level - b.level); // Sort by level
+  
+  // Construct heading context
+  const headingParts = [immediateHeading.text];
+  
+  // Add up to 2 parent headings for context
+  for (let i = 0; i < Math.min(2, parentHeadings.length); i++) {
+    headingParts.unshift(parentHeadings[i].text);
+  }
+  
+  return headingParts.join(' > ');
 }
 
 /**
@@ -30,52 +159,300 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
     }
   });
   
-  // Split by headings (look for HTML heading tags)
+  // Identify code blocks to preserve them
+  const codeBlocks = identifyCodeBlocks(content);
+  
+  // Extract headings for context
+  const headings = extractHeadingsHierarchy(content);
+  
+  // Split by semantic sections (headings)
   const sections = content.split(/(?=<h[1-6])/i);
   
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i];
     
+    // Skip empty sections
+    if (!section.trim()) {
+      continue;
+    }
+    
     // Extract heading if present
     const headingMatch = section.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/i);
-    const heading = headingMatch ? headingMatch[1].replace(/<[^>]*>/g, '') : '';
+    const heading = headingMatch ? headingMatch[1].replace(/<[^>]*>/g, '').trim() : '';
     
-    // Create section chunk with metadata
+    // Skip sections that are just a heading with no content
+    if (headingMatch && section.length <= headingMatch[0].length + 10) {
+      // If this is the last section or the heading is important, include it with the next section
+      if (i < sections.length - 1 && heading) {
+        // Combine with next section
+        sections[i+1] = section + sections[i+1];
+      }
+      continue;
+    }
+    
+    // For sections that are too long, we need to split them intelligently
+    if (section.length > config.chunking.maxSectionLength) {
+      // Check if this section contains code blocks
+      // We need to find code blocks in the section text directly
+      const sectionCodeBlocks: Array<{start: number, end: number}> = [];
+      
+      // Look for listing blocks in this section
+      const listingBlockRegex = /<div class="listingblock">([\s\S]*?)<\/div>/gi;
+      let match;
+      let sectionCopy = section;
+      while ((match = listingBlockRegex.exec(sectionCopy)) !== null) {
+        sectionCodeBlocks.push({
+          start: match.index,
+          end: match.index + match[0].length
+        });
+      }
+      
+      // Look for pre tags in this section
+      const preRegex = /<pre\b[^>]*>([\s\S]*?)<\/pre>/gi;
+      sectionCopy = section;
+      while ((match = preRegex.exec(sectionCopy)) !== null) {
+        // Check if this pre tag is already inside a listing block we found
+        const isInsideListingBlock = sectionCodeBlocks.some(block => 
+          match!.index >= block.start && match!.index + match![0].length <= block.end
+        );
+        
+        if (!isInsideListingBlock) {
+          sectionCodeBlocks.push({
+            start: match.index,
+            end: match.index + match[0].length
+          });
+        }
+      }
+      
+      if (sectionCodeBlocks.length > 0) {
+        // Handle sections with code blocks specially
+        const sectionChunks = splitSectionWithCodeBlocks(
+          section, 
+          sectionCodeBlocks,
+          heading,
+          metadata,
+          i
+        );
+        
+        sectionChunks.forEach(chunk => chunks.push(chunk));
+      } else {
+        // For sections without code blocks, split by semantic units
+        const semanticChunks = splitBySemanticUnits(section, heading, metadata, i);
+        semanticChunks.forEach(chunk => chunks.push(chunk));
+      }
+    } else {
+      // For smaller sections, keep them as a single chunk
+      chunks.push({
+        text: section,
+        metadata: {
+          ...metadata,
+          heading,
+          chunk_type: 'section',
+          section_index: i,
+        }
+      });
+    }
+  }
+  return chunks;
+}
+
+/**
+ * Split a section that contains code blocks
+ * @param section - Section content
+ * @param codeBlocks - Code blocks in this section
+ * @param heading - Section heading
+ * @param metadata - Document metadata
+ * @param sectionIndex - Index of this section
+ * @returns Array of chunks
+ */
+function splitSectionWithCodeBlocks(
+  section: string, 
+  codeBlocks: Array<{start: number, end: number}>,
+  heading: string,
+  metadata: Record<string, string>,
+  sectionIndex: number
+): Chunk[] {
+  const chunks: Chunk[] = [];
+  
+  // Sort code blocks by position
+  codeBlocks.sort((a, b) => a.start - b.start);
+  
+  let lastEnd = 0;
+  let lastTextChunk = '';
+  
+  // Process each code block and the text before it
+  for (const block of codeBlocks) {
+    // Text before the code block
+    if (block.start > lastEnd) {
+      const textBefore = section.substring(lastEnd, block.start);
+      
+      // Always add text before code block, even if it's short
+      // This ensures we don't lose context around code blocks
+      if (textBefore.trim().length > 0) {
+        chunks.push({
+          text: (heading ? `<h3>${heading}</h3>` : '') + textBefore,
+          metadata: {
+            ...metadata,
+            heading,
+            chunk_type: 'text_content',
+            section_index: sectionIndex,
+          }
+        });
+        lastTextChunk = textBefore;
+      }
+    }
+    
+    // The code block itself - always preserve code blocks as their own chunks
+    const codeBlock = section.substring(block.start, block.end);
+    
+    // Add context from previous text if available
+    let contextPrefix = '';
+    if (config.chunking.overlapSize > 0 && lastTextChunk.length > 0) {
+      // Get a small amount of context from the previous text chunk
+      const overlapSize = Math.min(config.chunking.overlapSize, lastTextChunk.length);
+      contextPrefix = lastTextChunk.substring(lastTextChunk.length - overlapSize);
+      
+      // Only include context if it's not just whitespace
+      if (contextPrefix.trim().length === 0) {
+        contextPrefix = '';
+      }
+    }
+    
     chunks.push({
-      text: section,
+      text: (heading ? `<h3>${heading}</h3>` : '') + 
+            (contextPrefix ? `<div class="context">${contextPrefix}</div>` : '') + 
+            codeBlock,
       metadata: {
         ...metadata,
         heading,
-        chunk_type: 'section',
-        section_index: i,
+        chunk_type: 'code_block',
+        section_index: sectionIndex,
+        has_context: contextPrefix.length > 0,
       }
     });
     
-    // For longer sections, further chunk by paragraphs
-    if (section.length > config.chunking.maxSectionLength) {
-      // Split by paragraph tags or double line breaks
-      const paragraphs = section.split(/(?=<p>)|(?=\n\n)/i);
-      
-      if (paragraphs.length > 1) {
-        for (let j = 0; j < paragraphs.length; j++) {
-          const paragraph = paragraphs[j];
-          
-          // Only create chunks for substantial paragraphs
-          if (paragraph.length > config.chunking.minParagraphLength) {
-            chunks.push({
-              text: paragraph,
-              metadata: {
-                ...metadata,
-                heading,
-                chunk_type: 'paragraph',
-                section_index: i,
-                paragraph_index: j,
-              }
-            });
-          }
-        }
+    lastEnd = block.end;
+    lastTextChunk = ''; // Reset after using a code block
+  }
+  
+  // Text after the last code block
+  if (lastEnd < section.length) {
+    const textAfter = section.substring(lastEnd);
+    
+    // Always add text after code block, even if it's short
+    // This ensures we don't lose context after code blocks
+    if (textAfter.trim().length > 0) {
+      // Add context from the last code block if available
+      let contextPrefix = '';
+      if (config.chunking.overlapSize > 0 && codeBlocks.length > 0) {
+        const lastCodeBlock = section.substring(
+          codeBlocks[codeBlocks.length - 1].start,
+          codeBlocks[codeBlocks.length - 1].end
+        );
+        
+        // Get a small amount of context from the code block
+        const overlapSize = Math.min(config.chunking.overlapSize, lastCodeBlock.length);
+        contextPrefix = lastCodeBlock.substring(lastCodeBlock.length - overlapSize);
       }
+      
+      chunks.push({
+        text: (heading ? `<h3>${heading}</h3>` : '') + 
+              (contextPrefix ? `<div class="context">${contextPrefix}</div>` : '') + 
+              textAfter,
+        metadata: {
+          ...metadata,
+          heading,
+          chunk_type: 'text_content',
+          section_index: sectionIndex,
+          has_context: contextPrefix.length > 0,
+        }
+      });
     }
+  }
+  
+  return chunks;
+}
+
+/**
+ * Split a section by semantic units (paragraphs, lists, etc.)
+ * @param section - Section content
+ * @param heading - Section heading
+ * @param metadata - Document metadata
+ * @param sectionIndex - Index of this section
+ * @returns Array of chunks
+ */
+function splitBySemanticUnits(
+  section: string,
+  heading: string,
+  metadata: Record<string, string>,
+  sectionIndex: number
+): Chunk[] {
+  const chunks: Chunk[] = [];
+  
+  // Extract the heading part if present
+  const headingMatch = section.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/i);
+  const headingPart = headingMatch ? headingMatch[0] : '';
+  const contentPart = headingMatch ? section.substring(headingMatch[0].length) : section;
+  
+  // Split by semantic units (paragraphs, lists, divs, etc.)
+  const semanticUnitRegex = /(?=<p\b)|(?=<ul\b)|(?=<ol\b)|(?=<div\b)|(?=<table\b)|(?=<section\b)/i;
+  const units = contentPart.split(semanticUnitRegex);
+  
+  let currentChunk = headingPart;
+  let currentLength = headingPart.length;
+  let lastUnitAdded = ''; // Track the last unit added for overlap
+  
+  for (let i = 0; i < units.length; i++) {
+    const unit = units[i];
+    
+    // If adding this unit would exceed the target length, create a new chunk
+    if (currentLength + unit.length > config.chunking.maxSectionLength && currentLength > 0) {
+      // Only create chunk if it has substantial content
+      if (currentLength > config.chunking.minParagraphLength) {
+        chunks.push({
+          text: currentChunk,
+          metadata: {
+            ...metadata,
+            heading,
+            chunk_type: 'semantic_unit',
+            section_index: sectionIndex,
+            unit_index: chunks.length,
+          }
+        });
+      }
+      
+      // Get overlap text from the end of the last chunk
+      let overlapText = '';
+      if (config.chunking.overlapSize > 0 && lastUnitAdded.length > 0) {
+        // Create overlap from the end of the last unit
+        const overlapSize = Math.min(config.chunking.overlapSize, lastUnitAdded.length);
+        overlapText = lastUnitAdded.substring(lastUnitAdded.length - overlapSize);
+      }
+      
+      // Start a new chunk, including the heading for context and overlap text
+      currentChunk = headingPart + overlapText + unit;
+      currentLength = headingPart.length + overlapText.length + unit.length;
+      lastUnitAdded = unit;
+    } else {
+      // Add to current chunk
+      currentChunk += unit;
+      currentLength += unit.length;
+      lastUnitAdded = unit;
+    }
+  }
+  
+  // Add the final chunk if it has content
+  if (currentLength > config.chunking.minParagraphLength) {
+    chunks.push({
+      text: currentChunk,
+      metadata: {
+        ...metadata,
+        heading,
+        chunk_type: 'semantic_unit',
+        section_index: sectionIndex,
+        unit_index: chunks.length,
+      }
+    });
   }
   
   return chunks;
@@ -88,10 +465,119 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
  */
 export function prepareChunksForEmbedding(chunks: Chunk[]): Chunk[] {
   return chunks.map(chunk => {
-    // Clean HTML from text
-    const cleanedText = chunk.text.replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    let cleanedText;
+    
+    // Extract context div if present
+    let contextText = '';
+    const contextMatch = chunk.text.match(/<div class="context">([\s\S]*?)<\/div>/i);
+    if (contextMatch) {
+      contextText = contextMatch[1].replace(/<[^>]*>/g, ' ').trim();
+    }
+    
+    // Extract heading if present
+    let headingText = '';
+    const headingMatch = chunk.text.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/i);
+    if (headingMatch) {
+      headingText = headingMatch[1].replace(/<[^>]*>/g, '').trim();
+    }
+    
+    // Special handling for code blocks to preserve their structure
+    if (chunk.metadata.chunk_type === 'code_block') {
+      // Extract code from various HTML structures
+      let codeContent = '';
+      
+      // Try to extract from pre tags
+      const preMatch = chunk.text.match(/<pre\b[^>]*>([\s\S]*?)<\/pre>/i);
+      if (preMatch) {
+        codeContent = preMatch[1];
+        // Remove code tags inside pre if present
+        codeContent = codeContent.replace(/<code\b[^>]*>([\s\S]*?)<\/code>/gi, '$1');
+      }
+      
+      // If no pre tags, try to extract from code tags
+      if (!codeContent) {
+        const codeMatch = chunk.text.match(/<code\b[^>]*>([\s\S]*?)<\/code>/i);
+        if (codeMatch) {
+          codeContent = codeMatch[1];
+        }
+      }
+      
+      // If no pre or code tags, try to extract from listing blocks
+      if (!codeContent) {
+        const listingMatch = chunk.text.match(/<div class="listingblock">([\s\S]*?)<\/div>/i);
+        if (listingMatch) {
+          // Try to find pre or code tags inside the listing block
+          const innerPreMatch = listingMatch[1].match(/<pre\b[^>]*>([\s\S]*?)<\/pre>/i);
+          if (innerPreMatch) {
+            codeContent = innerPreMatch[1];
+            // Remove code tags inside pre if present
+            codeContent = codeContent.replace(/<code\b[^>]*>([\s\S]*?)<\/code>/gi, '$1');
+          } else {
+            const innerCodeMatch = listingMatch[1].match(/<code\b[^>]*>([\s\S]*?)<\/code>/i);
+            if (innerCodeMatch) {
+              codeContent = innerCodeMatch[1];
+            }
+          }
+        }
+      }
+      
+      // If we still don't have code content, use the whole chunk
+      if (!codeContent) {
+        codeContent = chunk.text;
+      }
+      
+      // Clean the code content
+      cleanedText = codeContent
+        // Remove HTML tags but preserve code structure
+        .replace(/<[^>]*>/g, ' ')
+        // Normalize whitespace but preserve line breaks and indentation
+        .replace(/[ \t]+/g, ' ')
+        .trim();
+      
+      // Add context and prefix to indicate this is code
+      if (headingText) {
+        if (contextText) {
+          cleanedText = `${headingText} - Code Example\nContext: ${contextText}\n\n${cleanedText}`;
+        } else {
+          cleanedText = `${headingText} - Code Example\n\n${cleanedText}`;
+        }
+      } else {
+        if (contextText) {
+          cleanedText = `Code Example\nContext: ${contextText}\n\n${cleanedText}`;
+        } else {
+          cleanedText = `Code Example\n\n${cleanedText}`;
+        }
+      }
+    } else {
+      // Standard HTML cleaning for non-code chunks
+      cleanedText = chunk.text
+        // Remove context div if present (we'll add it back later)
+        .replace(/<div class="context">[\s\S]*?<\/div>/i, '')
+        // Remove all HTML tags
+        .replace(/<[^>]*>/g, ' ')
+        // Normalize whitespace
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      // Format the text with heading and context
+      if (headingText) {
+        if (contextText) {
+          // If the text already starts with the heading, don't duplicate it
+          if (cleanedText.startsWith(headingText)) {
+            cleanedText = `${cleanedText}\nContext: ${contextText}`;
+          } else {
+            cleanedText = `${headingText}\n${cleanedText}\nContext: ${contextText}`;
+          }
+        } else {
+          // If the text already starts with the heading, don't duplicate it
+          if (!cleanedText.startsWith(headingText)) {
+            cleanedText = `${headingText}\n${cleanedText}`;
+          }
+        }
+      } else if (contextText) {
+        cleanedText = `${cleanedText}\nContext: ${contextText}`;
+      }
+    }
     
     return {
       text: cleanedText,
