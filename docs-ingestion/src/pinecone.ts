@@ -27,10 +27,13 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
   
   // Prepare vectors for Pinecone
   const vectors = documents.map((doc, i) => {
-    // Create a unique ID based on source and chunk information
-    const sourceId = doc.metadata.source ? 
+    // Create a prefix based on source for ID
+    const sourcePrefix = doc.metadata.source ? 
       doc.metadata.source.replace(/[^a-zA-Z0-9]/g, '_') : 
       'unknown';
+    
+    // Create a unique ID with source prefix
+    const id = `${sourcePrefix}#${nanoid()}`;
     
     // Prepare metadata, removing the embedding
     const { embedding, ...restDoc } = doc;
@@ -44,7 +47,7 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
     };
     
     return {
-      id: nanoid(),
+      id,
       values: doc.embedding,
       metadata
     };
@@ -82,7 +85,7 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
 }
 
 /**
- * Delete documents from Pinecone by source
+ * Delete documents from Pinecone by source using ID prefixes
  * @param source - Source path to delete
  * @returns Promise with number of documents deleted
  */
@@ -90,17 +93,35 @@ export async function deleteFromPineconeBySource(source: string): Promise<void> 
   console.log(`Deleting documents with source ${source} from Pinecone...`);
   
   try {
-    // Format source for filter
-    const formattedSource = source.replace(/^\//, ''); // Remove leading slash if present
+    // Format source for prefix
+    const sourcePrefix = source.replace(/^\//, '').replace(/[^a-zA-Z0-9]/g, '_');
     
-    // Delete by metadata filter
-    await index.deleteMany({
-      filter: {
-        source: { $eq: formattedSource }
+    // Use listPaginated to get all vector IDs with the source prefix
+    let allVectorIds: string[] = [];
+    let paginationToken: string | undefined;
+    
+    do {
+      const listResult = await index.listPaginated({ 
+        prefix: `${sourcePrefix}#`,
+        paginationToken 
+      });
+      
+      // Extract vector IDs from the result
+      const vectorIds = listResult.vectors?.map(vector => vector.id).filter((id): id is string => id !== undefined) || [];
+      allVectorIds = [...allVectorIds, ...vectorIds];
+      
+      // Get pagination token for next page if it exists
+      paginationToken = listResult.pagination?.next;
+      
+      // Delete the current batch of vectors
+      if (vectorIds.length > 0) {
+        await index.deleteMany(vectorIds);
+        console.log(`Deleted batch of ${vectorIds.length} vectors`);
       }
-    });
+      
+    } while (paginationToken);
     
-    console.log(`Successfully deleted documents with source ${source} from Pinecone`);
+    console.log(`Successfully deleted ${allVectorIds.length} documents with source prefix ${sourcePrefix} from Pinecone`);
   } catch (error) {
     // Check if it's a 404 error (index not found)
     if (error instanceof Error && error.message && error.message.includes('404')) {
