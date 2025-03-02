@@ -150,20 +150,28 @@ function getHeadingContext(position: number, headings: Array<{text: string, leve
 export function chunkDocument(content: string, metadata: Record<string, string>): Chunk[] {
   const chunks: Chunk[] = [];
   
-  // First, add a document-level chunk with summary information
+  // Extract headings for context and summary
+  const headings = extractHeadingsHierarchy(content);
+  
+  // First, add a document-level chunk with comprehensive summary information
+  const topLevelHeadings = headings
+    .filter(h => h.level <= 2)
+    .map(h => h.text)
+    .slice(0, 5)
+    .join(' | ');
+  
   chunks.push({
-    text: `${metadata.title || 'Untitled'}: ${metadata.description || ''}`,
+    text: `${metadata.title || 'Untitled'}: ${metadata.description || ''}\n\nMain topics: ${topLevelHeadings}`,
     metadata: {
       ...metadata,
       chunk_type: 'document_summary',
+      document_length: content.length,
+      heading_count: headings.length,
     }
   });
   
   // Identify code blocks to preserve them
   const codeBlocks = identifyCodeBlocks(content);
-  
-  // Extract headings for context
-  const headings = extractHeadingsHierarchy(content);
   
   // Split by semantic sections (headings)
   const sections = content.split(/(?=<h[1-6])/i);
@@ -307,13 +315,24 @@ function splitSectionWithCodeBlocks(
     
     // Add context from previous text if available
     let contextPrefix = '';
-    if (config.chunking.overlapSize > 0 && lastTextChunk.length > 0) {
-      // Get a small amount of context from the previous text chunk
-      const overlapSize = Math.min(config.chunking.overlapSize, lastTextChunk.length);
-      contextPrefix = lastTextChunk.substring(lastTextChunk.length - overlapSize);
+    if (lastTextChunk.length > 0) {
+      // For code blocks, we want more substantial context - get at least a full sentence or paragraph
+      // This ensures we have meaningful context even if it exceeds the overlap size
+      
+      // First try to get a complete paragraph or sentence
+      const paragraphMatch = lastTextChunk.match(/([^.!?]+[.!?]+)[^.!?]*$/);
+      if (paragraphMatch && paragraphMatch[1] && paragraphMatch[1].length > 20) {
+        // We found a complete sentence at the end of the text
+        contextPrefix = paragraphMatch[1].trim();
+      } else {
+        // If we can't find a complete sentence, get a larger chunk of text
+        const minContextSize = Math.max(config.chunking.overlapSize * 2, 200); // At least 200 chars or double the overlap
+        const contextSize = Math.min(minContextSize, lastTextChunk.length);
+        contextPrefix = lastTextChunk.substring(lastTextChunk.length - contextSize);
+      }
       
       // Only include context if it's not just whitespace
-      if (contextPrefix.trim().length === 0) {
+      if (contextPrefix.trim().length < 20) { // Require at least 20 chars of meaningful context
         contextPrefix = '';
       }
     }
@@ -342,18 +361,9 @@ function splitSectionWithCodeBlocks(
     // Always add text after code block, even if it's short
     // This ensures we don't lose context after code blocks
     if (textAfter.trim().length > 0) {
-      // Add context from the last code block if available
+      // We don't add code context to text that follows code blocks
+      // This avoids the issue of incomplete code fragments being added as context
       let contextPrefix = '';
-      if (config.chunking.overlapSize > 0 && codeBlocks.length > 0) {
-        const lastCodeBlock = section.substring(
-          codeBlocks[codeBlocks.length - 1].start,
-          codeBlocks[codeBlocks.length - 1].end
-        );
-        
-        // Get a small amount of context from the code block
-        const overlapSize = Math.min(config.chunking.overlapSize, lastCodeBlock.length);
-        contextPrefix = lastCodeBlock.substring(lastCodeBlock.length - overlapSize);
-      }
       
       chunks.push({
         text: (heading ? `<h3>${heading}</h3>` : '') + 
@@ -464,7 +474,17 @@ function splitBySemanticUnits(
  * @returns Prepared chunks
  */
 export function prepareChunksForEmbedding(chunks: Chunk[]): Chunk[] {
-  return chunks.map(chunk => {
+  // Add document position metadata to each chunk
+  const totalChunks = chunks.length;
+  
+  return chunks.map((chunk, index) => {
+    // Add position metadata
+    chunk.metadata.position_in_document = index === 0 ? 'beginning' : 
+                                          index === totalChunks - 1 ? 'end' : 
+                                          'middle';
+    chunk.metadata.chunk_index = index;
+    chunk.metadata.total_chunks = totalChunks;
+    
     let cleanedText;
     
     // Extract context div if present
@@ -560,22 +580,32 @@ export function prepareChunksForEmbedding(chunks: Chunk[]): Chunk[] {
         .trim();
       
       // Format the text with heading and context
+      // First, check if the text already contains the heading (possibly duplicated)
+      const headingRegex = new RegExp(`^\\s*${headingText}\\s+${headingText}`, 'i');
       if (headingText) {
+        // Fix duplicated headings (e.g., "User Triggered Jobs User Triggered Jobs")
+        if (headingRegex.test(cleanedText)) {
+          // Replace the duplicated heading with a single instance
+          cleanedText = cleanedText.replace(headingRegex, headingText);
+        }
+        
+        // Add heading if it's not already at the start
+        if (!cleanedText.trim().startsWith(headingText)) {
+          cleanedText = `${headingText}\n${cleanedText}`;
+        }
+        
+        // Add context if available
         if (contextText) {
-          // If the text already starts with the heading, don't duplicate it
-          if (cleanedText.startsWith(headingText)) {
-            cleanedText = `${cleanedText}\nContext: ${contextText}`;
-          } else {
-            cleanedText = `${headingText}\n${cleanedText}\nContext: ${contextText}`;
-          }
-        } else {
-          // If the text already starts with the heading, don't duplicate it
-          if (!cleanedText.startsWith(headingText)) {
-            cleanedText = `${headingText}\n${cleanedText}`;
-          }
+          cleanedText = `${cleanedText}\nContext: ${contextText}`;
         }
       } else if (contextText) {
         cleanedText = `${cleanedText}\nContext: ${contextText}`;
+      }
+      
+      // Add document breadcrumb for better context
+      if (chunk.metadata.title) {
+        const docInfo = `[Document: ${chunk.metadata.title}]`;
+        cleanedText = `${docInfo}\n${cleanedText}`;
       }
     }
     
