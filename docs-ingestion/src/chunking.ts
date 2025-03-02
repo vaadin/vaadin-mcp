@@ -207,8 +207,8 @@ function transformUrl(url: string): string {
   
   const path = match[1];
   
-  // Remove 'index.adoc' from the end if present
-  const cleanPath = path.replace(/\/index\.adoc$/, '');
+  // Remove 
+  const cleanPath = path.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
   
   return `https://vaadin.com/docs/${cleanPath}`;
 }

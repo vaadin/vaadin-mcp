@@ -41,14 +41,11 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
     
     const id = `vaadin_${sourceId}_${chunkType}_${sectionIndex}_${paragraphIndex}_${Date.now()}_${i}`;
     
-    // Truncate text if needed for metadata
-    const truncatedText = doc.text.slice(0, config.metadata.maxTextLength);
-    
     // Prepare metadata, removing the embedding
     const { embedding, ...restDoc } = doc;
     const metadata = {
       ...restDoc.metadata,
-      text: truncatedText,
+      text: doc.text,
       chunk_type: doc.metadata.chunk_type,
       heading: doc.metadata.heading || '',
       title: doc.metadata.title || '',

@@ -26,15 +26,4 @@ export const config = {
     rateLimitDelay: 500, // Delay between batches in ms
   },
   
-  // Chunking settings
-  chunking: {
-    minParagraphLength: 250, // Minimum length for paragraph chunks (increased to avoid tiny chunks)
-    maxSectionLength: 2000, // Maximum length for section chunks before further chunking (increased for better context)
-    overlapSize: 150, // Number of characters to overlap between chunks for context continuity
-  },
-  
-  // Metadata settings
-  metadata: {
-    maxTextLength: 1000, // Maximum length of text to store in metadata
-  }
 };
