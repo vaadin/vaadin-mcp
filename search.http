@@ -1,8 +1,0 @@
-POST http://localhost:3001/search
-Content-Type: application/json
-
-{
-  "query": "How do I return a result from a completable future?",
-  "max_results": 5,
-  "max_tokens": 1500
-}

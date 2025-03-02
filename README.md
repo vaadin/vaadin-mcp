@@ -161,13 +161,17 @@ flowchart TD
     
     subgraph "User Environment"
         IDE["IDE with MCP Support"]
+        MCPServer["MCP Server\n(run via npx)"]
     end
     
     GHRepo --> GHActions
     GHActions -->|Daily Ingestion| VectorDB
+    GHActions -->|Deploy on Commits| RestServer
     VectorDB <-->|Search Queries| RestServer
-    NpmPackage -->|Installed Globally| IDE
-    RestServer <-->|API Requests| IDE
+    IDE -->|Run via npx| NpmPackage
+    NpmPackage -->|Downloaded| MCPServer
+    IDE <-->|MCP Protocol| MCPServer
+    MCPServer <-->|API Requests| RestServer
     
     classDef github fill:#f9d5e5,stroke:#333,stroke-width:1px;
     classDef pinecone fill:#d5e8f9,stroke:#333,stroke-width:1px;
@@ -179,7 +183,7 @@ flowchart TD
     class VectorDB pinecone;
     class RestServer flyio;
     class NpmPackage npm;
-    class IDE user;
+    class IDE,MCPServer user;
 ```
 
 ### 1. Documentation Ingestion Pipeline (GitHub Actions)
