@@ -189,7 +189,36 @@ function htmlToMarkdown(html: string): string {
  * @param metadata - The document metadata
  * @returns Array of chunks
  */
+/**
+ * Transform GitHub URL to docs.vaadin.com URL
+ * @param url - GitHub URL
+ * @returns Transformed URL
+ */
+function transformUrl(url: string): string {
+  if (!url || !url.includes('github.com/vaadin/docs/blob/main')) {
+    return url;
+  }
+  
+  // Extract the path after 'vaadin-docs/'
+  const match = url.match(/github\.com\/vaadin\/docs\/blob\/mainvaadin-docs\/articles\/(.+)/);
+  if (!match) {
+    return url;
+  }
+  
+  const path = match[1];
+  
+  // Remove 'index.adoc' from the end if present
+  const cleanPath = path.replace(/\/index\.adoc$/, '');
+  
+  return `https://vaadin.com/docs/${cleanPath}`;
+}
+
 export function chunkDocument(content: string, metadata: Record<string, string>): Chunk[] {
+  // Transform URL if present
+  if (metadata.url) {
+    metadata.url = transformUrl(metadata.url);
+  }
+  
   // Extract headings with their content
   const headingsWithContent = extractHeadingsWithContent(content);
   
@@ -200,8 +229,11 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
   for (let i = 0; i < headingsWithContent.length; i++) {
     const heading = headingsWithContent[i];
     
-    // Skip empty sections
-    if (!heading.content.trim()) {
+    // Skip empty sections or sections with only placeholders like section_outline::[]
+    const trimmedContent = heading.content.trim();
+    
+    // Check if content is empty or too short
+    if (!trimmedContent || trimmedContent.length < 100) {
       continue;
     }
     
@@ -220,10 +252,6 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
       metadata: {
         ...metadata,
         heading: heading.text,
-        breadcrumb: title !== heading.text ? title : undefined,
-        level: heading.level,
-        chunk_type: 'section',
-        section_index: i,
       }
     });
   }
@@ -237,17 +265,7 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
  * @returns Prepared chunks
  */
 export function prepareChunksForEmbedding(chunks: Chunk[]): Chunk[] {
-  // Add document position metadata to each chunk
-  const totalChunks = chunks.length;
-  
-  return chunks.map((chunk, index) => {
-    // Add position metadata
-    chunk.metadata.position_in_document = index === 0 ? 'beginning' : 
-                                          index === totalChunks - 1 ? 'end' : 
-                                          'middle';
-    chunk.metadata.chunk_index = index;
-    chunk.metadata.total_chunks = totalChunks;
-    
+  return chunks.map((chunk) => {
     // Add document info if available
     if (chunk.metadata.title) {
       const docInfo = `[Document: ${chunk.metadata.title}]`;
