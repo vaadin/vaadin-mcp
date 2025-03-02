@@ -16,7 +16,7 @@ export function processAsciiDoc(content: string): string {
   try {
     // Load the document
     const document = processor.load(content, {
-      safe: 'server', // Safe mode level
+      safe: 'unsafe',
       attributes: {
         // Common attributes for Vaadin docs
         'source-highlighter': 'highlight.js',
