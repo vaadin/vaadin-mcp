@@ -5,6 +5,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import { config } from './config';
 import type { DocumentWithEmbedding } from './embeddings';
+import { nanoid } from 'nanoid';
 
 // Initialize Pinecone client
 const pinecone = new Pinecone({
@@ -31,16 +32,6 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
       doc.metadata.source.replace(/[^a-zA-Z0-9]/g, '_') : 
       'unknown';
     
-    const chunkType = doc.metadata.chunk_type || 'unknown';
-    const sectionIndex = doc.metadata.section_index !== undefined ? 
-      doc.metadata.section_index : 
-      '';
-    const paragraphIndex = doc.metadata.paragraph_index !== undefined ? 
-      doc.metadata.paragraph_index : 
-      '';
-    
-    const id = `vaadin_${sourceId}_${chunkType}_${sectionIndex}_${paragraphIndex}_${Date.now()}_${i}`;
-    
     // Prepare metadata, removing the embedding
     const { embedding, ...restDoc } = doc;
     const metadata = {
@@ -53,7 +44,7 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
     };
     
     return {
-      id,
+      id: nanoid(),
       values: doc.embedding,
       metadata
     };

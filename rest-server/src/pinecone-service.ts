@@ -104,8 +104,7 @@ export async function searchDocumentation(
         title: metadata.title || 'Untitled',
         source: metadata.source || '',
         url: metadata.url || '',
-        heading: metadata.heading || '',
-        chunk_type: metadata.chunk_type || '',
+        heading: metadata.heading || ''
       },
       score: match.score || 0,
     });

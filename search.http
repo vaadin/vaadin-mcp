@@ -2,7 +2,7 @@ POST http://localhost:3001/search
 Content-Type: application/json
 
 {
-  "query": "How do I trigger jobs?",
+  "query": "How do I cancel a background job?",
   "max_results": 5,
   "max_tokens": 1500
 }

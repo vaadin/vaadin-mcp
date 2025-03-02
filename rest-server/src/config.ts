@@ -20,6 +20,6 @@ export const config = {
   search: {
     defaultMaxResults: 5,
     defaultMaxTokens: 1500,
-    scoreThreshold: 0.7, // Minimum similarity score to include in results
+    scoreThreshold: 0.5, // Minimum similarity score to include in results
   }
 };

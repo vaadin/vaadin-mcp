@@ -16,6 +16,7 @@
     "@pinecone-database/pinecone": "^5.1.0",
     "asciidoctor": "^3.0.4",
     "front-matter": "^4.0.2",
+    "nanoid": "^5.1.2",
     "openai": "^4.86.1",
     "simple-git": "^3.27.0"
   }
