@@ -40,6 +40,55 @@ The Model Context Protocol (MCP) server provides a standardized interface for ac
 3. The MCP server forwards search requests to the REST server and formats the results
 4. IDE assistants and tools can query the MCP server to get contextual Vaadin documentation
 
+```mermaid
+flowchart TD
+    subgraph "Documentation Sources"
+        VaadinDocs["Vaadin Documentation\n(AsciiDoc)"]
+    end
+
+    subgraph "Ingestion Pipeline"
+        Parser["AsciiDoc Parser"]
+        Chunker["Hierarchical Chunker"]
+        Embedder["OpenAI Embeddings Generator"]
+    end
+
+    subgraph "Storage"
+        Pinecone["Pinecone Vector Database"]
+    end
+
+    subgraph "API Layer"
+        REST["REST Server\n(/search endpoint)"]
+        MCP["MCP Server\n(Model Context Protocol)"]
+    end
+
+    subgraph "Consumers"
+        IDE["IDE Assistants"]
+        Tools["Developer Tools"]
+    end
+
+    VaadinDocs --> Parser
+    Parser --> Chunker
+    Chunker --> Embedder
+    Embedder --> Pinecone
+    
+    Pinecone <--> REST
+    REST <--> MCP
+    MCP <--> IDE
+    MCP <--> Tools
+
+    classDef pipeline fill:#f9d5e5,stroke:#333,stroke-width:1px;
+    classDef storage fill:#eeeeee,stroke:#333,stroke-width:1px;
+    classDef api fill:#d5e8f9,stroke:#333,stroke-width:1px;
+    classDef consumer fill:#e5f9d5,stroke:#333,stroke-width:1px;
+    classDef docs fill:#f9e5d5,stroke:#333,stroke-width:1px;
+
+    class VaadinDocs docs;
+    class Parser,Chunker,Embedder pipeline;
+    class Pinecone storage;
+    class REST,MCP api;
+    class IDE,Tools consumer;
+```
+
 ## Prerequisites
 
 - [Bun](https://bun.sh/) runtime
@@ -73,20 +122,19 @@ The Model Context Protocol (MCP) server provides a standardized interface for ac
    ```
 
 4. Integrate with your IDE by adding the MCP server to your MCP settings file (locally).
-
-```
-{
-    "mcpServers": {
-        "vaadin": {
-            "command": "/full/path/to/bun",
-            "args": [
-                "run",
-                "/full/path/to/vaadin-mcp/mcp-server/src/index.ts"
-            ]
+    ```
+    {
+        "mcpServers": {
+            "vaadin": {
+                "command": "/full/path/to/bun",
+                "args": [
+                    "run",
+                    "/full/path/to/vaadin-mcp/mcp-server/src/index.ts"
+                ]
+            }
         }
     }
-}
-```
+    ```
 
 ## License
 
