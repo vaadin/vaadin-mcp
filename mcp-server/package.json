@@ -3,16 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "start": "bun run src/index.ts",
-    "start:background": "mkdir -p logs && nohup bun run src/index.ts > logs/server-$(date +%Y-%m-%d).log 2>&1 & echo $! > logs/server.pid",
-    "stop": "node -e \"const fs = require('fs'); const path = require('path'); const pidFile = path.join('logs', 'server.pid'); if (fs.existsSync(pidFile)) { const pid = fs.readFileSync(pidFile, 'utf8').trim(); try { process.kill(pid); console.log(`Server with PID ${pid} stopped`); fs.unlinkSync(pidFile); } catch (e) { console.log(`Server with PID ${pid} not running`); fs.unlinkSync(pidFile); } } else { console.log('No server running'); }\"",
-    "restart": "npm run stop && npm run start:background",
-    "status": "node -e \"const fs = require('fs'); const path = require('path'); const pidFile = path.join('logs', 'server.pid'); if (fs.existsSync(pidFile)) { const pid = fs.readFileSync(pidFile, 'utf8').trim(); try { process.kill(pid, 0); const uptime = require('child_process').execSync(`ps -p ${pid} -o etimes=`).toString().trim(); const days = Math.floor(uptime / 86400); const hours = Math.floor((uptime % 86400) / 3600); const minutes = Math.floor((uptime % 3600) / 60); const seconds = uptime % 60; console.log(`Server running with PID ${pid}`); console.log(`Uptime: ${days}d ${hours}h ${minutes}m ${seconds}s`); console.log(`Log file: logs/server-$(date +%Y-%m-%d).log`); } catch (e) { console.log(`Server with PID ${pid} not running`); fs.unlinkSync(pidFile); } } else { console.log('No server running'); }\"",
-    "logs": "node -e \"const fs = require('fs'); const path = require('path'); const logsDir = 'logs'; if (!fs.existsSync(logsDir)) { fs.mkdirSync(logsDir); } const files = fs.readdirSync(logsDir).filter(f => f.endsWith('.log')); if (files.length === 0) { console.log('No log files found'); } else { console.log('Available log files:'); files.forEach(f => console.log(f)); }\"",
-    "logs:view": "node -e \"const fs = require('fs'); const path = require('path'); const logFile = process.argv[1]; if (!logFile) { console.log('Please specify a log file'); process.exit(1); } const fullPath = path.join('logs', logFile); if (!fs.existsSync(fullPath)) { console.log(`Log file ${fullPath} not found`); process.exit(1); } console.log(fs.readFileSync(fullPath, 'utf8'));\"",
-    "logs:clean": "node -e \"const fs = require('fs'); const path = require('path'); const logsDir = 'logs'; if (!fs.existsSync(logsDir)) { fs.mkdirSync(logsDir); } const pidFile = path.join(logsDir, 'server.pid'); if (fs.existsSync(pidFile)) { const pid = fs.readFileSync(pidFile, 'utf8').trim(); try { process.kill(pid, 0); console.log('Server is running. Please stop it before cleaning logs.'); process.exit(1); } catch (e) { fs.unlinkSync(pidFile); } } const files = fs.readdirSync(logsDir).filter(f => f.endsWith('.log')); if (files.length === 0) { console.log('No log files to clean'); } else { files.forEach(f => fs.unlinkSync(path.join(logsDir, f))); console.log(`Cleaned ${files.length} log files`); }\"",
-    "check:env": "node -e \"const envVars = ['OPENAI_API_KEY', 'PINECONE_API_KEY', 'PINECONE_INDEX']; const missing = envVars.filter(v => !process.env[v]); if (missing.length > 0) { console.log('❌ Missing environment variables: ' + missing.join(', ')); process.exit(1); } else { console.log('✅ All required environment variables are set'); }\"",
-    "check:pinecone": "bun run check-pinecone.ts"
+    "start": "bun run src/index.ts"
   },
   "devDependencies": {
     "@types/node": "^22.13.8",

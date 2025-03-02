@@ -17,7 +17,21 @@ import {
   McpError
 } from '@modelcontextprotocol/sdk/types.js';
 import { config } from './config.js';
-import type { SearchResult } from './pinecone-service.js';
+
+/**
+ * Search result interface
+ */
+export interface SearchResult {
+  text: string;
+  metadata: {
+    title: string;
+    source: string;
+    url: string;
+    heading?: string;
+    [key: string]: any;
+  };
+  score: number;
+}
 
 /**
  * Vaadin Documentation MCP Server
@@ -65,7 +79,7 @@ class VaadinDocsServer {
             properties: {
               query: {
                 type: 'string',
-                description: 'The search query or question about Vaadin'
+                description: 'The search query or question about Vaadin. Will be used to query a vector database.'
               },
               max_results: {
                 type: 'number',
@@ -188,26 +202,8 @@ class VaadinDocsServer {
     const transport = new StdioServerTransport();
     
     // Connect the server to the transport
-    await this.server.connect(transport);
-    
-    console.error('Vaadin Documentation MCP server running on stdio');
+    await this.server.connect(transport); 
   }
-}
-
-// Check required environment variables
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY environment variable is required');
-  process.exit(1);
-}
-
-if (!process.env.PINECONE_API_KEY) {
-  console.error('PINECONE_API_KEY environment variable is required');
-  process.exit(1);
-}
-
-if (!process.env.PINECONE_INDEX) {
-  console.error('PINECONE_INDEX environment variable is required');
-  process.exit(1);
 }
 
 // Create and run the server
