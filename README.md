@@ -95,7 +95,7 @@ flowchart TD
 - OpenAI API key (for embeddings)
 - Pinecone API key and index
 
-## Quick Start
+## Quick Start (Local Development)
 
 1. Set up environment variables:
    ```bash
@@ -112,7 +112,7 @@ flowchart TD
 2. Run the ingestion pipeline:
    ```bash
    cd docs-ingestion
-   ./burn run ingest
+   bun run ingest
    ```
 
 3. Start the REST server:
@@ -135,6 +135,177 @@ flowchart TD
         }
     }
     ```
+
+## Deployment Guide
+
+This section outlines how to deploy each component of the Vaadin Documentation Assistant for production use.
+
+```mermaid
+flowchart TD
+    subgraph "GitHub"
+        GHRepo["GitHub Repository"]
+        GHActions["GitHub Actions"]
+    end
+    
+    subgraph "Pinecone"
+        VectorDB["Vector Database"]
+    end
+    
+    subgraph "fly.io"
+        RestServer["REST Server"]
+    end
+    
+    subgraph "npm"
+        NpmPackage["MCP Server Package"]
+    end
+    
+    subgraph "User Environment"
+        IDE["IDE with MCP Support"]
+    end
+    
+    GHRepo --> GHActions
+    GHActions -->|Daily Ingestion| VectorDB
+    VectorDB <-->|Search Queries| RestServer
+    NpmPackage -->|Installed Globally| IDE
+    RestServer <-->|API Requests| IDE
+    
+    classDef github fill:#f9d5e5,stroke:#333,stroke-width:1px;
+    classDef pinecone fill:#d5e8f9,stroke:#333,stroke-width:1px;
+    classDef flyio fill:#e5f9d5,stroke:#333,stroke-width:1px;
+    classDef npm fill:#f9e5d5,stroke:#333,stroke-width:1px;
+    classDef user fill:#eeeeee,stroke:#333,stroke-width:1px;
+    
+    class GHRepo,GHActions github;
+    class VectorDB pinecone;
+    class RestServer flyio;
+    class NpmPackage npm;
+    class IDE user;
+```
+
+### 1. Documentation Ingestion Pipeline (GitHub Actions)
+
+The ingestion pipeline is configured to run as a scheduled GitHub Actions workflow:
+
+1. The workflow is defined in `.github/workflows/docs-ingestion.yml`
+2. It runs daily at 2 AM UTC to update the documentation
+3. It can also be triggered manually via the GitHub Actions UI
+
+To set up the GitHub Actions workflow:
+
+1. Add the following secrets to your GitHub repository:
+   - `OPENAI_API_KEY`
+   - `PINECONE_API_KEY`
+   - `PINECONE_INDEX`
+
+2. Push the repository to GitHub with the workflow file
+
+The workflow will:
+- Clone the repository
+- Set up Bun
+- Install dependencies
+- Run the ingestion pipeline
+- Log the results and notify on failures
+
+### 2. REST Server (fly.io)
+
+The REST server is deployed to fly.io using GitHub Actions:
+
+1. The workflow is defined in `.github/workflows/deploy-rest-server.yml`
+2. It automatically deploys the REST server to fly.io when changes are pushed to the `rest-server` directory
+3. It can also be triggered manually via the GitHub Actions UI
+
+To set up the GitHub Actions workflow:
+
+1. Create a fly.io account and install the Fly CLI:
+   ```bash
+   curl -L https://fly.io/install.sh | sh
+   ```
+
+2. Log in to Fly:
+   ```bash
+   fly auth login
+   ```
+
+3. Create a Fly API token:
+   ```bash
+   fly auth token
+   ```
+
+4. Add the following secrets to your GitHub repository:
+   - `FLY_API_TOKEN`: The Fly API token you generated
+   - `OPENAI_API_KEY`: Your OpenAI API key
+   - `PINECONE_API_KEY`: Your Pinecone API key
+   - `PINECONE_INDEX`: Your Pinecone index name
+
+5. Set secrets for the fly.io app:
+   ```bash
+   fly secrets set OPENAI_API_KEY=your_openai_api_key
+   fly secrets set PINECONE_API_KEY=your_pinecone_api_key
+   fly secrets set PINECONE_INDEX=your_pinecone_index
+   ```
+
+The workflow will:
+- Check out the repository
+- Set up the Fly CLI
+- Deploy the REST server to fly.io
+
+The REST server is deployed to `https://vaadin-docs-search.fly.dev`.
+
+### 3. MCP Server (npm package)
+
+The MCP server is distributed as an npm package:
+
+1. Build the package:
+   ```bash
+   cd mcp-server
+   bun install
+   bun run build
+   ```
+
+2. Publish to npm:
+   ```bash
+   npm login
+   npm publish
+   ```
+
+3. Integrate with IDE assistants by configuring them to use the MCP server:
+
+   ```json
+   {
+     "mcpServers": {
+       "vaadin": {
+         "command": "npx",
+         "args": [
+           "-y",
+           "vaadin-docs-mcp-server"
+         ]
+       }
+     }
+   }
+   ```
+
+   This configuration uses npx to automatically download and run the latest version of the package without requiring a global installation.
+
+4. Optionally, you can override the REST server URL for local development:
+
+   ```json
+   {
+     "mcpServers": {
+       "vaadin": {
+         "command": "npx",
+         "args": [
+           "-y",
+           "vaadin-docs-mcp-server"
+         ],
+         "env": {
+           "REST_SERVER_URL": "http://localhost:3001"
+         }
+       }
+     }
+   }
+   ```
+
+For detailed instructions on using the npm package, see `mcp-server/README.npm.md`.
 
 ## License
 

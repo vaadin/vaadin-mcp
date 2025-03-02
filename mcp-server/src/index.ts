@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 /**
  * Vaadin Documentation MCP Server
@@ -120,6 +120,8 @@ class VaadinDocsServer {
       }
 
       try {
+        console.log(`Searching for: "${args.query}" via REST server at ${config.restServer.url}`);
+        
         // Forward request to REST server
         const response = await fetch(`${config.restServer.url}/search`, {
           method: 'POST',
@@ -139,6 +141,7 @@ class VaadinDocsServer {
         }
 
         const data = await response.json();
+        console.log(`Found ${data.results?.length || 0} results`);
 
         // Format results
         const formattedResults = this.formatSearchResults(data.results);

@@ -1,0 +1,73 @@
+name: Vaadin Docs Ingestion
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      
+      - name: Cache Vaadin docs repository
+        uses: actions/cache@v3
+        with:
+          path: ./docs-ingestion/vaadin-docs
+          key: vaadin-docs-${{ github.run_id }}
+          restore-keys: |
+            vaadin-docs-
+      
+      - name: Install dependencies
+        working-directory: ./docs-ingestion
+        run: bun install
+      
+      - name: Run ingestion pipeline
+        working-directory: ./docs-ingestion
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_INDEX: ${{ secrets.PINECONE_INDEX }}
+        run: |
+          # Create a log file
+          mkdir -p logs
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+          LOG_FILE="logs/ingestion_${TIMESTAMP}.log"
+          
+          # Run ingestion and capture output
+          bun run ingest 2>&1 | tee $LOG_FILE
+          
+          # Check exit status
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "::error::Ingestion failed. See logs for details."
+            exit 1
+          fi
+      
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ingestion-logs
+          path: ./docs-ingestion/logs/
+          retention-days: 7
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Docs Ingestion Failed: ${new Date().toISOString()}`,
+              body: `The scheduled docs ingestion workflow failed. Please check the [workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`
+            })

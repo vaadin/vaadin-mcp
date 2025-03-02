@@ -1,0 +1,30 @@
+name: Deploy REST Server to Fly.io
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'rest-server/**'
+      - '.github/workflows/deploy-rest-server.yml'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy REST Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Fly.io CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Deploy to Fly.io
+        working-directory: ./rest-server
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --remote-only

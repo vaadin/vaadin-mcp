@@ -12,19 +12,13 @@ export const config = {
   
   // REST server settings
   restServer: {
-    url: process.env.REST_SERVER_URL || 'http://localhost:3001',
-  },
-  
-  // Pinecone settings
-  pinecone: {
-    apiKey: process.env.PINECONE_API_KEY,
-    index: process.env.PINECONE_INDEX,
+    url: process.env.REST_SERVER_URL || 'https://vaadin-docs-search.fly.dev',
   },
   
   // Search settings
   search: {
     defaultMaxResults: 5,
     defaultMaxTokens: 1500,
-    scoreThreshold: 0.7, // Minimum similarity score to include in results
+    scoreThreshold: 0.6, // Minimum similarity score to include in results
   }
 };
