@@ -140,52 +140,6 @@ flowchart TD
 
 This section outlines how to deploy each component of the Vaadin Documentation Assistant for production use.
 
-```mermaid
-flowchart TD
-    subgraph "GitHub"
-        GHRepo["GitHub Repository"]
-        GHActions["GitHub Actions"]
-    end
-    
-    subgraph "Pinecone"
-        VectorDB["Vector Database"]
-    end
-    
-    subgraph "fly.io"
-        RestServer["REST Server"]
-    end
-    
-    subgraph "npm"
-        NpmPackage["MCP Server Package"]
-    end
-    
-    subgraph "User Environment"
-        IDE["IDE with MCP Support"]
-        MCPServer["MCP Server\n(run via npx)"]
-    end
-    
-    GHRepo --> GHActions
-    GHActions -->|Daily Ingestion| VectorDB
-    GHActions -->|Deploy on Commits| RestServer
-    VectorDB <-->|Search Queries| RestServer
-    IDE -->|Run via npx| NpmPackage
-    NpmPackage -->|Downloaded| MCPServer
-    IDE <-->|MCP Protocol| MCPServer
-    MCPServer <-->|API Requests| RestServer
-    
-    classDef github fill:#f9d5e5,stroke:#333,stroke-width:1px;
-    classDef pinecone fill:#d5e8f9,stroke:#333,stroke-width:1px;
-    classDef flyio fill:#e5f9d5,stroke:#333,stroke-width:1px;
-    classDef npm fill:#f9e5d5,stroke:#333,stroke-width:1px;
-    classDef user fill:#eeeeee,stroke:#333,stroke-width:1px;
-    
-    class GHRepo,GHActions github;
-    class VectorDB pinecone;
-    class RestServer flyio;
-    class NpmPackage npm;
-    class IDE,MCPServer user;
-```
-
 ### 1. Documentation Ingestion Pipeline (GitHub Actions)
 
 The ingestion pipeline is configured to run as a scheduled GitHub Actions workflow:
