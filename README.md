@@ -9,11 +9,21 @@ This project provides a complete solution for ingesting, indexing, and retrievin
 The ingestion pipeline handles the process of extracting, processing, and indexing Vaadin documentation:
 
 - Clones or pulls the latest Vaadin documentation from GitHub
-- Parses and processes AsciiDoc files with custom front matter
-- Implements a hierarchical chunking strategy for optimal retrieval
+- Parses AsciiDoc files with custom front matter
+- Processes AsciiDoc content to Markdown using a custom approach:
+  - Handles includes by manually processing them before conversion
+  - Uses asciidoctor.js to handle conditionals and other directives
+  - Converts to Markdown using downdoc
+- Implements a semantic chunking strategy based on heading structure:
+  - Preserves semantic units by keeping entire sections together
+  - Chunks based on h2 level headings
+  - Preserves document title and introduction as the first chunk
+  - Maintains context by including document title in each chunk
+  - Never breaks up code blocks
 - Generates embeddings using OpenAI's text-embedding-3-small model
 - Stores embeddings and metadata in Pinecone vector database
-- Supports incremental updates to keep documentation current
+- Handles incremental updates by replacing documents from the same source
+- Includes rate limiting and error handling for API calls
 
 ### 2. REST Server (`rest-server/`)
 
@@ -112,7 +122,7 @@ flowchart TD
 2. Run the ingestion pipeline:
    ```bash
    cd docs-ingestion
-   bun run ingest
+   bun run src/index.ts
    ```
 
 3. Start the REST server:

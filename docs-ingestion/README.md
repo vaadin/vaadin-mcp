@@ -1,22 +1,32 @@
 # Vaadin Documentation Ingestion Pipeline
 
-This project provides a pipeline for ingesting Vaadin documentation from the official GitHub repository into a Pinecone vector database. The ingested documentation can then be used for semantic search and retrieval through the separate MCP (Model Context Protocol) server.
+This project provides a pipeline for ingesting Vaadin documentation from the official GitHub repository into a Pinecone vector database. The ingested documentation can then be used for semantic search and retrieval through the separate MCP (Model Context Protocol) server or REST API server.
 
 ## Features
 
 - Clones or pulls the latest Vaadin documentation from GitHub
 - Parses AsciiDoc files with custom front matter
-- Processes AsciiDoc content to HTML
-- Implements a hierarchical chunking strategy
+- Processes AsciiDoc content to Markdown using a custom approach:
+  - Processing includes before conversion
+  - Uses asciidoctor.js to handle conditionals and other directives
+  - Converts to Markdown using downdoc
+- Implements a semantic chunking strategy based on heading structure:
+  - Preserves semantic units by keeping entire sections together
+  - Chunks based on h2 level headings
+  - Preserves document title and introduction as the first chunk
+  - Maintains context by including document title in each chunk
+  - Never breaks up code blocks
 - Generates embeddings using OpenAI's text-embedding-3-small model
 - Stores embeddings and metadata in Pinecone
 - Handles incremental updates by replacing documents from the same source
+- Includes rate limiting and error handling for API calls
 
 ## Prerequisites
 
 - [Bun](https://bun.sh/) runtime
 - OpenAI API key
 - Pinecone API key and index
+- Git (for cloning the documentation repository)
 
 ## Setup
 
@@ -46,9 +56,6 @@ This project provides a pipeline for ingesting Vaadin documentation from the off
    # Pinecone API key and index name
    PINECONE_API_KEY=your_pinecone_api_key
    PINECONE_INDEX=your_pinecone_index_name
-   
-   # Claude API key (only needed for the example script)
-   CLAUDE_API_KEY=your_claude_api_key
    ```
 
 ## Pinecone Setup
@@ -67,36 +74,93 @@ You can run the ingestion pipeline directly:
 
 ```bash
 # Run the ingestion pipeline
-bun run ingest
+bun run src/index.ts
 ```
 
 The ingestion pipeline will:
 1. Clone or pull the latest Vaadin documentation
-2. Process all AsciiDoc files
+2. Process all AsciiDoc files (excluding those matching skip patterns)
 3. Generate embeddings
 4. Store them in Pinecone
+
+For testing and development purposes, you can also use:
+
+```bash
+# Test the AsciiDoc processing with a sample document
+bun run src/test-processing.ts
+
+# Display chunks from the building-apps directory without storing them
+bun run src/display-chunks.ts
+```
 
 ## Configuration
 
 You can modify the configuration in `src/config.ts` to adjust:
 
-- GitHub repository settings
-- OpenAI settings (model, batch size, rate limiting)
-- Pinecone settings (batch size, rate limiting)
-- Chunking settings
-- Metadata settings
+- GitHub repository settings:
+  - Repository URL
+  - Local path for cloning
+  - Articles path within the repository
+  - Skip patterns for files to exclude
+- OpenAI settings:
+  - Model (default: text-embedding-3-small)
+  - Batch size for API calls
+  - Rate limiting delay between batches
+- Pinecone settings:
+  - Batch size for upserts
+  - Rate limiting delay between batches
+- AsciiDoc processor settings:
+  - Safety level
+  - Attributes for conditional content
 
 ## Project Structure
 
 - `src/index.ts` - Main entry point for the ingestion pipeline
 - `src/config.ts` - Configuration settings
-- `src/docs-repository.ts` - Documentation repository operations
-- `src/metadata-parser.ts` - Front matter parsing
-- `src/asciidoc-processor.ts` - AsciiDoc processing
-- `src/chunking.ts` - Document chunking strategy
-- `src/embeddings.ts` - OpenAI embedding generation
-- `src/pinecone.ts` - Pinecone integration
+- `src/docs-repository.ts` - Documentation repository operations (clone, pull, file listing)
+- `src/metadata-parser.ts` - Front matter parsing and metadata enhancement
+- `src/asciidoc-processor.ts` - AsciiDoc processing with include handling
+- `src/chunking.ts` - Semantic document chunking strategy
+- `src/embeddings.ts` - OpenAI embedding generation with rate limiting
+- `src/pinecone.ts` - Pinecone integration for storing and retrieving embeddings
+- `src/test-processing.ts` - Test script for the AsciiDoc processing pipeline
 
+## How It Works
+
+### AsciiDoc Processing
+
+The pipeline uses a custom approach to handle AsciiDoc files:
+
+1. First, it manually processes includes using a recursive function that resolves paths and handles tag directives
+2. Then it uses asciidoctor.js to handle conditionals and other directives
+3. Finally, it converts the processed AsciiDoc to Markdown using downdoc
+
+This approach addresses the limitation of downdoc, which doesn't support includes and would otherwise omit them.
+
+### Chunking Strategy
+
+The chunking strategy is designed to preserve semantic meaning:
+
+1. The first chunk contains the document title (h1) and introduction paragraph
+2. Subsequent chunks are created based on h2 level headings
+3. Each chunk includes the document title to maintain context
+4. Code blocks are never split across chunks
+
+### Metadata Handling
+
+The pipeline extracts and enhances metadata:
+
+1. Parses custom front matter from AsciiDoc files
+2. Enhances metadata with source information
+3. Generates direct Vaadin docs URLs
+4. Adds processing timestamps
+
+### Incremental Updates
+
+To support incremental updates:
+
+1. Before storing new chunks from a source, existing documents from the same source are deleted
+2. This ensures that updates to documentation replace older versions rather than duplicating them
 
 ## License
 
