@@ -35,15 +35,14 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
     // Create a unique ID with source prefix
     const id = `${sourcePrefix}#${nanoid()}`;
     
-    // Prepare metadata, removing the embedding
+    // Prepare metadata, only including the specified fields
     const { embedding, ...restDoc } = doc;
     const metadata = {
-      ...restDoc.metadata,
       text: doc.text,
-      chunk_type: doc.metadata.chunk_type,
-      heading: doc.metadata.heading || '',
       title: doc.metadata.title || '',
       processed_at: new Date().toISOString(),
+      source: doc.metadata.source || '',
+      url: doc.metadata.url || '',
     };
     
     return {
