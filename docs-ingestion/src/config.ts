@@ -42,8 +42,6 @@ export const config = {
       'icons': 'font',
       'experimental': '',
       'toc': 'macro',
-      'root': './vaadin-docs',
-      'articles': '../vaadin-docs/articles',
       'flow': true,
       'react': true
     }

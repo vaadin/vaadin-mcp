@@ -46,7 +46,9 @@ async function processAndDisplayFile(filePath: string): Promise<void> {
     );
     
     // Process AsciiDoc content to HTML
-    const htmlContent = processAsciiDoc(cleanContent);
+    // Pass the directory of the file being processed as the base directory for includes
+    const fileDir = path.dirname(filePath);
+    const htmlContent = processAsciiDoc(cleanContent, fileDir);
     
     // Create chunks
     const chunks = chunkDocument(htmlContent, enhancedMetadata);

@@ -2,6 +2,10 @@
 
 /**
  * Main entry point for the Vaadin docs ingestion pipeline
+ * Simplified process:
+ * 1. Use asciidoctor.js to handle imports and conditionals
+ * 2. Convert to markdown with downdoc
+ * 3. Chunk based on h2 level headings
  */
 
 import fs from 'fs';
@@ -9,7 +13,7 @@ import path from 'path';
 import { config } from './config';
 import { cloneOrPullRepo, getAsciiDocFiles } from './docs-repository';
 import { parseMetadata, enhanceMetadata } from './metadata-parser';
-import { processAsciiDoc, extractTextFromHtml } from './asciidoc-processor';
+import { processAsciiDoc } from './asciidoc-processor';
 import { chunkDocument, prepareChunksForEmbedding } from './chunking';
 import { generateEmbeddings } from './embeddings';
 import { storeInPinecone, deleteFromPineconeBySource } from './pinecone';
@@ -36,11 +40,11 @@ async function processFile(filePath: string): Promise<number> {
       config.docs.localPath
     );
     
-    // Process AsciiDoc content to HTML
-    const htmlContent = processAsciiDoc(cleanContent);
+    // Process AsciiDoc content directly to Markdown using asciidoctor.js and downdoc
+    const markdownContent = processAsciiDoc(cleanContent);
     
-    // Create chunks
-    const chunks = chunkDocument(htmlContent, enhancedMetadata);
+    // Create chunks based on h2 level headings
+    const chunks = chunkDocument(markdownContent, enhancedMetadata);
     console.log(`Created ${chunks.length} chunks from ${filePath}`);
     
     // Prepare chunks for embedding

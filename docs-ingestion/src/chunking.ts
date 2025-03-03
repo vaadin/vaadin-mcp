@@ -4,11 +4,10 @@
  * 1. Preserves semantic units by keeping entire sections as one chunk
  * 2. Maintains context by including breadcrumbs for sub-headings
  * 3. Preserves code blocks by never breaking them up
- * 4. Outputs clean markdown with proper formatting
+ * 4. Chunks based on h2 level headings
  */
 
 import { config } from './config';
-import { processAsciiDoc } from './asciidoc-processor';
 
 /**
  * Chunk type definition
@@ -29,24 +28,22 @@ interface Heading {
 }
 
 /**
- * Extract headings and their content from HTML
- * @param html - HTML content
+ * Extract headings and their content from Markdown
+ * @param markdown - Markdown content
  * @returns Array of headings with their content
  */
-function extractHeadingsWithContent(html: string): Heading[] {
+export function extractHeadingsWithContent(markdown: string): Heading[] {
   const headings: Heading[] = [];
-  const headingRegex = /<h([1-6])[^>]*>(.*?)<\/h\1>/gi;
+  // Match markdown headings (# Heading, ## Heading, etc.)
+  const headingRegex = /^(#{1,6})\s+(.+?)$/gm;
   
   // Find all headings
   let match;
   const headingPositions: {level: number, text: string, position: number}[] = [];
   
-  while ((match = headingRegex.exec(html)) !== null) {
-    const level = parseInt(match[1]);
-    // Decode HTML entities in the heading text before removing HTML tags
-    let text = match[2];
-    text = text.replace(/&amp;/g, '&')
-               .replace(/<[^>]*>/g, '').trim();
+  while ((match = headingRegex.exec(markdown)) !== null) {
+    const level = match[1].length; // Number of # characters
+    const text = match[2].trim();
     
     headingPositions.push({
       level,
@@ -64,17 +61,15 @@ function extractHeadingsWithContent(html: string): Heading[] {
     const next = i < headingPositions.length - 1 ? headingPositions[i + 1] : null;
     
     const startPos = current.position;
-    const endPos = next ? next.position : html.length;
+    // Find the end of the current heading line
+    const headingEndPos = markdown.indexOf('\n', startPos);
     
-    // Extract the heading tag itself
-    const headingTagMatch = html.substring(startPos).match(/<h[1-6][^>]*>.*?<\/h[1-6]>/i);
-    const headingTag = headingTagMatch ? headingTagMatch[0] : '';
-    
-    // Content starts after the heading tag
-    const contentStartPos = startPos + headingTag.length;
+    // Content starts after the heading line
+    const contentStartPos = headingEndPos !== -1 ? headingEndPos + 1 : markdown.length;
+    const endPos = next ? next.position : markdown.length;
     
     // Extract content (everything between this heading and the next)
-    const content = html.substring(contentStartPos, endPos).trim();
+    const content = markdown.substring(contentStartPos, endPos).trim();
     
     headings.push({
       level: current.level,
@@ -110,145 +105,90 @@ function generateBreadcrumb(heading: Heading, headings: Heading[]): string {
 }
 
 /**
- * Convert HTML to Markdown
- * @param html - HTML content
- * @returns Markdown content
- */
-function htmlToMarkdown(html: string): string {
-  let markdown = html;
-  
-  // Handle code blocks
-  markdown = markdown.replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (match, content) => {
-    // Remove code tags inside pre if present, but preserve the content exactly as is
-    let code = content.replace(/<code\b[^>]*>([\s\S]*?)<\/code>/gi, '$1');
-    
-    // Decode HTML entities, but preserve tags for code examples
-    code = code.replace(/&lt;/g, '<')
-               .replace(/&gt;/g, '>')
-               .replace(/&amp;/g, '&')
-               .replace(/&quot;/g, '"')
-               .replace(/&#39;/g, "'")
-               .replace(/&nbsp;/g, ' ');
-    
-    // Determine if there's a language specified
-    const langMatch = match.match(/class=".*?language-([a-zA-Z0-9]+).*?"/i);
-    const language = langMatch ? langMatch[1] : '';
-    
-    return `\n\`\`\`${language}\n${code}\n\`\`\`\n`;
-  });
-  
-  // Handle inline code
-  markdown = markdown.replace(/<code\b[^>]*>([\s\S]*?)<\/code>/gi, '`$1`');
-  
-  // Handle strong/bold
-  markdown = markdown.replace(/<(strong|b)\b[^>]*>([\s\S]*?)<\/\1>/gi, '**$2**');
-  
-  // Handle emphasis/italic
-  markdown = markdown.replace(/<(em|i)\b[^>]*>([\s\S]*?)<\/\1>/gi, '*$2*');
-  
-  // Handle links
-  markdown = markdown.replace(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)');
-  
-  // Handle lists
-  markdown = markdown.replace(/<ul\b[^>]*>([\s\S]*?)<\/ul>/gi, (match, content) => {
-    return content.replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n');
-  });
-  
-  markdown = markdown.replace(/<ol\b[^>]*>([\s\S]*?)<\/ol>/gi, (match, content) => {
-    let index = 1;
-    return content.replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (m: string, c: string) => `${index++}. ${c}\n`);
-  });
-  
-  // Handle paragraphs
-  markdown = markdown.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, '$1\n\n');
-  
-  // Remove remaining HTML tags, but be careful not to remove content within code blocks
-  // First, let's extract and save code blocks
-  const codeBlocks: string[] = [];
-  markdown = markdown.replace(/```[\s\S]*?```/g, (match) => {
-    codeBlocks.push(match);
-    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
-  });
-  
-  // Now remove HTML tags from non-code content
-  markdown = markdown.replace(/<[^>]*>/g, '');
-  
-  // Restore code blocks
-  codeBlocks.forEach((block, index) => {
-    markdown = markdown.replace(`__CODE_BLOCK_${index}__`, block);
-  });
-  
-  // Decode HTML entities - make sure to decode &amp; first to avoid double-decoding issues
-  markdown = markdown.replace(/&amp;/g, '&')
-                    .replace(/&lt;/g, '<')
-                    .replace(/&gt;/g, '>')
-                    .replace(/&quot;/g, '"')
-                    .replace(/&#39;/g, "'")
-                    .replace(/&nbsp;/g, ' ')
-                    .replace(/&hellip;/g, '...')
-                    .replace(/&#8217;/g, "'")
-                    .replace(/&#8216;/g, "'")
-                    .replace(/&#8220;/g, '"')
-                    .replace(/&#8221;/g, '"')
-                    .replace(/&#8211;/g, '-')
-                    .replace(/&#8212;/g, '--')
-                    .replace(/&#8230;/g, '...')
-                    .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
-  
-  // Normalize whitespace
-  markdown = markdown.replace(/\n{3,}/g, '\n\n');
-  
-  return markdown;
-}
-
-/**
- * Chunk a document based on its semantic structure
- * @param content - The document content (HTML)
+ * Chunk a document based on h2 level headings
+ * First chunk is the main document title and introduction paragraph
+ * Subsequent chunks are based on h2 level headings
+ * @param content - The document content (Markdown)
  * @param metadata - The document metadata
  * @returns Array of chunks
  */
 export function chunkDocument(content: string, metadata: Record<string, string>): Chunk[] {
-  
   // Extract headings with their content
   const headingsWithContent = extractHeadingsWithContent(content);
   
   // Create chunks from headings
   const chunks: Chunk[] = [];
   
-  // Process each heading and its content
-  for (let i = 0; i < headingsWithContent.length; i++) {
-    const heading = headingsWithContent[i];
+  // Get h1 heading if it exists
+  const h1Heading = headingsWithContent.find(h => h.level === 1);
+  const documentTitle = h1Heading ? h1Heading.text : metadata.title || '';
+  
+  // Create the first chunk with the document title and introduction paragraph
+  if (h1Heading) {
+    chunks.push({
+      text: `# ${h1Heading.text}\n\n${h1Heading.content}`,
+      metadata: {
+        ...metadata,
+        heading: h1Heading.text,
+        documentTitle,
+        isIntroduction: true
+      }
+    });
+  }
+  
+  // Filter for h2 headings
+  const h2Headings = headingsWithContent.filter(h => h.level === 2);
+  
+  // If no h2 headings and no h1 heading, create a single chunk with the entire content
+  if (h2Headings.length === 0 && !h1Heading) {
+    chunks.push({
+      text: content,
+      metadata: {
+        ...metadata,
+        documentTitle
+      }
+    });
+    return chunks;
+  }
+  
+  // Process each h2 heading to create a chunk
+  for (let i = 0; i < h2Headings.length; i++) {
+    const h2Heading = h2Headings[i];
+    const nextH2 = i < h2Headings.length - 1 ? h2Headings[i + 1] : null;
     
-    // Skip empty sections or sections with only placeholders like section_outline::[]
-    const trimmedContent = heading.content.trim();
+    // Find all content between this h2 and the next h2 (or end of document)
+    let sectionContent = '';
     
-    // Check if content is empty or too short
-    if (!trimmedContent || trimmedContent.length < 100) {
+    // Start with the h2 heading itself
+    sectionContent += `## ${h2Heading.text}\n\n${h2Heading.content}\n\n`;
+    
+    // Find all sub-headings (h3, h4, etc.) that belong to this h2 section
+    const subHeadings = headingsWithContent.filter(h => 
+      h.level > 2 && 
+      h.position > h2Heading.position && 
+      (!nextH2 || h.position < nextH2.position)
+    );
+    
+    // Sort sub-headings by position
+    subHeadings.sort((a, b) => a.position - b.position);
+    
+    // Add sub-headings content
+    for (const subHeading of subHeadings) {
+      sectionContent += `${'#'.repeat(subHeading.level)} ${subHeading.text}\n\n${subHeading.content}\n\n`;
+    }
+    
+    // Skip empty sections
+    if (sectionContent.trim().length === 0) {
       continue;
     }
     
-    // Generate breadcrumb for sub-headings
-    let title = heading.text;
-    if (heading.level > 1) {
-      title = generateBreadcrumb(heading, headingsWithContent);
-    }
-    
-    // Convert content to markdown
-    const markdownContent = htmlToMarkdown(heading.content);
-    
     // Create the chunk
-    // Ensure title has HTML entities decoded
-    const decodedTitle = title.replace(/&amp;/g, '&')
-                              .replace(/&lt;/g, '<')
-                              .replace(/&gt;/g, '>')
-                              .replace(/&quot;/g, '"')
-                              .replace(/&#39;/g, "'");
-    
     chunks.push({
-      text: `# ${decodedTitle}\n\n${markdownContent}`,
+      text: documentTitle ? `# ${documentTitle}\n\n${sectionContent}` : sectionContent,
       metadata: {
         ...metadata,
-        heading: heading.text,
+        heading: h2Heading.text,
+        documentTitle
       }
     });
   }

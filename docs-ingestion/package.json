@@ -16,6 +16,7 @@
   "dependencies": {
     "@pinecone-database/pinecone": "^5.1.0",
     "asciidoctor": "^3.0.4",
+    "downdoc": "^1.0.2-stable",
     "front-matter": "^4.0.2",
     "minimatch": "^10.0.1",
     "nanoid": "^5.1.2",
