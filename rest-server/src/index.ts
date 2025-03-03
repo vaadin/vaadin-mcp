@@ -80,7 +80,7 @@ app.post('/search', async (req: Request, res: Response) => {
       
     // Parse and validate max_tokens
     const maxTokens = max_tokens && !isNaN(max_tokens) 
-      ? Math.min(Math.max(100, max_tokens), 5000) 
+      ? Math.min(Math.max(100, max_tokens), 10000) 
       : config.search.defaultMaxTokens;
     
     // Search documentation
