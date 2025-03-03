@@ -43,7 +43,10 @@ function extractHeadingsWithContent(html: string): Heading[] {
   
   while ((match = headingRegex.exec(html)) !== null) {
     const level = parseInt(match[1]);
-    const text = match[2].replace(/<[^>]*>/g, '').trim();
+    // Decode HTML entities in the heading text before removing HTML tags
+    let text = match[2];
+    text = text.replace(/&amp;/g, '&')
+               .replace(/<[^>]*>/g, '').trim();
     
     headingPositions.push({
       level,
@@ -116,9 +119,10 @@ function htmlToMarkdown(html: string): string {
   
   // Handle code blocks
   markdown = markdown.replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (match, content) => {
-    // Remove code tags inside pre if present
+    // Remove code tags inside pre if present, but preserve the content exactly as is
     let code = content.replace(/<code\b[^>]*>([\s\S]*?)<\/code>/gi, '$1');
-    // Decode HTML entities
+    
+    // Decode HTML entities, but preserve tags for code examples
     code = code.replace(/&lt;/g, '<')
                .replace(/&gt;/g, '>')
                .replace(/&amp;/g, '&')
@@ -158,16 +162,30 @@ function htmlToMarkdown(html: string): string {
   // Handle paragraphs
   markdown = markdown.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, '$1\n\n');
   
-  // Remove remaining HTML tags
+  // Remove remaining HTML tags, but be careful not to remove content within code blocks
+  // First, let's extract and save code blocks
+  const codeBlocks: string[] = [];
+  markdown = markdown.replace(/```[\s\S]*?```/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+  });
+  
+  // Now remove HTML tags from non-code content
   markdown = markdown.replace(/<[^>]*>/g, '');
   
-  // Decode HTML entities
-  markdown = markdown.replace(/&lt;/g, '<')
+  // Restore code blocks
+  codeBlocks.forEach((block, index) => {
+    markdown = markdown.replace(`__CODE_BLOCK_${index}__`, block);
+  });
+  
+  // Decode HTML entities - make sure to decode &amp; first to avoid double-decoding issues
+  markdown = markdown.replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
                     .replace(/&gt;/g, '>')
-                    .replace(/&amp;/g, '&')
                     .replace(/&quot;/g, '"')
                     .replace(/&#39;/g, "'")
                     .replace(/&nbsp;/g, ' ')
+                    .replace(/&hellip;/g, '...')
                     .replace(/&#8217;/g, "'")
                     .replace(/&#8216;/g, "'")
                     .replace(/&#8220;/g, '"')
@@ -219,8 +237,15 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
     const markdownContent = htmlToMarkdown(heading.content);
     
     // Create the chunk
+    // Ensure title has HTML entities decoded
+    const decodedTitle = title.replace(/&amp;/g, '&')
+                              .replace(/&lt;/g, '<')
+                              .replace(/&gt;/g, '>')
+                              .replace(/&quot;/g, '"')
+                              .replace(/&#39;/g, "'");
+    
     chunks.push({
-      text: `# ${title}\n\n${markdownContent}`,
+      text: `# ${decodedTitle}\n\n${markdownContent}`,
       metadata: {
         ...metadata,
         heading: heading.text,

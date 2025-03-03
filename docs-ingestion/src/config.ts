@@ -43,7 +43,9 @@ export const config = {
       'experimental': '',
       'toc': 'macro',
       'root': './vaadin-docs',
-      'articles': '../vaadin-docs/articles'
+      'articles': '../vaadin-docs/articles',
+      'flow': true,
+      'react': true
     }
   },
 };
