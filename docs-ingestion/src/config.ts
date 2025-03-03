@@ -8,13 +8,15 @@ export const config = {
     repoUrl: 'https://github.com/vaadin/docs.git',
     localPath: './vaadin-docs',
     articlesPath: 'articles',
-    // Patterns for files and paths to skip, relative to the articlesPath
-    skipPatterns: [
-      // Skip files starting with underscore as they used for imports
-      '_*',
-      'hilla/lit/**',
-      '404.adoc',
-      'contributing/**'
+    branch: 'getting-started-with-skeletons', 
+    includePatterns: [
+      'building-apps/**/*.{adoc,asciidoc}',
+      'components/**/*.{adoc,asciidoc}',
+      'designing-apps/**/*.{adoc,asciidoc}',
+      'getting-started/**/*.{adoc,asciidoc}'
+    ],
+    excludePatterns: [
+      '_*' // Not standalone files, used for imports
     ],
   },
   

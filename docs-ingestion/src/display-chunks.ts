@@ -84,7 +84,8 @@ function getBuildingAppsFiles(): string[] {
   const buildingAppsDir = path.join(
     config.docs.localPath, 
     config.docs.articlesPath,
-    'building-apps'
+    'building-apps',
+    'business-logic'
   );
   
   function getFiles(dir: string) {

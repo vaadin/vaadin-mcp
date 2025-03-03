@@ -69,10 +69,57 @@ async function processFile(filePath: string): Promise<number> {
 }
 
 /**
+ * Parse command line arguments
+ * @returns Object containing parsed arguments
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const parsedArgs: { 
+    branch?: string;
+    includePatterns?: string[];
+    excludePatterns?: string[];
+  } = {};
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if (arg === '--branch' && i + 1 < args.length) {
+      parsedArgs.branch = args[++i];
+    } else if (arg === '--include' && i + 1 < args.length) {
+      // Split comma-separated patterns
+      parsedArgs.includePatterns = args[++i].split(',');
+    } else if (arg === '--exclude' && i + 1 < args.length) {
+      // Split comma-separated patterns
+      parsedArgs.excludePatterns = args[++i].split(',');
+    }
+  }
+  
+  return parsedArgs;
+}
+
+/**
  * Main function to run the ingestion pipeline
  */
 async function main() {
   console.log('Starting Vaadin docs ingestion pipeline...');
+  
+  // Parse command line arguments
+  const args = parseArgs();
+  
+  // Override config with command line arguments if provided
+  if (args.branch) {
+    console.log(`Using branch: ${args.branch}`);
+  }
+  
+  if (args.includePatterns && args.includePatterns.length > 0) {
+    config.docs.includePatterns = args.includePatterns;
+    console.log(`Using include patterns: ${args.includePatterns.join(', ')}`);
+  }
+  
+  if (args.excludePatterns && args.excludePatterns.length > 0) {
+    config.docs.excludePatterns = [...config.docs.excludePatterns, ...args.excludePatterns];
+    console.log(`Added exclude patterns: ${args.excludePatterns.join(', ')}`);
+  }
   
   // Check for required environment variables
   if (!config.openai.apiKey) {
@@ -91,7 +138,7 @@ async function main() {
   }
   
   // Clone or pull the repository
-  const repoSuccess = await cloneOrPullRepo();
+  const repoSuccess = await cloneOrPullRepo(args.branch);
   if (!repoSuccess) {
     console.error('Failed to clone or pull repository');
     process.exit(1);
