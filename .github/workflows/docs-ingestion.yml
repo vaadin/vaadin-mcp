@@ -54,11 +54,12 @@ jobs:
       
       - name: Upload logs
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ingestion-logs
           path: ./docs-ingestion/logs/
           retention-days: 7
+          include-hidden-files: true
       
       - name: Notify on failure
         if: failure()
