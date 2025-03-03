@@ -73,7 +73,7 @@ class VaadinDocsServer {
       tools: [
         {
           name: 'search_vaadin_docs',
-          description: 'Search Vaadin documentation for relevant information',
+          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -180,9 +180,8 @@ class VaadinDocsServer {
     let output = `Found ${results.length} relevant documentation sections:\n\n`;
 
     results.forEach((result, index) => {
-      output += `## ${index + 1}. ${result.metadata.title}${result.metadata.heading ? ` - ${result.metadata.heading}` : ''}\n`;
-      output += `Source: ${result.metadata.url}\n`;
-      output += `Relevance: ${(result.score * 100).toFixed(1)}%\n\n`;
+      output += `## ${index + 1}. ${result.metadata.title}\n`;
+      output += `Source: ${result.metadata.url}\n\n`;
       output += `${result.text}\n\n`;
 
       if (index < results.length - 1) {
