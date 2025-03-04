@@ -122,8 +122,7 @@ Content: ${doc.text}
 
   // Create the prompt for OpenAI
   const prompt = `
-You are an expert on Vaadin development. Answer the following question about Vaadin using only the provided documentation.
-If the documentation doesn't contain enough information to answer the question confidently, acknowledge the limitations.
+You are an expert on Vaadin development. Answer the following question about Vaadin using the provided documentation.
 Provide clear, concise answers with code examples when appropriate.
 
 Question: ${question}
@@ -146,6 +145,36 @@ ${context}
   return response.choices[0]?.message?.content || 'Unable to generate an answer.';
 }
 
+/**
+ * Rewrite a user question to be more suitable for vector database search
+ * @param originalQuestion - The original user question
+ * @returns Promise with the rewritten question optimized for vector search
+ */
+async function rewriteQuestionForSearch(originalQuestion: string): Promise<string> {
+  const prompt = `
+You are an expert on Vaadin documentation. Your task is to rewrite the following user question into a format that's more suitable for searching in a vector database of Vaadin documentation.
+
+The documentation is likely organized at a more generic level than specific use cases. For example, if a user asks about "how to add a date picker column to a grid", you should rewrite it to search for "how to add a component column to a grid" since the documentation probably covers the general concept rather than specific component types.
+
+Original question: ${originalQuestion}
+
+Rewrite this question to be more effective for searching technical documentation while preserving the core information need. Focus on general concepts and patterns rather than specific implementations.
+
+Rewritten question:`;
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: 'You are a helpful assistant that specializes in optimizing search queries for technical documentation.' },
+      { role: 'user', content: prompt }
+    ],
+    temperature: 0.3,
+    max_tokens: 400
+  });
+
+  return response.choices[0]?.message?.content?.trim() || originalQuestion;
+}
+
 // Ask endpoint - accepts a question and returns an AI-generated answer
 app.post('/ask', async (req: Request, res: Response) => {
   try {
@@ -164,11 +193,15 @@ app.post('/ask', async (req: Request, res: Response) => {
         error: 'Missing or invalid "question" parameter in request body' 
       });
     }
+    console.log('Question:', question);
+    // Rewrite the question for better vector search
+    const searchQuestion = await rewriteQuestionForSearch(question);
+    console.log('Search question:', searchQuestion);
     
     // Search for supporting documentation (fixed at 5 results)
-    const supportingDocs = await searchDocumentation(question, 5, 4000);
+    const supportingDocs = await searchDocumentation(searchQuestion, 5, 4000);
     
-    // Generate answer using OpenAI
+    // Generate answer using OpenAI with the original question
     const answer = await generateAnswer(question, supportingDocs);
     
     // Return the answer and supporting documents
