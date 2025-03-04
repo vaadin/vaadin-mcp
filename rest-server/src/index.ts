@@ -193,10 +193,9 @@ app.post('/ask', async (req: Request, res: Response) => {
         error: 'Missing or invalid "question" parameter in request body' 
       });
     }
-    console.log('Question:', question);
+
     // Rewrite the question for better vector search
     const searchQuestion = await rewriteQuestionForSearch(question);
-    console.log('Search question:', searchQuestion);
     
     // Search for supporting documentation (fixed at 5 results)
     const supportingDocs = await searchDocumentation(searchQuestion, 5, 4000);
