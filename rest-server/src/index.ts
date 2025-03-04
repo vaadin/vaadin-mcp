@@ -124,7 +124,7 @@ Content: ${doc.text}
   const prompt = `
 You are an expert on Vaadin development. Answer the following question about Vaadin using only the provided documentation.
 If the documentation doesn't contain enough information to answer the question confidently, acknowledge the limitations.
-Provide clear, concise answers with code examples when appropriate. List the urls of the sources used to answer the question.
+Provide clear, concise answers with code examples when appropriate.
 
 Question: ${question}
 
