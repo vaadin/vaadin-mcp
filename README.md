@@ -30,9 +30,10 @@ The ingestion pipeline handles the process of extracting, processing, and indexi
 The REST server provides an HTTP API for searching Vaadin documentation:
 
 - Exposes a `/search` endpoint for querying documentation
+- Provides an `/ask` endpoint for AI-generated answers to Vaadin questions
 - Connects to Pinecone vector database for semantic search
 - Handles parameter validation and error handling
-- Returns search results in JSON format
+- Returns search results or AI-generated answers in JSON format
 
 ### 3. MCP Server (`mcp-server/`)
 
@@ -46,7 +47,7 @@ The Model Context Protocol (MCP) server provides a standardized interface for ac
 ## How It Works
 
 1. The ingestion pipeline processes Vaadin documentation and stores it in a Pinecone vector database
-2. The REST server provides an HTTP API to search the Pinecone database
+2. The REST server provides an HTTP API to search the Pinecone database and generate AI answers
 3. The MCP server forwards search requests to the REST server and formats the results
 4. IDE assistants and tools can query the MCP server to get contextual Vaadin documentation
 
@@ -67,7 +68,7 @@ flowchart TD
     end
 
     subgraph "API Layer"
-        REST["REST Server\n(/search endpoint)"]
+        REST["REST Server\n(/search and /ask endpoints)"]
         MCP["MCP Server\n(Model Context Protocol)"]
     end
 
@@ -102,7 +103,7 @@ flowchart TD
 ## Prerequisites
 
 - [Bun](https://bun.sh/) runtime
-- OpenAI API key (for embeddings)
+- OpenAI API key (for embeddings and AI answers)
 - Pinecone API key and index
 
 ## Quick Start (Local Development)

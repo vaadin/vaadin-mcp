@@ -5,6 +5,7 @@ This server provides a REST API for searching Vaadin documentation. It's designe
 ## Features
 
 - Exposes a `/search` endpoint for querying documentation
+- Provides an `/ask` endpoint for AI-generated answers to Vaadin questions
 - Connects to Pinecone vector database for semantic search
 - Handles parameter validation and error handling
 - Returns search results in JSON format
@@ -12,7 +13,7 @@ This server provides a REST API for searching Vaadin documentation. It's designe
 ## Prerequisites
 
 - [Bun](https://bun.sh/) runtime
-- OpenAI API key (for embeddings)
+- OpenAI API key (for embeddings and AI answers)
 - Pinecone API key and index
 
 ## Installation
@@ -87,6 +88,34 @@ POST /search
 }
 ```
 
+### Ask Question
+
+```
+POST /ask
+```
+
+**Request Body:**
+```json
+{
+  "question": "How do I create a Vaadin Grid component?"
+}
+```
+
+**Parameters:**
+- `question` (required): The question about Vaadin development
+
+**Response:**
+```json
+{
+  "answer": "To create a Vaadin Grid component, you need to first import the Grid class. Here's a basic example:\n\n```java\nGrid<Person> grid = new Grid<>(Person.class);\ngrid.setItems(personList);\ngrid.addColumn(Person::getName).setHeader(\"Name\");\ngrid.addColumn(Person::getAge).setHeader(\"Age\");\n```\n\nThis creates a Grid that displays Person objects with Name and Age columns."
+}
+```
+
+The endpoint internally:
+1. Searches for 5 relevant documentation snippets related to the question
+2. Uses OpenAI to generate a comprehensive answer based on the documentation
+3. Returns only the generated answer to the client
+
 ## Error Handling
 
 The server returns appropriate HTTP status codes and error messages:
@@ -99,6 +128,6 @@ The server returns appropriate HTTP status codes and error messages:
 The server can be configured through environment variables:
 
 - `REST_PORT`: Port to run the server on (default: 3001)
-- `OPENAI_API_KEY`: OpenAI API key for embeddings
+- `OPENAI_API_KEY`: OpenAI API key for embeddings and AI answers
 - `PINECONE_API_KEY`: Pinecone API key
 - `PINECONE_INDEX`: Pinecone index name
