@@ -104,12 +104,12 @@ app.post('/search', async (req: Request, res: Response) => {
 });
 
 /**
- * Generate an answer to a question using OpenAI and Vaadin documentation
+ * Prepare the context, prompt, and messages for OpenAI from the supporting documents
  * @param question - The user's question
- * @param documents - The supporting documentation
- * @returns Promise with the generated answer
+ * @param documents - The supporting documents from the vector search
+ * @returns An object containing the messages array for OpenAI
  */
-async function generateAnswer(question: string, documents: any[]): Promise<string> {
+function prepareOpenAIRequest(question: string, documents: any[]): { messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> } {
   // Create a context from the documents
   const context = documents.map((doc, index) => {
     return `Document ${index + 1}:
@@ -131,18 +131,13 @@ Documentation:
 ${context}
 `;
 
-  // Generate the answer using OpenAI
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+  // Return the messages array for OpenAI
+  return {
     messages: [
       { role: 'system', content: 'You are a helpful assistant that specializes in Vaadin development.' },
       { role: 'user', content: prompt }
-    ],
-    temperature: 0.3,
-    max_tokens: 1500
-  });
-
-  return response.choices[0]?.message?.content || 'Unable to generate an answer.';
+    ]
+  };
 }
 
 /**
@@ -185,7 +180,7 @@ app.post('/ask', async (req: Request, res: Response) => {
       });
     }
     
-    const { question } = req.body;
+    const { question, stream = false } = req.body;
     
     // Validate question
     if (!question || typeof question !== 'string') {
@@ -200,13 +195,53 @@ app.post('/ask', async (req: Request, res: Response) => {
     // Search for supporting documentation (fixed at 5 results)
     const supportingDocs = await searchDocumentation(searchQuestion, 5, 4000);
     
-    // Generate answer using OpenAI with the original question
-    const answer = await generateAnswer(question, supportingDocs);
+    // Prepare the OpenAI request (same for both streaming and non-streaming)
+    const { messages } = prepareOpenAIRequest(question, supportingDocs);
     
-    // Return the answer and supporting documents
-    res.json({ 
-      answer
-    });
+    // If streaming is requested, handle streaming response
+    if (stream === true) {
+      // Set appropriate headers for streaming
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      
+      // Generate the answer using OpenAI with streaming
+      const stream = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages,
+        temperature: 0.3,
+        max_tokens: 1500,
+        stream: true,
+      });
+
+      // Stream the response to the client
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) {
+          // Send the chunk as a server-sent event
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+      }
+
+      // End the response
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } else {
+      // Generate answer using OpenAI with the original question (non-streaming)
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages,
+        temperature: 0.3,
+        max_tokens: 1500
+      });
+      
+      const answer = response.choices[0]?.message?.content || 'Unable to generate an answer.';
+      
+      // Return the answer
+      res.json({ 
+        answer
+      });
+    }
   } catch (error) {
     console.error('Error answering question:', error);
     

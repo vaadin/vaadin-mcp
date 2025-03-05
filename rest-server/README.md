@@ -97,24 +97,46 @@ POST /ask
 **Request Body:**
 ```json
 {
-  "question": "How do I create a Vaadin Grid component?"
+  "question": "How do I create a Vaadin Grid component?",
+  "stream": false
 }
 ```
 
 **Parameters:**
 - `question` (required): The question about Vaadin development
+- `stream` (optional): Boolean flag to enable streaming response (default: false)
 
-**Response:**
+**Response (non-streaming):**
 ```json
 {
   "answer": "To create a Vaadin Grid component, you need to first import the Grid class. Here's a basic example:\n\n```java\nGrid<Person> grid = new Grid<>(Person.class);\ngrid.setItems(personList);\ngrid.addColumn(Person::getName).setHeader(\"Name\");\ngrid.addColumn(Person::getAge).setHeader(\"Age\");\n```\n\nThis creates a Grid that displays Person objects with Name and Age columns."
 }
 ```
 
+**Response (streaming):**
+The endpoint returns a stream of Server-Sent Events (SSE) with the following format:
+
+```
+data: {"content":"To create a Vaadin Grid component"}
+
+data: {"content":", you need to first import the Grid class"}
+
+data: {"content":"."}
+
+...
+
+data: [DONE]
+```
+
+When streaming is enabled:
+1. The response is sent as a stream of Server-Sent Events
+2. Each event contains a chunk of the answer
+3. The stream ends with a `data: [DONE]` event
+
 The endpoint internally:
 1. Searches for 5 relevant documentation snippets related to the question
 2. Uses OpenAI to generate a comprehensive answer based on the documentation
-3. Returns only the generated answer to the client
+3. Returns the generated answer to the client (either as a complete JSON response or as a stream)
 
 ## Error Handling
 
