@@ -170,6 +170,60 @@ Rewritten question:`;
   return response.choices[0]?.message?.content?.trim() || originalQuestion;
 }
 
+/**
+ * Check if a question is related to Vaadin or Java development
+ * @param question The question to check
+ * @returns A promise that resolves to an object with isRelevant and reason properties
+ */
+async function isQuestionRelevant(question: string): Promise<{ isRelevant: boolean; reason: string }> {
+  const prompt = `
+You are a guardrail system that determines if questions are related to Vaadin or Java development.
+Evaluate if the following question is related to Vaadin, Java development, or web development with Java frameworks.
+
+Question: ${question}
+
+First, provide your reasoning about whether this question is related to Vaadin, Java, or web development with Java frameworks.
+Then, provide a final yes/no determination.
+
+Format your response exactly as follows:
+Reasoning: [your detailed reasoning]
+Relevant: [YES or NO]
+`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are a guardrail system that determines if questions are on-topic.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0,
+      max_tokens: 400
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    // Extract the determination from the response
+    const reasoningMatch = content.match(/Reasoning: (.*?)(?=\nRelevant:|$)/s);
+    const relevantMatch = content.match(/Relevant: (YES|NO)/i);
+    
+    const reasoning = reasoningMatch ? reasoningMatch[1].trim() : 'No reasoning provided';
+    const isRelevant = relevantMatch ? relevantMatch[1].toUpperCase() === 'YES' : false;
+    
+    return {
+      isRelevant,
+      reason: reasoning
+    };
+  } catch (error) {
+    console.error('Error checking question relevance:', error);
+    // Default to allowing the question if there's an error with the guardrail
+    return {
+      isRelevant: true,
+      reason: 'Error checking relevance, defaulting to allow'
+    };
+  }
+}
+
 // Ask endpoint - accepts a question and returns an AI-generated answer
 app.post('/ask', async (req: Request, res: Response) => {
   try {
@@ -186,6 +240,16 @@ app.post('/ask', async (req: Request, res: Response) => {
     if (!question || typeof question !== 'string') {
       return res.status(400).json({ 
         error: 'Missing or invalid "question" parameter in request body' 
+      });
+    }
+
+    // Check if the question is relevant to Vaadin or Java development
+    const relevanceCheck = await isQuestionRelevant(question);
+    
+    if (!relevanceCheck.isRelevant) {
+      return res.status(400).json({
+        error: 'Question not related to Vaadin or Java development',
+        reason: relevanceCheck.reason
       });
     }
 
@@ -209,7 +273,7 @@ app.post('/ask', async (req: Request, res: Response) => {
       const stream = await openai.chat.completions.create({
         model: 'gpt-4o',
         messages,
-        temperature: 0.3,
+        temperature: 0,
         max_tokens: 1500,
         stream: true,
       });
@@ -231,7 +295,7 @@ app.post('/ask', async (req: Request, res: Response) => {
       const response = await openai.chat.completions.create({
         model: 'gpt-4o',
         messages,
-        temperature: 0.3,
+        temperature: 0,
         max_tokens: 1500
       });
       
