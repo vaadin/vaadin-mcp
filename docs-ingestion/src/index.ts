@@ -22,6 +22,131 @@ import path from 'path';
 let testMode = false;
 
 /**
+ * Configure attributes based on framework
+ * @param framework - The framework to use ('flow', 'hilla', or undefined)
+ * @returns Configured attributes object
+ */
+function getFrameworkAttributes(framework?: string): Record<string, any> {
+  // Create a properly typed attributes object that includes flow and react properties
+  const attributes: Record<string, any> = { 
+    ...config.asciidoc.attributes,
+    flow: false,
+    react: false
+  };
+  
+  if (framework === 'flow') {
+    attributes['flow'] = true;
+    attributes['react'] = false;
+  } else if (framework === 'hilla') {
+    attributes['flow'] = false;
+    attributes['react'] = true;
+  } 
+  
+  return attributes;
+}
+
+/**
+ * Process chunks for storage or test output
+ * @param documentsWithEmbeddings - Documents with embeddings
+ * @param filePath - Path to the source file
+ * @param sourceIdentifier - Source identifier for Pinecone
+ * @param framework - Optional framework identifier
+ * @returns Number of chunks processed
+ */
+async function processChunks(
+  documentsWithEmbeddings: any[],
+  filePath: string,
+  sourceIdentifier: string,
+  framework?: string
+): Promise<number> {
+  if (testMode) {
+    // In test mode, print chunks to console instead of saving to Pinecone
+    const frameworkLabel = framework ? ` (${framework})` : '';
+    console.log(`\n===== CHUNKS FROM ${filePath}${frameworkLabel} =====`);
+    documentsWithEmbeddings.forEach((doc, index) => {
+      console.log(`\n----- CHUNK ${index + 1} -----`);
+      console.log(`Metadata: ${JSON.stringify(doc.metadata, null, 2)}`);
+      console.log(`Text: ${doc.text}`);
+    });
+    console.log(`\n===== END CHUNKS FROM ${filePath}${frameworkLabel} =====\n`);
+    return documentsWithEmbeddings.length;
+  } else {
+    // Delete existing documents for this source before storing new ones
+    await deleteFromPineconeBySource(sourceIdentifier);
+    
+    // Store in Pinecone
+    return await storeInPinecone(documentsWithEmbeddings);
+  }
+}
+
+/**
+ * Process content with a specific framework
+ * @param filePath - Path to the AsciiDoc file
+ * @param cleanContent - The cleaned content without front matter
+ * @param metadata - The parsed metadata
+ * @param framework - Optional framework to use ('flow' or 'hilla')
+ * @returns Promise with the number of chunks processed
+ */
+async function processContent(
+  filePath: string,
+  cleanContent: string,
+  metadata: Record<string, string>,
+  framework?: string
+): Promise<number> {
+  try {
+    const frameworkLabel = framework ? ` for ${framework}` : '';
+    console.log(`Processing ${filePath}${frameworkLabel}`);
+    
+    // Clone the metadata and add framework if specified
+    const metadataWithFramework = framework 
+      ? { ...metadata, framework } 
+      : { ...metadata };
+    
+    // Enhance metadata with source information
+    const enhancedMetadata = enhanceMetadata(
+      metadataWithFramework, 
+      filePath, 
+      config.docs.localPath,
+      framework ? undefined : cleanContent // Only auto-detect framework if not explicitly provided
+    );
+    
+    // Get attributes based on framework
+    const attributes = getFrameworkAttributes(enhancedMetadata.framework);
+    
+    // Process AsciiDoc content with the specific framework attribute
+    const fileDir = path.dirname(filePath);
+    const markdownContent = await processAsciiDoc(cleanContent, fileDir, attributes);
+    
+    // Create chunks based on h2 level headings
+    const chunks = chunkDocument(markdownContent, enhancedMetadata);
+    console.log(`Created ${chunks.length} chunks from ${filePath}${frameworkLabel}`);
+    
+    // Prepare chunks for embedding
+    const preparedChunks = prepareChunksForEmbedding(chunks);
+    
+    // Generate embeddings
+    const documentsWithEmbeddings = await generateEmbeddings(preparedChunks);
+    
+    // Determine source identifier for Pinecone
+    const sourceIdentifier = framework 
+      ? `${enhancedMetadata.source}#${framework}`
+      : enhancedMetadata.source;
+    
+    // Process chunks (either store in Pinecone or print to console)
+    return await processChunks(
+      documentsWithEmbeddings, 
+      filePath, 
+      sourceIdentifier, 
+      framework
+    );
+  } catch (error) {
+    const frameworkLabel = framework ? ` for ${framework}` : '';
+    console.error(`Error processing ${filePath}${frameworkLabel}:`, error);
+    return 0;
+  }
+}
+
+/**
  * Process a single AsciiDoc file
  * @param filePath - Path to the AsciiDoc file
  * @returns Promise with the number of chunks processed
@@ -44,151 +169,18 @@ async function processFile(filePath: string): Promise<number> {
       let totalProcessed = 0;
       
       // Process for Flow
-      totalProcessed += await processFileWithFramework(filePath, cleanContent, metadata, 'flow');
+      totalProcessed += await processContent(filePath, cleanContent, metadata, 'flow');
       
       // Process for Hilla
-      totalProcessed += await processFileWithFramework(filePath, cleanContent, metadata, 'hilla');
+      totalProcessed += await processContent(filePath, cleanContent, metadata, 'hilla');
       
       return totalProcessed;
     } else {
-      // Enhance metadata with source information and framework detection
-      const enhancedMetadata = enhanceMetadata(
-        metadata, 
-        filePath, 
-        config.docs.localPath,
-        cleanContent
-      );
-      
-      // Set attributes based on detected framework
-      const attributes: Record<string, any> = { ...config.asciidoc.attributes };
-      if (enhancedMetadata.framework === 'flow') {
-        attributes['flow'] = true;
-        attributes['react'] = false;
-      } else if (enhancedMetadata.framework === 'hilla') {
-        attributes['flow'] = false;
-        attributes['react'] = true;
-      } else {
-        attributes['flow'] = false;
-        attributes['react'] = false;
-      }
-      
-      // Process AsciiDoc content directly to Markdown using asciidoctor.js and downdoc
-      const fileDir = path.dirname(filePath);
-      const markdownContent = await processAsciiDoc(cleanContent, fileDir, attributes);
-      
-      // Create chunks based on h2 level headings
-      const chunks = chunkDocument(markdownContent, enhancedMetadata);
-      console.log(`Created ${chunks.length} chunks from ${filePath}`);
-      
-      // Prepare chunks for embedding
-      const preparedChunks = prepareChunksForEmbedding(chunks);
-      
-      // Generate embeddings
-      const documentsWithEmbeddings = await generateEmbeddings(preparedChunks);
-      
-      if (testMode) {
-        // In test mode, print chunks to console instead of saving to Pinecone
-        console.log(`\n===== CHUNKS FROM ${filePath} =====`);
-        documentsWithEmbeddings.forEach((doc, index) => {
-          console.log(`\n----- CHUNK ${index + 1} -----`);
-          console.log(`Metadata: ${JSON.stringify(doc.metadata, null, 2)}`);
-          console.log(`Text: ${doc.text}`);
-        });
-        console.log(`\n===== END CHUNKS FROM ${filePath} =====\n`);
-        return documentsWithEmbeddings.length;
-      } else {
-        // Delete existing documents for this source before storing new ones
-        if (enhancedMetadata.source) {
-          await deleteFromPineconeBySource(enhancedMetadata.source);
-        }
-        
-        // Store in Pinecone
-        const storedCount = await storeInPinecone(documentsWithEmbeddings);
-        
-        return storedCount;
-      }
+      // Process with auto-detected framework
+      return await processContent(filePath, cleanContent, metadata);
     }
   } catch (error) {
     console.error(`Error processing file ${filePath}:`, error);
-    return 0;
-  }
-}
-
-/**
- * Process a file with a specific framework attribute
- * @param filePath - Path to the AsciiDoc file
- * @param cleanContent - The cleaned content without front matter
- * @param metadata - The parsed metadata
- * @param framework - The framework to use ('flow' or 'hilla')
- * @returns Promise with the number of chunks processed
- */
-async function processFileWithFramework(
-  filePath: string, 
-  cleanContent: string, 
-  metadata: Record<string, string>,
-  framework: string
-): Promise<number> {
-  console.log(`Processing ${filePath} for ${framework}`);
-  
-  try {
-    // Clone the metadata and add framework
-    const metadataWithFramework = { ...metadata, framework };
-    
-    // Enhance metadata with source information
-    const enhancedMetadata = enhanceMetadata(
-      metadataWithFramework, 
-      filePath, 
-      config.docs.localPath
-    );
-    
-    // Set the appropriate attribute for asciidoc processing
-    const attributes: Record<string, any> = { ...config.asciidoc.attributes };
-    if (framework === 'flow') {
-      // Set flow to true and react to false
-      attributes['flow'] = true;
-      attributes['react'] = false;
-    } else if (framework === 'hilla') {
-      // Set flow to false and react to true
-      attributes['flow'] = false;
-      attributes['react'] = true; // Use 'react' attribute for Hilla framework
-    }
-    
-    // Process AsciiDoc content with the specific framework attribute
-    const fileDir = path.dirname(filePath);
-    const markdownContent = await processAsciiDoc(cleanContent, fileDir, attributes);
-    
-    // Create chunks based on h2 level headings
-    const chunks = chunkDocument(markdownContent, enhancedMetadata);
-    console.log(`Created ${chunks.length} chunks from ${filePath} for ${framework}`);
-    
-    // Prepare chunks for embedding
-    const preparedChunks = prepareChunksForEmbedding(chunks);
-    
-    // Generate embeddings
-    const documentsWithEmbeddings = await generateEmbeddings(preparedChunks);
-    
-    if (testMode) {
-      // In test mode, print chunks to console instead of saving to Pinecone
-      console.log(`\n===== CHUNKS FROM ${filePath} (${framework}) =====`);
-      documentsWithEmbeddings.forEach((doc, index) => {
-        console.log(`\n----- CHUNK ${index + 1} -----`);
-        console.log(`Metadata: ${JSON.stringify(doc.metadata, null, 2)}`);
-        console.log(`Text: ${doc.text}`);
-      });
-      console.log(`\n===== END CHUNKS FROM ${filePath} (${framework}) =====\n`);
-      return documentsWithEmbeddings.length;
-    } else {
-      // Delete existing documents for this source and framework before storing new ones
-      const sourceWithFramework = `${enhancedMetadata.source}#${framework}`;
-      await deleteFromPineconeBySource(sourceWithFramework);
-      
-      // Store in Pinecone
-      const storedCount = await storeInPinecone(documentsWithEmbeddings);
-      
-      return storedCount;
-    }
-  } catch (error) {
-    console.error(`Error processing ${filePath} for ${framework}:`, error);
     return 0;
   }
 }
