@@ -44,8 +44,6 @@ export const config = {
       'icons': 'font',
       'experimental': '',
       'toc': 'macro',
-      'flow': true,
-      'react': true
     }
   },
 };

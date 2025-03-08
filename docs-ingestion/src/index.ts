@@ -56,8 +56,22 @@ async function processFile(filePath: string): Promise<number> {
         cleanContent
       );
       
+      // Set attributes based on detected framework
+      const attributes: Record<string, any> = { ...config.asciidoc.attributes };
+      if (enhancedMetadata.framework === 'flow') {
+        attributes['flow'] = true;
+        attributes['react'] = false;
+      } else if (enhancedMetadata.framework === 'hilla') {
+        attributes['flow'] = false;
+        attributes['react'] = true;
+      } else {
+        // Default to both attributes enabled for backward compatibility
+        attributes['flow'] = true;
+        attributes['react'] = true;
+      }
+      
       // Process AsciiDoc content directly to Markdown using asciidoctor.js and downdoc
-      const markdownContent = processAsciiDoc(cleanContent);
+      const markdownContent = processAsciiDoc(cleanContent, undefined, attributes);
       
       // Create chunks based on h2 level headings
       const chunks = chunkDocument(markdownContent, enhancedMetadata);
@@ -113,13 +127,15 @@ async function processFileWithFramework(
     );
     
     // Set the appropriate attribute for asciidoc processing
-    const attributes = { ...config.asciidoc.attributes };
+    const attributes: Record<string, any> = { ...config.asciidoc.attributes };
     if (framework === 'flow') {
-      attributes.flow = true;
-      attributes.react = false;
+      // Set flow to true and react to false
+      attributes['flow'] = true;
+      attributes['react'] = false;
     } else if (framework === 'hilla') {
-      attributes.flow = false;
-      attributes.react = true; // Use 'react' attribute for Hilla framework
+      // Set flow to false and react to true
+      attributes['flow'] = false;
+      attributes['react'] = true; // Use 'react' attribute for Hilla framework
     }
     
     // Process AsciiDoc content with the specific framework attribute

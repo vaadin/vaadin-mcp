@@ -178,84 +178,78 @@ This document uses the root attribute.
   });
 
   test('should handle conditional includes in AsciiDoc', () => {
-    // Create a simple document with conditional includes
-    const simpleConditional = `
-= Conditional Content Test
-
-== Flow Content
-ifdef::flow[]
-This content should be visible when flow is enabled.
-endif::[]
-
-== React Content
-ifdef::react[]
-This content should be visible when react is enabled.
-endif::[]
-`;
+    // Parse metadata and get content
+    const { content, metadata } = parseMetadata(conditionalIncludes);
     
-    // Process with default attributes (both flow and react should be true)
-    const markdown = processAsciiDoc(simpleConditional, fixturesDir);
+    // Process with explicit attributes
+    const flowMarkdown = processAsciiDoc(content, fixturesDir, { flow: true });
+    const reactMarkdown = processAsciiDoc(content, fixturesDir, { react: true });
+    const bothMarkdown = processAsciiDoc(content, fixturesDir, { flow: true, react: true });
+    const neitherMarkdown = processAsciiDoc(content, fixturesDir, {});
     
-    // Verify both flow and react content are included
-    expect(markdown).toContain('# Conditional Content Test');
-    expect(markdown).toContain('## Flow Content');
-    expect(markdown).toContain('This content should be visible when flow is enabled.');
-    expect(markdown).toContain('## React Content');
-    expect(markdown).toContain('This content should be visible when react is enabled.');
+    // Verify flow content is only in flow and both versions
+    expect(flowMarkdown).toContain('This is a Flow example');
+    expect(bothMarkdown).toContain('This is a Flow example');
+    expect(reactMarkdown).not.toContain('This is a Flow example');
+    expect(neitherMarkdown).not.toContain('This is a Flow example');
     
-    // Now test with a more complex example from the fixture
-    const { content } = parseMetadata(conditionalIncludes);
-    const complexMarkdown = processAsciiDoc(content, fixturesDir);
+    // Verify react content is only in react and both versions
+    expect(reactMarkdown).toContain('This is a React example');
+    expect(bothMarkdown).toContain('This is a React example');
+    expect(flowMarkdown).not.toContain('This is a React example');
+    expect(neitherMarkdown).not.toContain('This is a React example');
     
-    // Verify the document structure
-    expect(complexMarkdown).toContain('# Conditional Includes');
-    expect(complexMarkdown).toContain('## Introduction');
-    
-    // Since both flow and react are true by default, both sections should be included
-    expect(complexMarkdown).toContain('## Flow Example');
-    expect(complexMarkdown).toContain('## React Example');
-    expect(complexMarkdown).toContain('Flow content is visible.');
-    expect(complexMarkdown).toContain('React content is visible.');
-    expect(complexMarkdown).toContain('This content is only visible when both Flow and React are enabled.');
+    // Verify nested conditional content
+    expect(bothMarkdown).toContain('This content is only visible when both Flow and React are enabled');
+    expect(flowMarkdown).not.toContain('This content is only visible when both Flow and React are enabled');
+    expect(reactMarkdown).not.toContain('This content is only visible when both Flow and React are enabled');
+    expect(neitherMarkdown).not.toContain('This content is only visible when both Flow and React are enabled');
   });
 
   test('should process content with framework attributes', () => {
-    // Create a simple document with content
-    const simpleContent = `= Framework Content Test
+    // Create a simple document with conditional content
+    const conditionalContent = `= Framework Content Test
 
 == Flow Section
-This content is related to Flow.
+This content is always visible.
+ifdef::flow[]
+This content is only visible with flow attribute.
+endif::[]
 
 == React Section
-This content is related to React.`;
+This content is always visible.
+ifdef::react[]
+This content is only visible with react attribute.
+endif::[]`;
     
     // Process with Flow attribute enabled (for flow framework)
-    const flowMarkdown = processAsciiDoc(simpleContent, fixturesDir, { flow: true, react: false });
+    const flowMarkdown = processAsciiDoc(conditionalContent, fixturesDir, { flow: true });
     
     // Process with React attribute enabled (for hilla framework)
-    const reactMarkdown = processAsciiDoc(simpleContent, fixturesDir, { flow: false, react: true });
+    const reactMarkdown = processAsciiDoc(conditionalContent, fixturesDir, { react: true });
     
     // Process with both attributes enabled
-    const bothMarkdown = processAsciiDoc(simpleContent, fixturesDir, { flow: true, react: true });
+    const bothMarkdown = processAsciiDoc(conditionalContent, fixturesDir, { flow: true, react: true });
     
-    // Verify the attributes are passed correctly
-    expect(flowMarkdown).toContain('Flow Section');
-    expect(flowMarkdown).toContain('This content is related to Flow');
-    expect(flowMarkdown).toContain('React Section');
-    expect(flowMarkdown).toContain('This content is related to React');
+    // Process with neither attribute enabled
+    const neitherMarkdown = processAsciiDoc(conditionalContent, fixturesDir, {});
     
-    expect(reactMarkdown).toContain('Flow Section');
-    expect(reactMarkdown).toContain('This content is related to Flow');
-    expect(reactMarkdown).toContain('React Section');
-    expect(reactMarkdown).toContain('This content is related to React');
+    // Verify flow-specific content is only in flow and both versions
+    expect(flowMarkdown).toContain('This content is only visible with flow attribute');
+    expect(bothMarkdown).toContain('This content is only visible with flow attribute');
+    expect(reactMarkdown).not.toContain('This content is only visible with flow attribute');
+    expect(neitherMarkdown).not.toContain('This content is only visible with flow attribute');
     
-    expect(bothMarkdown).toContain('Flow Section');
-    expect(bothMarkdown).toContain('This content is related to Flow');
-    expect(bothMarkdown).toContain('React Section');
-    expect(bothMarkdown).toContain('This content is related to React');
+    // Verify react-specific content is only in react and both versions
+    expect(reactMarkdown).toContain('This content is only visible with react attribute');
+    expect(bothMarkdown).toContain('This content is only visible with react attribute');
+    expect(flowMarkdown).not.toContain('This content is only visible with react attribute');
+    expect(neitherMarkdown).not.toContain('This content is only visible with react attribute');
     
-    // The important part is that we're passing the correct attributes
-    // to the AsciiDoc processor, which will be used for conditional content
-    // in the actual documents
+    // Verify common content is in all versions
+    expect(flowMarkdown).toContain('This content is always visible');
+    expect(reactMarkdown).toContain('This content is always visible');
+    expect(bothMarkdown).toContain('This content is always visible');
+    expect(neitherMarkdown).toContain('This content is always visible');
   });
 }); 

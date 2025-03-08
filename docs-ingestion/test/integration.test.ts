@@ -211,10 +211,10 @@ endif::[]`;
     const { content, metadata } = parseMetadata(conditionalDocument);
     
     // Process with Flow attribute enabled (for flow framework)
-    const flowMarkdown = processAsciiDoc(content, fixturesDir, { flow: true, react: false });
+    const flowMarkdown = processAsciiDoc(content, fixturesDir, { flow: true });
     
     // Process with React attribute enabled (for hilla framework)
-    const reactMarkdown = processAsciiDoc(content, fixturesDir, { flow: false, react: true });
+    const reactMarkdown = processAsciiDoc(content, fixturesDir, { react: true });
     
     // Create enhanced metadata for flow
     const flowMetadata = {
