@@ -9,7 +9,6 @@
  */
 
 import fs from 'fs';
-import path from 'path';
 import { config } from './config';
 import { cloneOrPullRepo, getAsciiDocFiles } from './docs-repository';
 import { parseMetadata, enhanceMetadata } from './metadata-parser';
@@ -17,6 +16,7 @@ import { processAsciiDoc } from './asciidoc-processor';
 import { chunkDocument, prepareChunksForEmbedding } from './chunking';
 import { generateEmbeddings } from './embeddings';
 import { storeInPinecone, deleteFromPineconeBySource } from './pinecone';
+import path from 'path';
 
 /**
  * Process a single AsciiDoc file
@@ -65,13 +65,13 @@ async function processFile(filePath: string): Promise<number> {
         attributes['flow'] = false;
         attributes['react'] = true;
       } else {
-        // Default to both attributes enabled for backward compatibility
-        attributes['flow'] = true;
-        attributes['react'] = true;
+        attributes['flow'] = false;
+        attributes['react'] = false;
       }
       
       // Process AsciiDoc content directly to Markdown using asciidoctor.js and downdoc
-      const markdownContent = processAsciiDoc(cleanContent, undefined, attributes);
+      const fileDir = path.dirname(filePath);
+      const markdownContent = processAsciiDoc(cleanContent, fileDir, attributes);
       
       // Create chunks based on h2 level headings
       const chunks = chunkDocument(markdownContent, enhancedMetadata);
@@ -139,7 +139,8 @@ async function processFileWithFramework(
     }
     
     // Process AsciiDoc content with the specific framework attribute
-    const markdownContent = processAsciiDoc(cleanContent, undefined, attributes);
+    const fileDir = path.dirname(filePath);
+    const markdownContent = processAsciiDoc(cleanContent, fileDir, attributes);
     
     // Create chunks based on h2 level headings
     const chunks = chunkDocument(markdownContent, enhancedMetadata);

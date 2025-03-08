@@ -103,12 +103,33 @@ function processIncludes(
           if (tagsMatch) {
             const tag = tagsMatch[1];
             // Extract content between tag markers
-            const tagRegex = new RegExp(`// tag::${tag}\\[\\]([\\s\\S]*?)// end::${tag}\\[\\]`, 'g');
-            let taggedContent = '';
-            let tagMatch;
+            // Support multiple comment styles:
+            // 1. Standard comments: // tag::name[]
+            // 2. HTML comments: <!-- tag::name[] -->
+            // 3. JSX/React comments: {/* tag::name[] */}
+            const tagPatterns = [
+              `// tag::${tag}\\[\\]([\\s\\S]*?)// end::${tag}\\[\\]`,
+              `<!-- tag::${tag}\\[\\] -->([\\s\\S]*?)<!-- end::${tag}\\[\\] -->`,
+              `\\{/\\* tag::${tag}\\[\\] \\*/\\}([\\s\\S]*?)\\{/\\* end::${tag}\\[\\] \\*/\\}`
+            ];
             
-            while ((tagMatch = tagRegex.exec(includedContent)) !== null) {
-              taggedContent += tagMatch[1];
+            let taggedContent = '';
+            
+            // Try each pattern until we find matches
+            for (const pattern of tagPatterns) {
+              const tagRegex = new RegExp(pattern, 'g');
+              let tagMatch;
+              let patternMatched = false;
+              
+              while ((tagMatch = tagRegex.exec(includedContent)) !== null) {
+                taggedContent += tagMatch[1];
+                patternMatched = true;
+              }
+              
+              // If we found matches with this pattern, no need to try others
+              if (patternMatched) {
+                break;
+              }
             }
             
             if (taggedContent) {
@@ -150,8 +171,8 @@ export function processAsciiDoc(content: string, baseDir?: string, customAttribu
     const attributes = {
       ...config.asciidoc.attributes,
       // Override root and articles with absolute paths to ensure correct resolution
-      'root': process.cwd() + '/' + config.docs.localPath,
-      'articles': process.cwd() + '/' + config.docs.localPath + '/' + config.docs.articlesPath,
+      'root': process.cwd() + '/' + config.docs.localPath.slice(1),
+      'articles': process.cwd() + '/' + config.docs.localPath.slice(1) + '/' + config.docs.articlesPath,
       // Apply custom attributes if provided
       ...(customAttributes || {})
     };
