@@ -1,6 +1,7 @@
-import { describe, test, expect, beforeAll } from 'bun:test';
+import { describe, test, expect, beforeAll, afterEach } from 'bun:test';
 import { processAsciiDoc } from '../src/asciidoc-processor';
 import { parseMetadata } from '../src/metadata-parser';
+import { config } from '../src/config';
 import fs from 'fs';
 import path from 'path';
 
@@ -12,11 +13,21 @@ describe('AsciiDoc Processor', () => {
   let basicDocument: string;
   let documentWithIncludes: string;
   let documentWithAttributes: string;
+  let conditionalIncludes: string;
+  
+  // Store original config to restore after tests
+  const originalAttributes = { ...config.asciidoc.attributes };
   
   beforeAll(() => {
     basicDocument = fs.readFileSync(path.join(fixturesDir, 'basic-document.adoc'), 'utf-8');
     documentWithIncludes = fs.readFileSync(path.join(fixturesDir, 'document-with-includes.adoc'), 'utf-8');
     documentWithAttributes = fs.readFileSync(path.join(fixturesDir, 'document-with-attributes.adoc'), 'utf-8');
+    conditionalIncludes = fs.readFileSync(path.join(fixturesDir, 'conditional-includes.adoc'), 'utf-8');
+  });
+  
+  // Restore original config after each test
+  afterEach(() => {
+    config.asciidoc.attributes = { ...originalAttributes };
   });
 
   test('should process a basic AsciiDoc document', () => {
@@ -164,5 +175,47 @@ This document uses the root attribute.
     expect(metadata['page-title']).toBe('Document With Root Attribute for Testing');
     expect(metadata['meta-description']).toBe('A document for testing root attribute');
     expect(metadata.order).toBe('5');
+  });
+
+  test('should handle conditional includes in AsciiDoc', () => {
+    // Create a simple document with conditional includes
+    const simpleConditional = `
+= Conditional Content Test
+
+== Flow Content
+ifdef::flow[]
+This content should be visible when flow is enabled.
+endif::[]
+
+== React Content
+ifdef::react[]
+This content should be visible when react is enabled.
+endif::[]
+`;
+    
+    // Process with default attributes (both flow and react should be true)
+    const markdown = processAsciiDoc(simpleConditional, fixturesDir);
+    
+    // Verify both flow and react content are included
+    expect(markdown).toContain('# Conditional Content Test');
+    expect(markdown).toContain('## Flow Content');
+    expect(markdown).toContain('This content should be visible when flow is enabled.');
+    expect(markdown).toContain('## React Content');
+    expect(markdown).toContain('This content should be visible when react is enabled.');
+    
+    // Now test with a more complex example from the fixture
+    const { content } = parseMetadata(conditionalIncludes);
+    const complexMarkdown = processAsciiDoc(content, fixturesDir);
+    
+    // Verify the document structure
+    expect(complexMarkdown).toContain('# Conditional Includes');
+    expect(complexMarkdown).toContain('## Introduction');
+    
+    // Since both flow and react are true by default, both sections should be included
+    expect(complexMarkdown).toContain('## Flow Example');
+    expect(complexMarkdown).toContain('## React Example');
+    expect(complexMarkdown).toContain('Flow content is visible.');
+    expect(complexMarkdown).toContain('React content is visible.');
+    expect(complexMarkdown).toContain('This content is only visible when both Flow and React are enabled.');
   });
 }); 
