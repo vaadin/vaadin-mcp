@@ -70,7 +70,7 @@ app.post('/search', async (req: Request, res: Response) => {
       });
     }
     
-    const { query, max_results, max_tokens } = req.body;
+    const { query, max_results, max_tokens, framework } = req.body;
     
     // Validate query
     if (!query || typeof query !== 'string') {
@@ -89,8 +89,13 @@ app.post('/search', async (req: Request, res: Response) => {
       ? Math.min(Math.max(100, max_tokens), 10000) 
       : config.search.defaultMaxTokens;
     
+    // Validate framework parameter
+    const validFramework = framework === undefined || framework === '' || framework === 'flow' || framework === 'hilla'
+      ? framework || ''
+      : '';
+    
     // Search documentation
-    const results = await searchDocumentation(query, maxResults, maxTokens);
+    const results = await searchDocumentation(query, maxResults, maxTokens, validFramework);
     
     // Return results
     res.json({ results });
@@ -115,6 +120,7 @@ function prepareOpenAIRequest(question: string, documents: any[]): { messages: A
     return `Document ${index + 1}:
 Title: ${doc.metadata.title}
 ${doc.metadata.heading ? `Heading: ${doc.metadata.heading}\n` : ''}
+${doc.metadata.framework ? `Framework: ${doc.metadata.framework}\n` : ''}
 Source: ${doc.metadata.url}
 Content: ${doc.text}
 `;
@@ -234,7 +240,7 @@ app.post('/ask', async (req: Request, res: Response) => {
       });
     }
     
-    const { question, stream = false } = req.body;
+    const { question, stream = false, framework } = req.body;
     
     // Validate question
     if (!question || typeof question !== 'string') {
@@ -253,11 +259,16 @@ app.post('/ask', async (req: Request, res: Response) => {
       });
     }
 
+    // Validate framework parameter
+    const validFramework = framework === undefined || framework === '' || framework === 'flow' || framework === 'hilla'
+      ? framework || ''
+      : '';
+
     // Rewrite the question for better vector search
     const searchQuestion = await rewriteQuestionForSearch(question);
     
     // Search for supporting documentation (fixed at 5 results)
-    const supportingDocs = await searchDocumentation(searchQuestion, 5, 4000);
+    const supportingDocs = await searchDocumentation(searchQuestion, 5, 4000, validFramework);
     
     // Prepare the OpenAI request (same for both streaming and non-streaming)
     const { messages } = prepareOpenAIRequest(question, supportingDocs);

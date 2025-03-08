@@ -29,6 +29,7 @@ export interface SearchResult {
     source: string;
     url: string;
     heading?: string;
+    framework?: string;
     [key: string]: any;
   };
   score: number;
@@ -54,21 +55,54 @@ async function generateQueryEmbedding(query: string): Promise<number[]> {
  * @param query - The query text
  * @param maxResults - Maximum number of results to return
  * @param maxTokens - Maximum number of tokens to return
+ * @param framework - Optional framework filter ('flow', 'hilla', or empty string)
  * @returns Promise with search results
  */
 export async function searchDocumentation(
   query: string,
   maxResults: number = config.search.defaultMaxResults,
-  maxTokens: number = config.search.defaultMaxTokens
+  maxTokens: number = config.search.defaultMaxTokens,
+  framework: string = ''
 ): Promise<SearchResult[]> {
   // Generate embedding for the query
   const queryEmbedding = await generateQueryEmbedding(query);
+  
+  // Prepare filter based on framework parameter
+  let filter = {};
+  
+  if (framework === 'flow') {
+    // Filter for 'flow' OR empty framework
+    filter = {
+      $or: [
+        { framework: 'flow' },
+        { framework: '' }
+      ]
+    };
+  } else if (framework === 'hilla') {
+    // Filter for 'hilla' OR empty framework
+    filter = {
+      $or: [
+        { framework: 'hilla' },
+        { framework: '' }
+      ]
+    };
+  } else {
+    // No specific framework filter, include all documents
+    filter = {
+      $or: [
+        { framework: 'flow' },
+        { framework: 'hilla' },
+        { framework: '' }
+      ]
+    };
+  }
   
   // Query Pinecone
   const queryResponse = await index.query({
     vector: queryEmbedding,
     topK: maxResults * 2, // Request more results than needed to filter by score
     includeMetadata: true,
+    filter: filter
   });
   
   // Filter and format results
@@ -104,7 +138,8 @@ export async function searchDocumentation(
         title: metadata.title || 'Untitled',
         source: metadata.source || '',
         url: metadata.url || '',
-        heading: metadata.heading || ''
+        heading: metadata.heading || '',
+        framework: metadata.framework || ''
       },
       score: match.score || 0,
     });
