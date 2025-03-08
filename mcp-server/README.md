@@ -60,6 +60,7 @@ The MCP server provides the following tool:
     - `query` (required): The search query or question about Vaadin
     - `max_results` (optional): Maximum number of results to return (default: 5)
     - `max_tokens` (optional): Maximum number of tokens to return (default: 1500)
+    - `framework` (optional): The Vaadin framework to focus on: "flow" for Java-based views, "hilla" for React-based views, or empty string for both (default: "")
 
 ## Development
 

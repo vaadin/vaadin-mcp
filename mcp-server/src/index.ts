@@ -73,7 +73,7 @@ class VaadinDocsServer {
       tools: [
         {
           name: 'search_vaadin_docs',
-          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices.',
+          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. When using this tool, try to deduce the correct framework from context: use "flow" for Java-based views, "hilla" for React-based views, or empty string for both frameworks. Only use an empty string if the question is general or requires knowledge of both frameworks.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -92,6 +92,11 @@ class VaadinDocsServer {
                 description: 'Maximum number of tokens to return (default: 1500)',
                 minimum: 100,
                 maximum: 5000
+              },
+              framework: {
+                type: 'string',
+                description: 'The Vaadin framework to focus on: "flow" for Java-based views, "hilla" for React-based views, or empty string for both. If not specified, the agent should try to deduce the correct framework from context or asking the user for clarification.',
+                enum: ['flow', 'hilla', '']
               }
             },
             required: ['query']
@@ -129,7 +134,8 @@ class VaadinDocsServer {
           body: JSON.stringify({
             query: args.query,
             max_results: args.max_results,
-            max_tokens: args.max_tokens
+            max_tokens: args.max_tokens,
+            framework: args.framework || ''
           })
         });
 
