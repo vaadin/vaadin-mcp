@@ -261,4 +261,60 @@ Another paragraph.`;
       expect(chunk.metadata.url).toBe(enhancedMetadata.url);
     });
   });
+
+  test('should handle framework badges in headings', () => {
+    const markdown = `# Main Title [badge-flow]#Flow#
+
+Introduction paragraph.
+
+## Section 1 [badge-flow]#Flow#
+
+Content for section 1.
+
+## Section 2 [badge-hilla]#Hilla#
+
+Content for section 2.
+
+## Section 3
+
+Content for section 3 (no badge).`;
+
+    const metadata = {
+      title: 'Framework Test Document',
+      'page-title': 'Framework Test Document',
+      'meta-description': 'A test document for framework badges',
+      order: '1',
+      url: 'https://example.com/framework-test',
+      framework: 'flow' // Default framework
+    };
+
+    const chunks = chunkDocument(markdown, metadata);
+    
+    // Should have chunks for intro and sections
+    expect(chunks.length).toBe(4); // Intro + 3 sections
+    
+    // First chunk should have flow framework from h1 badge
+    expect(chunks[0].metadata.framework).toBe('flow');
+    
+    // Find section 1 chunk (should have flow framework from h2 badge)
+    const section1Chunk = chunks.find(chunk => chunk.text.includes('## Section 1'));
+    expect(section1Chunk).toBeDefined();
+    if (section1Chunk) {
+      expect(section1Chunk.metadata.framework).toBe('flow');
+    }
+    
+    // Find section 2 chunk (should have hilla framework from h2 badge)
+    const section2Chunk = chunks.find(chunk => chunk.text.includes('## Section 2'));
+    expect(section2Chunk).toBeDefined();
+    if (section2Chunk) {
+      expect(section2Chunk.metadata.framework).toBe('hilla');
+    }
+    
+    // Find section 3 chunk (should inherit flow framework from metadata)
+    const section3Chunk = chunks.find(chunk => chunk.text.includes('## Section 3'));
+    expect(section3Chunk).toBeDefined();
+    if (section3Chunk) {
+      expect(section3Chunk.metadata.framework).toBe('flow');
+    }
+  });
 }); 

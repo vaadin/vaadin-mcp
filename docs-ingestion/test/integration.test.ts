@@ -185,4 +185,65 @@ Content for subsection 2.1.
       expect(chunk.metadata.url).toBe(enhancedMetadata.url);
     });
   });
+
+  test('should process conditional content based on framework attributes', () => {
+    // Create a document with conditional content
+    const conditionalDocument = `---
+title: Conditional Document
+page-title: Conditional Document for Testing
+meta-description: A document with conditional content
+order: 10
+---
+
+= Conditional Document
+
+== Flow Content
+ifdef::flow[]
+This content should only be visible with flow attribute.
+endif::[]
+
+== React Content
+ifdef::react[]
+This content should only be visible with react attribute.
+endif::[]`;
+    
+    // Parse metadata and get content
+    const { content, metadata } = parseMetadata(conditionalDocument);
+    
+    // Process with Flow attribute enabled (for flow framework)
+    const flowMarkdown = processAsciiDoc(content, fixturesDir, { flow: true, react: false });
+    
+    // Process with React attribute enabled (for hilla framework)
+    const reactMarkdown = processAsciiDoc(content, fixturesDir, { flow: false, react: true });
+    
+    // Create enhanced metadata for flow
+    const flowMetadata = {
+      ...metadata,
+      framework: 'flow',
+      url: 'https://example.com/flow',
+      source: '/test/flow.adoc'
+    };
+    
+    // Create enhanced metadata for hilla
+    const hillaMetadata = {
+      ...metadata,
+      framework: 'hilla',
+      url: 'https://example.com/hilla',
+      source: '/test/hilla.adoc'
+    };
+    
+    // Chunk the documents
+    const flowChunks = chunkDocument(flowMarkdown, flowMetadata);
+    const reactChunks = chunkDocument(reactMarkdown, hillaMetadata);
+    
+    // Verify the flow chunks
+    expect(flowChunks.length).toBeGreaterThan(0);
+    expect(flowChunks.some(chunk => chunk.text.includes('This content should only be visible with flow attribute'))).toBe(true);
+    expect(flowChunks.every(chunk => chunk.metadata.framework === 'flow')).toBe(true);
+    
+    // Verify the hilla chunks
+    expect(reactChunks.length).toBeGreaterThan(0);
+    expect(reactChunks.some(chunk => chunk.text.includes('This content should only be visible with react attribute'))).toBe(true);
+    expect(reactChunks.every(chunk => chunk.metadata.framework === 'hilla')).toBe(true);
+  });
 }); 

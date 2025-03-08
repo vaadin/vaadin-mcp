@@ -32,8 +32,13 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
       doc.metadata.source.replace(/[^a-zA-Z0-9]/g, '_') : 
       'unknown';
     
-    // Create a unique ID with source prefix
-    const id = `${sourcePrefix}#${nanoid()}`;
+    // Add framework to the ID if available
+    const frameworkSuffix = doc.metadata.framework ? 
+      `#${doc.metadata.framework}` : 
+      '';
+    
+    // Create a unique ID with source prefix and framework suffix
+    const id = `${sourcePrefix}${frameworkSuffix}#${nanoid()}`;
     
     // Prepare metadata, only including the specified fields
     const { embedding, ...restDoc } = doc;
@@ -43,6 +48,7 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
       processed_at: new Date().toISOString(),
       source: doc.metadata.source || '',
       url: doc.metadata.url || '',
+      framework: doc.metadata.framework || '',
     };
     
     return {
@@ -85,23 +91,34 @@ export async function storeInPinecone(documents: DocumentWithEmbedding[]): Promi
 
 /**
  * Delete documents from Pinecone by source using ID prefixes
- * @param source - Source path to delete
+ * @param source - Source path to delete, optionally with framework suffix
  * @returns Promise with number of documents deleted
  */
 export async function deleteFromPineconeBySource(source: string): Promise<void> {
   console.log(`Deleting documents with source ${source} from Pinecone...`);
   
   try {
-    // Format source for prefix
-    const sourcePrefix = source.replace(/^\//, '').replace(/[^a-zA-Z0-9]/g, '_');
+    // Check if source contains a framework suffix
+    let sourcePrefix: string;
+    let frameworkSuffix: string = '';
     
-    // Use listPaginated to get all vector IDs with the source prefix
+    if (source.includes('#')) {
+      // Split source and framework
+      const [sourcePath, framework] = source.split('#');
+      sourcePrefix = sourcePath.replace(/^\//, '').replace(/[^a-zA-Z0-9]/g, '_');
+      frameworkSuffix = `#${framework}`;
+    } else {
+      // Just format the source
+      sourcePrefix = source.replace(/^\//, '').replace(/[^a-zA-Z0-9]/g, '_');
+    }
+    
+    // Use listPaginated to get all vector IDs with the source prefix and framework suffix
     let allVectorIds: string[] = [];
     let paginationToken: string | undefined;
     
     do {
       const listResult = await index.listPaginated({ 
-        prefix: `${sourcePrefix}#`,
+        prefix: `${sourcePrefix}${frameworkSuffix}#`,
         paginationToken 
       });
       
@@ -120,7 +137,7 @@ export async function deleteFromPineconeBySource(source: string): Promise<void> 
       
     } while (paginationToken);
     
-    console.log(`Successfully deleted ${allVectorIds.length} documents with source prefix ${sourcePrefix} from Pinecone`);
+    console.log(`Successfully deleted ${allVectorIds.length} documents with source prefix ${sourcePrefix}${frameworkSuffix} from Pinecone`);
   } catch (error) {
     // Check if it's a 404 error (index not found)
     if (error instanceof Error && error.message && error.message.includes('404')) {

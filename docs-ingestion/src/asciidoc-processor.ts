@@ -138,9 +138,10 @@ function processIncludes(
  * Process AsciiDoc content and convert directly to Markdown
  * @param content - The AsciiDoc content to process
  * @param baseDir - The base directory for resolving includes (defaults to config.docs.localPath)
+ * @param customAttributes - Optional custom attributes to override the default ones
  * @returns The processed Markdown content
  */
-export function processAsciiDoc(content: string, baseDir?: string): string {
+export function processAsciiDoc(content: string, baseDir?: string, customAttributes?: Record<string, any>): string {
   try {
     // Set the base directory for includes
     const baseDirPath = baseDir || config.docs.localPath;
@@ -150,7 +151,9 @@ export function processAsciiDoc(content: string, baseDir?: string): string {
       ...config.asciidoc.attributes,
       // Override root and articles with absolute paths to ensure correct resolution
       'root': process.cwd() + '/' + config.docs.localPath,
-      'articles': process.cwd() + '/' + config.docs.localPath + '/' + config.docs.articlesPath
+      'articles': process.cwd() + '/' + config.docs.localPath + '/' + config.docs.articlesPath,
+      // Apply custom attributes if provided
+      ...(customAttributes || {})
     };
     
     // First process includes manually

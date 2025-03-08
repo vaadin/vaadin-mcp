@@ -125,13 +125,18 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
   
   // Create the first chunk with the document title and introduction paragraph
   if (h1Heading) {
+    // Check for framework badge in h1 heading
+    const h1Framework = getFrameworkFromHeading(h1Heading.text);
+    
     chunks.push({
       text: `# ${h1Heading.text}\n\n${h1Heading.content}`,
       metadata: {
         ...metadata,
         heading: h1Heading.text,
         documentTitle,
-        isIntroduction: true
+        isIntroduction: true,
+        // Override framework if badge is found in h1
+        ...(h1Framework ? { framework: h1Framework } : {})
       }
     });
   }
@@ -182,18 +187,40 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
       continue;
     }
     
+    // Check for framework badge in h2 heading
+    const h2Framework = getFrameworkFromHeading(h2Heading.text);
+    
     // Create the chunk
     chunks.push({
       text: documentTitle ? `# ${documentTitle}\n\n${sectionContent}` : sectionContent,
       metadata: {
         ...metadata,
         heading: h2Heading.text,
-        documentTitle
+        documentTitle,
+        // Override framework if badge is found in h2
+        ...(h2Framework ? { framework: h2Framework } : {})
       }
     });
   }
   
   return chunks;
+}
+
+/**
+ * Extract framework information from a heading with a badge
+ * @param headingText - The heading text
+ * @returns The framework ('flow', 'hilla', or undefined if no badge)
+ */
+function getFrameworkFromHeading(headingText: string): string | undefined {
+  // Check for [badge-flow]#Flow# or [badge-hilla]#Hilla#
+  const badgeRegex = /\[badge-(flow|hilla)\]#(Flow|Hilla)#/;
+  const match = headingText.match(badgeRegex);
+  
+  if (match) {
+    return match[1].toLowerCase(); // Return 'flow' or 'hilla'
+  }
+  
+  return undefined;
 }
 
 /**

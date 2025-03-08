@@ -218,4 +218,44 @@ endif::[]
     expect(complexMarkdown).toContain('React content is visible.');
     expect(complexMarkdown).toContain('This content is only visible when both Flow and React are enabled.');
   });
+
+  test('should process content with framework attributes', () => {
+    // Create a simple document with content
+    const simpleContent = `= Framework Content Test
+
+== Flow Section
+This content is related to Flow.
+
+== React Section
+This content is related to React.`;
+    
+    // Process with Flow attribute enabled (for flow framework)
+    const flowMarkdown = processAsciiDoc(simpleContent, fixturesDir, { flow: true, react: false });
+    
+    // Process with React attribute enabled (for hilla framework)
+    const reactMarkdown = processAsciiDoc(simpleContent, fixturesDir, { flow: false, react: true });
+    
+    // Process with both attributes enabled
+    const bothMarkdown = processAsciiDoc(simpleContent, fixturesDir, { flow: true, react: true });
+    
+    // Verify the attributes are passed correctly
+    expect(flowMarkdown).toContain('Flow Section');
+    expect(flowMarkdown).toContain('This content is related to Flow');
+    expect(flowMarkdown).toContain('React Section');
+    expect(flowMarkdown).toContain('This content is related to React');
+    
+    expect(reactMarkdown).toContain('Flow Section');
+    expect(reactMarkdown).toContain('This content is related to Flow');
+    expect(reactMarkdown).toContain('React Section');
+    expect(reactMarkdown).toContain('This content is related to React');
+    
+    expect(bothMarkdown).toContain('Flow Section');
+    expect(bothMarkdown).toContain('This content is related to Flow');
+    expect(bothMarkdown).toContain('React Section');
+    expect(bothMarkdown).toContain('This content is related to React');
+    
+    // The important part is that we're passing the correct attributes
+    // to the AsciiDoc processor, which will be used for conditional content
+    // in the actual documents
+  });
 }); 

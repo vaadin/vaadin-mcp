@@ -42,16 +42,44 @@ export function parseMetadata(content: string): {
 }
 
 /**
+ * Detect the framework from the file name and content
+ * @param filePath - The path to the source file
+ * @param content - The content of the file
+ * @returns The detected framework ('flow', 'hilla', or '')
+ */
+export function detectFramework(filePath: string, content: string): string {
+  // Check file name for framework indicators
+  if (filePath.includes('/flow.asciidoc') || filePath.includes('/flow.adoc')) {
+    return 'flow';
+  }
+  if (filePath.includes('/hilla.asciidoc') || filePath.includes('/hilla.adoc')) {
+    return 'hilla';
+  }
+  
+  // Check for framework badges in h1 headings
+  const h1BadgeRegex = /^=\s+.*\[badge-(flow|hilla)\]#(Flow|Hilla)#/m;
+  const h1Match = content.match(h1BadgeRegex);
+  if (h1Match) {
+    return h1Match[1].toLowerCase(); // Return 'flow' or 'hilla'
+  }
+  
+  // Default to empty string if no framework is detected
+  return '';
+}
+
+/**
  * Enhance metadata with additional information
  * @param metadata - The original metadata
  * @param filePath - The path to the source file
  * @param repoPath - The path to the local repository
+ * @param content - The content of the file (optional, for framework detection)
  * @returns Enhanced metadata
  */
 export function enhanceMetadata(
   metadata: Record<string, string>,
   filePath: string,
-  repoPath: string
+  repoPath: string,
+  content?: string
 ): Record<string, string> {
   // Clone the metadata object
   const enhancedMetadata = { ...metadata };
@@ -80,6 +108,11 @@ export function enhanceMetadata(
   
   // Add timestamp
   enhancedMetadata.processed_at = new Date().toISOString();
+  
+  // Add framework metadata if content is provided
+  if (content) {
+    enhancedMetadata.framework = detectFramework(filePath, content);
+  }
   
   return enhancedMetadata;
 }
