@@ -1,7 +1,0 @@
-== Intermediate Include
-
-This file includes another file to test nested includes.
-
-include::nested-include.adoc[]
-
-Additional content in the intermediate file. 
