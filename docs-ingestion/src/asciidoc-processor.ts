@@ -171,14 +171,15 @@ export function processAsciiDoc(content: string, baseDir?: string, customAttribu
     const attributes = {
       ...config.asciidoc.attributes,
       // Override root and articles with absolute paths to ensure correct resolution
-      'root': process.cwd() + '/' + config.docs.localPath.slice(1),
-      'articles': process.cwd() + '/' + config.docs.localPath.slice(1) + '/' + config.docs.articlesPath,
+      'root': process.cwd() + '/' + config.docs.localPath.slice(2),
+      'articles': process.cwd() + '/' + config.docs.localPath.slice(2) + '/' + config.docs.articlesPath,
       // Apply custom attributes if provided
       ...(customAttributes || {})
     };
     
     // First process includes manually
     const contentWithIncludes = processIncludes(content, attributes, baseDirPath);
+
 
     // Then use asciidoctor to process conditionals and other directives
     const document = processor.load(contentWithIncludes, {
@@ -190,17 +191,22 @@ export function processAsciiDoc(content: string, baseDir?: string, customAttribu
       standalone: true,
       // Set base directory for includes
       base_dir: baseDirPath,
-      // Set attributes
-      attributes: attributes
+      // Set attributes - explicitly set flow and react
+      attributes: {
+        ...attributes,
+        // Ensure flow and react are explicitly set as strings
+        'flow': (attributes as any)['flow'] ? 'true' : undefined,
+        'react': (attributes as any)['react'] ? 'true' : undefined
+      }
     });
     
     // Get the processed AsciiDoc content
     const processedAsciiDoc = document.getSource();
     
+
     // Use downdoc JS API to convert the processed AsciiDoc to Markdown
     const markdown = downdoc(processedAsciiDoc, {
       attributes: {
-        // Include all attributes from config
         ...attributes,
         'markdown-list-indent': 2
       }
