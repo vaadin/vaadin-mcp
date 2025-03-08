@@ -6,8 +6,8 @@ This project provides a pipeline for ingesting Vaadin documentation from the off
 
 - Clones or pulls the latest Vaadin documentation from GitHub
 - Parses AsciiDoc files with custom front matter
-- Processes AsciiDoc content to Markdown using a custom approach:
-  - Processing includes before conversion
+- Processes AsciiDoc content to Markdown using a robust approach:
+  - Uses asciidoctor-reducer to handle includes
   - Uses asciidoctor.js to handle conditionals and other directives
   - Converts to Markdown using downdoc
 - Implements a semantic chunking strategy based on heading structure:
@@ -74,7 +74,7 @@ You can run the ingestion pipeline directly:
 
 ```bash
 # Run the ingestion pipeline
-bun run src/index.ts
+bun run ingest
 ```
 
 The ingestion pipeline will:
@@ -87,7 +87,7 @@ For testing and development purposes, you can also use:
 
 ```bash
 # Test the AsciiDoc processing with a sample document
-bun run src/test-processing.ts
+bun run test-asciidoc path/to/document.adoc
 
 # Display chunks from the building-apps directory without storing them
 bun run src/display-chunks.ts
@@ -129,13 +129,13 @@ You can modify the configuration in `src/config.ts` to adjust:
 
 ### AsciiDoc Processing
 
-The pipeline uses a custom approach to handle AsciiDoc files:
+The pipeline uses asciidoctor-reducer and downdoc to handle AsciiDoc files:
 
-1. First, it manually processes includes using a recursive function that resolves paths and handles tag directives
-2. Then it uses asciidoctor.js to handle conditionals and other directives
+1. First, it registers the asciidoctor-reducer extension to handle includes
+2. Then it uses asciidoctor.js to process the document, which handles includes, conditionals, and other directives
 3. Finally, it converts the processed AsciiDoc to Markdown using downdoc
 
-This approach addresses the limitation of downdoc, which doesn't support includes and would otherwise omit them.
+This approach ensures that includes are properly processed before conversion to Markdown, addressing the limitation of downdoc which doesn't natively support includes.
 
 ### Chunking Strategy
 

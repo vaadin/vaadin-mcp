@@ -11,3 +11,7 @@ declare module 'downdoc' {
 
   export = downdoc;
 }
+
+declare module '@asciidoctor/reducer' {
+  export function register(registry?: any): void;
+}

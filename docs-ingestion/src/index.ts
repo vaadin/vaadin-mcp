@@ -74,7 +74,7 @@ async function processFile(filePath: string): Promise<number> {
       
       // Process AsciiDoc content directly to Markdown using asciidoctor.js and downdoc
       const fileDir = path.dirname(filePath);
-      const markdownContent = processAsciiDoc(cleanContent, fileDir, attributes);
+      const markdownContent = await processAsciiDoc(cleanContent, fileDir, attributes);
       
       // Create chunks based on h2 level headings
       const chunks = chunkDocument(markdownContent, enhancedMetadata);
@@ -155,7 +155,7 @@ async function processFileWithFramework(
     
     // Process AsciiDoc content with the specific framework attribute
     const fileDir = path.dirname(filePath);
-    const markdownContent = processAsciiDoc(cleanContent, fileDir, attributes);
+    const markdownContent = await processAsciiDoc(cleanContent, fileDir, attributes);
     
     // Create chunks based on h2 level headings
     const chunks = chunkDocument(markdownContent, enhancedMetadata);

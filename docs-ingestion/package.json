@@ -15,8 +15,9 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@asciidoctor/reducer": "^1.1.0",
     "@pinecone-database/pinecone": "^5.1.0",
-    "asciidoctor": "^3.0.4",
+    "asciidoctor": "2.2.6",
     "downdoc": "^1.0.2-stable",
     "front-matter": "^4.0.2",
     "minimatch": "^10.0.1",
