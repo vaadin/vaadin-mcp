@@ -1,0 +1,20 @@
+---
+title: Document With Attributes
+page-title: Document With Attributes for Testing
+meta-description: A document with attributes for testing
+order: 3
+---
+
+= Document With Attributes
+
+== Introduction
+
+This document uses attributes in include paths.
+
+== Including With Attributes
+
+include::{custom-path}/{custom-file}[]
+
+== Including Specific Tags With Attributes
+
+include::{custom-path}/{custom-file}[tags=code-example] 

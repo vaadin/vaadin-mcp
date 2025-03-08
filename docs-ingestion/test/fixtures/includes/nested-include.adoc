@@ -1,0 +1,10 @@
+== Nested Include Content
+
+This content will be included by another file, which is then included in the main file.
+
+// tag::important[]
+[IMPORTANT]
+====
+This is important information in a nested include.
+====
+// end::important[] 
