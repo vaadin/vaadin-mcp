@@ -83,28 +83,6 @@ export function extractHeadingsWithContent(markdown: string): Heading[] {
 }
 
 /**
- * Generate breadcrumb for a heading based on its parent headings
- * @param heading - Current heading
- * @param headings - All headings
- * @returns Breadcrumb string
- */
-function generateBreadcrumb(heading: Heading, headings: Heading[]): string {
-  // Find parent headings (those with lower level numbers that come before this heading)
-  const parentHeadings = headings
-    .filter(h => h.level < heading.level && h.position < heading.position)
-    .sort((a, b) => b.position - a.position); // Sort in reverse order to get the closest parent first
-  
-  if (parentHeadings.length === 0) {
-    return heading.text;
-  }
-  
-  // Get the closest parent heading
-  const parent = parentHeadings[0];
-  
-  return `${parent.text} > ${heading.text}`;
-}
-
-/**
  * Chunk a document based on h2 level headings
  * First chunk is the main document title and introduction paragraph
  * Subsequent chunks are based on h2 level headings
@@ -182,8 +160,8 @@ export function chunkDocument(content: string, metadata: Record<string, string>)
       sectionContent += `${'#'.repeat(subHeading.level)} ${subHeading.text}\n\n${subHeading.content}\n\n`;
     }
     
-    // Skip empty sections
-    if (sectionContent.trim().length === 0) {
+    // Skip sections below the minimum length
+    if (sectionContent.trim().length < config.chunking.minSectionLength) {
       continue;
     }
     

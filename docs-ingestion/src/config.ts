@@ -46,4 +46,9 @@ export const config = {
       'toc': 'macro',
     }
   },
+
+  // Chunking settings
+  chunking: {
+    minSectionLength: 200, // Minimum length of a section to be considered for chunking
+  }
 };
