@@ -8,7 +8,7 @@ export const config = {
     repoUrl: 'https://github.com/vaadin/docs.git',
     localPath: './vaadin-docs',
     articlesPath: 'articles',
-    branch: 'getting-started-with-skeletons', 
+    branch: 'latest', 
     includePatterns: [
       'building-apps/**/*.{adoc,asciidoc}',
       'components/**/*.{adoc,asciidoc}',
