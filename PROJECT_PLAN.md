@@ -1,6 +1,6 @@
 # Vaadin RAG System Refactor - Project Plan & Tracking
 
-**Project Status**: 🟡 Ready to Start  
+**Project Status**: 🟡 Epic 1 Complete - Ready for Epic 2.1  
 **Last Updated**: 2025-07-23  
 **Context Window Limit**: 128k tokens per session  
 **⚠️ CRITICAL RULE**: Each agent completes ONE session only, then hands off
@@ -52,23 +52,40 @@ This project refactors the existing naive RAG system for Vaadin documentation in
 ## 📊 Epic Breakdown & Progress Tracking
 
 ### Epic 1: Refactor Project Structure 
-**Status**: 🔴 Not Started  
+**Status**: ✅ **COMPLETED**  
 **Complexity**: Medium (5-8 hours)  
-**Context Window**: Single session
+**Context Window**: Single session  
+**Completed**: 2025-07-23
 
 #### Tasks:
-- [ ] **1.1** Initialize Bun workspace at project root
-- [ ] **1.2** Create `core-types` package with shared interfaces
-- [ ] **1.3** Create `1-asciidoc-converter` package structure
-- [ ] **1.4** Create `2-embedding-generator` package structure  
-- [ ] **1.5** Refactor `rest-server` into packages structure
-- [ ] **1.6** Refactor `mcp-server` into packages structure
-- [ ] **1.7** Update all inter-package dependencies
+- [x] **1.1** Initialize Bun workspace at project root
+- [x] **1.2** Create `core-types` package with shared interfaces
+- [x] **1.3** Create `1-asciidoc-converter` package structure
+- [x] **1.4** Create `2-embedding-generator` package structure  
+- [x] **1.5** Refactor `rest-server` into packages structure
+- [x] **1.6** Refactor `mcp-server` into packages structure
+- [x] **1.7** Update all inter-package dependencies
 
 **Validation Criteria:**
-- [ ] `bun install` works from root
-- [ ] All packages have correct dependencies on `core-types`
-- [ ] TypeScript compilation works across all packages
+- [x] `bun install` works from root
+- [x] All packages have correct dependencies on `core-types`
+- [x] TypeScript compilation works across all packages
+
+**Technical Decisions Made:**
+- Created workspace with proper Bun workspace configuration
+- All packages follow consistent TypeScript configuration (ES2022, ESNext modules)
+- Core-types package contains all shared interfaces as specified in project brief
+- Placeholder implementation files created for new packages (to be implemented in Epic 2)
+- Updated package names to follow workspace conventions (removed "vaadin-docs-" prefixes)
+- Added LangChain dependencies to packages that will need them (rest-server, embedding-generator)
+
+**Notes for Next Agent (Epic 2.1):**
+- All packages compile successfully with `bun run build`
+- Core-types interfaces are ready for use
+- 1-asciidoc-converter package structure is ready for implementation
+- Existing docs-ingestion source files need to be analyzed and split appropriately
+- Framework detection logic exists in `docs-ingestion/src/metadata-parser.ts`
+- Repository checkout logic exists in `docs-ingestion/src/docs-repository.ts`
 
 ---
 
@@ -466,28 +483,30 @@ export interface IngestionConfig {
 
 ## 🎯 Next Steps
 
-### 🔥 CURRENT SESSION FOCUS: Epic 1 ONLY
+### 🔥 CURRENT SESSION FOCUS: Epic 2.1 - AsciiDoc Converter
 
-**⚠️ This agent should ONLY complete Epic 1 and then stop ⚠️**
+**⚠️ Next agent should ONLY complete Epic 2.1 and then stop ⚠️**
 
-#### Session Scope (Epic 1):
-1. ✅ Read project-brief.md completely (REQUIRED)
-2. ✅ Read this document completely (DONE)
-3. Examine current codebase structure  
-4. Initialize Bun workspace at project root
-5. Create all 5 package directories with basic structure
-6. Set up core-types with shared interfaces
-7. Configure inter-package dependencies
-8. Verify everything compiles and installs correctly
-9. **Update this document** with progress and any issues
+#### Session Scope (Epic 2.1):
+1. ✅ Epic 1 COMPLETED - Workspace structure ready
+2. **START HERE**: Analyze existing `docs-ingestion/src/` files 
+3. Move and refactor framework detection logic to 1-asciidoc-converter
+4. Move and refactor repository checkout logic to 1-asciidoc-converter  
+5. Implement AsciiDoc → Markdown conversion with frontmatter
+6. Create test data structure as specified
+7. Implement URL generation logic
+8. Create test suite for framework detection
+9. **Update this document** with Epic 2.1 progress
 10. **Commit all changes** to version control
-11. **Document handoff** for next agent (Epic 2.1)
+11. **Document handoff** for next agent (Epic 2.2)
 
 #### End-of-Session Deliverables:
-- [ ] Working Bun workspace with all packages
-- [ ] Updated PROJECT_PLAN.md with Epic 1 status
-- [ ] Clear instructions for next agent starting Epic 2.1
-- [ ] All code committed and saved
+- [ ] Working 1-asciidoc-converter package
+- [ ] Test data created in test-data/ directory  
+- [ ] Framework detection working with 100% accuracy on test cases
+- [ ] Markdown output with frontmatter in packages/1-asciidoc-converter/dist/markdown/
+- [ ] Updated PROJECT_PLAN.md with Epic 2.1 status
+- [ ] Clear instructions for next agent starting Epic 2.2
 
 ### Overall Project Success Metrics:
 - **Accuracy**: >95% framework detection accuracy

@@ -1,0 +1,32 @@
+{
+  "name": "rest-server",
+  "version": "1.0.0",
+  "description": "REST API for Vaadin documentation search with hybrid search and framework filtering",
+  "module": "src/index.ts",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "bun run src/index.ts",
+    "test": "echo 'No tests yet' && exit 0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.8",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "core-types": "workspace:*",
+    "langchain": "0.3.30",
+    "@langchain/core": "0.3.66",
+    "@langchain/community": "0.3.48",
+    "@langchain/openai": "^0.3.0",
+    "@langchain/pinecone": "^0.1.0",
+    "@pinecone-database/pinecone": "^5.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "openai": "^4.86.1"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "vaadin-rag-system",
+  "version": "1.0.0",
+  "description": "Advanced RAG System for Vaadin Documentation",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun run --filter='*' build",
+    "test": "bun run --filter='*' test",
+    "ingest:all": "bun run --filter='1-asciidoc-converter' convert && bun run --filter='2-embedding-generator' generate",
+    "start:rest": "bun run --filter='rest-server' start",
+    "start:mcp": "bun run --filter='mcp-server' start"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "@types/node": "^22.13.8"
+  },
+  "packageManager": "bun@1.0.0",
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+} 

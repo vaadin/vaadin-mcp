@@ -1,0 +1,28 @@
+{
+  "name": "2-embedding-generator",
+  "version": "1.0.0",
+  "description": "Document chunking, embedding generation, and vector storage with hierarchical relationships",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "generate": "bun run src/index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "core-types": "workspace:*",
+    "langchain": "0.3.30",
+    "@langchain/core": "0.3.66",
+    "@langchain/community": "0.3.48",
+    "@langchain/openai": "^0.3.0",
+    "@langchain/pinecone": "^0.1.0",
+    "@pinecone-database/pinecone": "^5.1.0",
+    "openai": "^4.86.1",
+    "nanoid": "^5.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.8",
+    "typescript": "^5.8.2"
+  }
+} 
