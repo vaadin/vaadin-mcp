@@ -9,15 +9,16 @@
  * - Metadata extraction and frontmatter creation
  */
 
-// import type { IngestionConfig, ProcessedMetadata } from 'core-types';
+import type { IngestionConfig } from 'core-types';
 
-export async function convertDocumentation(config: any): Promise<void> {
-  console.log('AsciiDoc converter will be implemented in Epic 2.1');
-  // Implementation will be added in Epic 2.1
-}
+// Main export - the primary function users will call
+export { convertDocumentation, type ConversionResult } from './converter.js';
 
-// Exports will be uncommented in Epic 2.1 when modules are implemented:
-// export * from './framework-detector.js';
-// export * from './url-generator.js';
-// export * from './asciidoc-processor.js';
-// export * from './repository-manager.js'; 
+// Individual module exports for advanced usage
+export * from './framework-detector';
+export * from './url-generator';
+export * from './asciidoc-processor';
+export * from './repository-manager';
+
+// Re-export types for convenience
+export type { IngestionConfig, ProcessedMetadata, Framework } from 'core-types'; 

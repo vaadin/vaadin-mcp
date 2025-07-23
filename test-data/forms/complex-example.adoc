@@ -1,0 +1,193 @@
+= Complete Form Example
+
+This example demonstrates a complete form implementation that includes data binding, validation, and proper error handling. The concepts shown here apply to both Flow and Hilla applications.
+
+== The Data Model
+
+First, let's define our data model with validation annotations:
+
+[source,java]
+----
+public class Customer {
+    @NotBlank(message = "First name is required")
+    @Size(max = 50)
+    private String firstName;
+    
+    @NotBlank(message = "Last name is required") 
+    @Size(max = 50)
+    private String lastName;
+    
+    @Email(message = "Please enter a valid email address")
+    @NotBlank(message = "Email is required")
+    private String email;
+    
+    @Past(message = "Birth date must be in the past")
+    private LocalDate birthDate;
+    
+    @Pattern(regexp = "\\+?[0-9 ()-]{10,}", message = "Please enter a valid phone number")
+    private String phoneNumber;
+    
+    @NotNull(message = "Please select a customer type")
+    private CustomerType customerType;
+    
+    // Constructors, getters, and setters...
+}
+
+public enum CustomerType {
+    INDIVIDUAL("Individual"),
+    BUSINESS("Business"),
+    NON_PROFIT("Non-Profit");
+    
+    private final String displayName;
+    
+    CustomerType(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+----
+
+== Form Layout Structure
+
+Organize your form with logical groupings:
+
+=== Personal Information Section
+
+Group related fields together for better user experience:
+
+* First Name and Last Name
+* Email Address  
+* Phone Number
+* Date of Birth
+
+=== Account Information Section
+
+* Customer Type selection
+* Account preferences
+* Terms and conditions acceptance
+
+== Validation Strategy
+
+=== Client-Side Validation
+
+Provide immediate feedback for:
+
+* Required field validation
+* Format validation (email, phone)
+* Length restrictions
+
+=== Server-Side Validation
+
+Always validate on the server for:
+
+* Business rule validation
+* Database constraint checks
+* Security validation
+
+=== Cross-Field Validation
+
+Some validation rules involve multiple fields:
+
+[source,java]
+----
+// Example: Business customers must provide a company name
+@AssertTrue(message = "Company name is required for business customers")
+public boolean isCompanyNameValid() {
+    if (customerType == CustomerType.BUSINESS) {
+        return companyName != null && !companyName.trim().isEmpty();
+    }
+    return true;
+}
+----
+
+== Error Handling Patterns
+
+=== Field-Level Errors
+
+Display errors directly next to the relevant field for immediate context.
+
+=== Form-Level Errors
+
+Show general errors at the top of the form for issues that don't relate to specific fields.
+
+=== Success Feedback
+
+Provide clear confirmation when operations complete successfully:
+
+* Visual indicators (checkmarks, color changes)
+* Success messages
+* Redirect to confirmation page
+
+== Progressive Enhancement
+
+=== Basic Functionality First
+
+Ensure your form works without JavaScript for maximum accessibility.
+
+=== Add Enhancements
+
+Layer on JavaScript enhancements:
+
+* Real-time validation
+* Dynamic field updates
+* Autocomplete functionality
+* Progressive disclosure
+
+== Performance Considerations
+
+=== Debounce Validation
+
+Avoid validating on every keystroke for expensive operations:
+
+* Use debouncing for server-side validation calls
+* Validate locally first, then server-side
+* Cache validation results when appropriate
+
+=== Optimize Network Calls
+
+* Batch multiple validation requests
+* Use appropriate HTTP caching headers
+* Implement request cancellation for outdated requests
+
+== Testing Your Forms
+
+=== Unit Tests
+
+Test individual validation rules and business logic.
+
+=== Integration Tests
+
+Test the complete form submission flow.
+
+=== User Experience Testing
+
+* Test with real users
+* Verify accessibility compliance
+* Test on different devices and browsers
+
+== Common Pitfalls to Avoid
+
+=== Over-Validation
+
+Don't make the form so strict that it becomes frustrating to use.
+
+=== Inconsistent Validation
+
+Ensure client-side and server-side validation rules match exactly.
+
+=== Poor Error Messages
+
+Avoid technical jargon in user-facing error messages.
+
+=== Accessibility Oversights
+
+Always test with screen readers and keyboard navigation.
+
+== Learn More
+
+* Return to include::../forms.adoc[] for forms overview
+* See include::../forms/binding.adoc[] for data binding details  
+* Review include::../forms/validation.adoc[] for validation techniques 

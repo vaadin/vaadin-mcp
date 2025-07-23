@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "convert": "bun run src/index.ts",
-    "test": "bun test"
+    "test": "bun run test.ts"
   },
   "dependencies": {
     "core-types": "workspace:*",

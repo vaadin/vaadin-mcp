@@ -1,0 +1,158 @@
+= Form Validation [badge-hilla]#Hilla#
+
+Client-side validation provides immediate feedback to users and improves the user experience. In Hilla, validation is built into the form binding system and integrates seamlessly with TypeScript.
+
+== Setting Up Validation
+
+Hilla uses the same validation annotations as the server-side, but they're processed on the client side for immediate feedback:
+
+[source,typescript]
+----
+import { field, Binder } from '@hilla/form';
+import { PersonModel } from './generated/PersonModel';
+
+// Create a binder for your form
+const binder = new Binder(document.querySelector('#form'), PersonModel);
+
+// Bind fields with validation
+binder.for(PersonModel.firstName).element = 
+  document.querySelector('#firstName') as HTMLInputElement;
+  
+binder.for(PersonModel.email).element = 
+  document.querySelector('#email') as HTMLInputElement;
+----
+
+== Built-in Validators
+
+Hilla supports several built-in validation annotations:
+
+=== Required Fields
+
+[source,java]
+----
+@NotNull
+@NotBlank  
+private String firstName;
+----
+
+=== String Validation
+
+[source,java]
+----
+@Size(min = 2, max = 50)
+private String lastName;
+
+@Pattern(regexp = "^[A-Za-z ]+$", message = "Only letters and spaces allowed")
+private String name;
+----
+
+=== Numeric Validation
+
+[source,java]
+----
+@Min(18)
+@Max(120)
+private Integer age;
+
+@DecimalMin("0.0")
+@DecimalMax("999.99")
+private BigDecimal price;
+----
+
+=== Email Validation
+
+[source,java]
+----
+@Email
+private String email;
+----
+
+== Custom Validators
+
+You can create custom validation logic:
+
+[source,typescript]
+----
+// Custom async validator
+const validateUniqueEmail = async (email: string) => {
+  const response = await fetch(`/api/check-email/${email}`);
+  const exists = await response.json();
+  return exists ? 'Email already exists' : '';
+};
+
+// Apply custom validator
+binder.for(PersonModel.email).addValidator(validateUniqueEmail);
+----
+
+== Validation Events
+
+Listen for validation events to customize the UI:
+
+[source,typescript]
+----
+binder.for(PersonModel.firstName).addEventListener('validation-error', (event) => {
+  const errorMessage = event.detail.message;
+  showErrorMessage(errorMessage);
+});
+
+binder.for(PersonModel.firstName).addEventListener('validation-success', (event) => {
+  hideErrorMessage();
+});
+----
+
+== Real-time Validation
+
+Enable real-time validation as the user types:
+
+[source,typescript]
+----
+// Validate on every input change
+binder.for(PersonModel.firstName).element?.addEventListener('input', () => {
+  binder.for(PersonModel.firstName).validate();
+});
+----
+
+== Form-level Validation
+
+Validate the entire form before submission:
+
+[source,typescript]
+----
+const submitButton = document.querySelector('#submit') as HTMLButtonElement;
+
+submitButton.addEventListener('click', async (event) => {
+  event.preventDefault();
+  
+  const isValid = await binder.validate();
+  if (isValid) {
+    const person = binder.value;
+    await personService.save(person);
+    showSuccessMessage('Person saved successfully');
+  } else {
+    showErrorMessage('Please fix the validation errors');
+  }
+});
+----
+
+== Best Practices
+
+=== Validate Early and Often
+
+Provide feedback as soon as possible, but avoid being too aggressive with validation timing.
+
+=== Clear Error Messages
+
+Write error messages that clearly explain what the user needs to do to fix the problem.
+
+=== Visual Feedback
+
+Use consistent visual cues (colors, icons) to indicate validation state.
+
+=== Accessibility
+
+Ensure error messages are accessible to screen readers by using appropriate ARIA attributes.
+
+== Learn More
+
+* Return to include::../forms.adoc[] for an overview of forms
+* See include::../forms/complex-example.adoc[] for a complete working example with validation 

@@ -1,0 +1,99 @@
+= Fields & Binding [badge-flow]#Flow#
+
+Data binding connects your form fields to your data model automatically. In Vaadin Flow, the `Binder` class provides a powerful and type-safe way to bind form fields to Java objects.
+
+== Setting Up a Binder
+
+To start using data binding, create a `Binder` instance for your data type:
+
+[source,java]
+----
+public class PersonForm extends VerticalLayout {
+    private TextField firstName = new TextField("First Name");
+    private TextField lastName = new TextField("Last Name");
+    private EmailField email = new EmailField("Email");
+    
+    private Binder<Person> binder = new Binder<>(Person.class);
+    
+    public PersonForm() {
+        add(firstName, lastName, email);
+        bindFields();
+    }
+    
+    private void bindFields() {
+        binder.forField(firstName)
+            .asRequired("First name is required")
+            .bind(Person::getFirstName, Person::setFirstName);
+            
+        binder.forField(lastName)
+            .asRequired("Last name is required")
+            .bind(Person::getLastName, Person::setLastName);
+            
+        binder.forField(email)
+            .bind(Person::getEmail, Person::setEmail);
+    }
+}
+----
+
+== Automatic Binding
+
+For simple cases, you can use automatic binding based on property names:
+
+[source,java]
+----
+binder.bindInstanceFields(this);
+----
+
+This works when your field names match the property names in your data class.
+
+== Reading and Writing Values
+
+To populate the form with data from an object:
+
+[source,java]
+----
+Person person = personService.findById(id);
+binder.readBean(person);
+----
+
+To get the current form values back into an object:
+
+[source,java]
+----
+if (binder.writeBeanIfValid(person)) {
+    personService.save(person);
+    Notification.show("Person saved successfully");
+} else {
+    Notification.show("Please fix the errors", Notification.Type.ERROR_MESSAGE);
+}
+----
+
+== Validation
+
+The binder automatically handles validation based on Bean Validation annotations or custom validators:
+
+[source,java]
+----
+binder.forField(email)
+    .withValidator(new EmailValidator("Invalid email address"))
+    .bind(Person::getEmail, Person::setEmail);
+----
+
+== Best Practices
+
+=== Use Type Safety
+
+Always specify the generic type when creating your binder to get compile-time type checking.
+
+=== Validate Early
+
+Set up validation rules when binding fields, not just before saving.
+
+=== Handle Conversion Errors
+
+For complex data types, provide custom converters and handle conversion errors gracefully.
+
+== Learn More
+
+* See include::../forms/validation.adoc[] for advanced validation techniques
+* Check include::../forms/complex-example.adoc[] for a complete working example 

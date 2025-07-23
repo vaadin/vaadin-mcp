@@ -1,0 +1,205 @@
+= Button Component
+
+The Button component is one of the most fundamental UI elements in web applications. It provides users with a way to trigger actions and navigate through your application.
+
+== Basic Usage
+
+Creating a button is straightforward in both Flow and Hilla:
+
+=== Flow Example
+
+[source,java]
+----
+Button button = new Button("Click me!");
+button.addClickListener(event -> {
+    Notification.show("Button clicked!");
+});
+----
+
+=== Hilla Example
+
+[source,typescript]
+----
+const button = document.createElement('vaadin-button');
+button.textContent = 'Click me!';
+button.addEventListener('click', () => {
+    showNotification('Button clicked!');
+});
+----
+
+== Button Variants
+
+Buttons come in several visual variants:
+
+=== Primary Button
+
+Use for the main action on a page:
+
+[source,java]
+----
+Button primaryButton = new Button("Save");
+primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+----
+
+=== Secondary Button
+
+Use for secondary actions:
+
+[source,java]
+----
+Button secondaryButton = new Button("Cancel");
+// Secondary is the default variant
+----
+
+=== Success Button
+
+Use for positive actions:
+
+[source,java]
+----
+Button successButton = new Button("Confirm");
+successButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+----
+
+=== Error Button
+
+Use for destructive actions:
+
+[source,java]
+----
+Button errorButton = new Button("Delete");
+errorButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+----
+
+== Button Sizes
+
+Adjust button size for different contexts:
+
+=== Small Buttons
+
+[source,java]
+----
+Button smallButton = new Button("Small");
+smallButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
+----
+
+=== Large Buttons
+
+[source,java]
+----
+Button largeButton = new Button("Large");
+largeButton.addThemeVariants(ButtonVariant.LUMO_LARGE);
+----
+
+== Icon Buttons
+
+Add icons to make buttons more intuitive:
+
+=== Icon with Text
+
+[source,java]
+----
+Button iconButton = new Button("Save", VaadinIcon.CHECK.create());
+----
+
+=== Icon Only
+
+[source,java]
+----
+Button iconOnlyButton = new Button(VaadinIcon.EDIT.create());
+iconOnlyButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+iconOnlyButton.getElement().setAttribute("aria-label", "Edit");
+----
+
+== Disabled State
+
+Disable buttons when actions are not available:
+
+[source,java]
+----
+Button disabledButton = new Button("Disabled");
+disabledButton.setEnabled(false);
+----
+
+== Loading State
+
+Show loading state for long-running operations:
+
+[source,java]
+----
+Button loadingButton = new Button("Loading...");
+loadingButton.setEnabled(false);
+// Add spinner icon or loading indicator
+----
+
+== Best Practices
+
+=== Clear Labels
+
+Use descriptive, action-oriented labels:
+
+* ✅ "Save Changes"
+* ✅ "Add to Cart"  
+* ❌ "OK"
+* ❌ "Submit"
+
+=== Consistent Styling
+
+Maintain consistent button styles throughout your application.
+
+=== Accessibility
+
+* Always provide clear labels
+* Use `aria-label` for icon-only buttons
+* Ensure sufficient color contrast
+* Make buttons keyboard accessible
+
+=== Loading States
+
+Provide feedback for long-running operations to prevent multiple clicks.
+
+== Common Patterns
+
+=== Confirmation Dialogs
+
+[source,java]
+----
+Button deleteButton = new Button("Delete", event -> {
+    ConfirmDialog dialog = new ConfirmDialog();
+    dialog.setHeader("Delete Item");
+    dialog.setText("Are you sure you want to delete this item?");
+    dialog.setCancelable(true);
+    dialog.setConfirmText("Delete");
+    dialog.addConfirmListener(confirmEvent -> {
+        // Perform delete operation
+        deleteItem();
+    });
+    dialog.open();
+});
+----
+
+=== Form Actions
+
+[source,java]
+----
+HorizontalLayout formActions = new HorizontalLayout();
+Button saveButton = new Button("Save", event -> saveForm());
+Button cancelButton = new Button("Cancel", event -> cancelForm());
+
+saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+formActions.add(saveButton, cancelButton);
+----
+
+== Troubleshooting
+
+=== Button Not Clicking
+
+* Check if the button is enabled
+* Verify click listener is properly attached
+* Ensure the button is not obscured by other elements
+
+=== Styling Issues
+
+* Check theme variants are applied correctly
+* Verify CSS custom properties if using custom styling
+* Ensure proper CSS loading order 
