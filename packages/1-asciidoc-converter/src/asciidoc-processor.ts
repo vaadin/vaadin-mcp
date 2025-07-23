@@ -42,20 +42,17 @@ registerReducer().then(result => {
  * @returns Configured attributes object
  */
 function getFrameworkAttributes(framework: Framework, repoPath: string): Record<string, any> {
+  // Import config here to avoid circular dependencies
+  const { asciidocConfig } = require('./config');
+  
   const attributes: Record<string, any> = {
-    // Basic AsciiDoc attributes
-    'sectnums': true,
-    'sectlinks': true,
-    'sectanchors': true,
-    'toc': 'left',
-    'toclevels': 3,
-    'source-highlighter': 'highlight.js',
-    'highlightjs-theme': 'github',
-    'imagesdir': 'images',
+    // Basic AsciiDoc attributes from config
+    ...asciidocConfig.attributes,
     
     // Vaadin-specific attributes
     'root': repoPath,
     'articles': path.join(repoPath, 'articles'),
+    'imagesdir': 'images',
     
     // Framework-specific attributes
     'flow': framework === 'flow',

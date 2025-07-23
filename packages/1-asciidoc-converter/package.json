@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "convert": "bun run src/index.ts",
+    "convert": "bun run src/cli.ts",
     "test": "bun run test.ts"
   },
   "dependencies": {
