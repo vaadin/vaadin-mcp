@@ -61,6 +61,34 @@ export const frameworkDetectionTests: TestCase[] = [
     content: "= Forms in Hilla\n\nHilla forms...",
     expectedFramework: "hilla",
     isComponent: false
+  },
+  {
+    name: "Flow directory-based detection",
+    filePath: "flow/routing/updating-url-parameters.adoc",
+    content: "= Updating URL Parameters without Navigation\n\nTo preserve deep linking...",
+    expectedFramework: "flow",
+    isComponent: false
+  },
+  {
+    name: "Hilla directory-based detection",
+    filePath: "hilla/lit/components/text-field.adoc",
+    content: "= TextField Component\n\nText field usage in Hilla...",
+    expectedFramework: "hilla",
+    isComponent: true  // Should be true since path contains '/components/'
+  },
+  {
+    name: "Flow nested directory detection",
+    filePath: "flow/advanced/security.adoc",
+    content: "= Security Features\n\nAdvanced security in Flow...",
+    expectedFramework: "flow",
+    isComponent: false
+  },
+  {
+    name: "Root level flow directory",
+    filePath: "flow/index.adoc",
+    content: "= Flow Overview\n\nMain Flow documentation...",
+    expectedFramework: "flow",
+    isComponent: false
   }
 ];
 

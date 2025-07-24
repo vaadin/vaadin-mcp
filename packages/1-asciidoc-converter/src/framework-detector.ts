@@ -11,11 +11,22 @@ import type { Framework } from 'core-types';
  * @returns The detected framework ('flow', 'hilla', or 'common')
  */
 export function detectFramework(filePath: string, content: string): Framework {
-  // Check file name for framework indicators
+  // Check file name for framework indicators first
   if (filePath.includes('/flow.asciidoc') || filePath.includes('/flow.adoc')) {
     return 'flow';
   }
   if (filePath.includes('/hilla.asciidoc') || filePath.includes('/hilla.adoc')) {
+    return 'hilla';
+  }
+  
+  // Check directory structure for framework detection
+  // Files in flow/ directories should be detected as flow
+  if (filePath.includes('/flow/') || filePath.startsWith('flow/')) {
+    return 'flow';
+  }
+  
+  // Files in hilla/ directories should be detected as hilla  
+  if (filePath.includes('/hilla/') || filePath.startsWith('hilla/')) {
     return 'hilla';
   }
   

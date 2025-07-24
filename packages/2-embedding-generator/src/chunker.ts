@@ -159,8 +159,14 @@ export class HierarchicalMarkdownChunker {
       return nanoid(8);
     }
     
+    // Normalize the file path to use forward slashes and ensure it's relative
+    let normalizedPath = filePath.replace(/\\/g, '/');
+    
+    // Remove any leading slashes or drive letters to ensure relative path
+    normalizedPath = normalizedPath.replace(/^[A-Za-z]:/, '').replace(/^\/+/, '');
+    
     // Convert file path to a clean identifier
-    return filePath
+    return normalizedPath
       .replace(/\.md$/, '')
       .replace(/[^a-zA-Z0-9]/g, '-')
       .replace(/-+/g, '-')

@@ -88,7 +88,10 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     console.log('\n📖 Step 2: Loading markdown documents...');
     const loadingStart = Date.now();
     
-    const loader = createDirectoryLoader(config.markdownDir, { recursive: true });
+    const loader = createDirectoryLoader(config.markdownDir, { 
+      recursive: true,
+      baseDir: config.markdownDir  // Ensure paths are relative to the markdown directory
+    });
     const documents = await loader.load();
     
     const loadingTime = Date.now() - loadingStart;
@@ -110,7 +113,8 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     const allChunks = new Map<string, any[]>();
     
     for (const document of documents) {
-      const filePath = path.relative(config.markdownDir, document.metadata.file_path);
+      // Document file_path should already be relative due to baseDir in loader
+      const filePath = document.metadata.file_path;
       const chunks = await chunker.chunkDocument(document);
       allChunks.set(filePath, chunks);
     }

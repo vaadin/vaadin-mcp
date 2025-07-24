@@ -27,7 +27,8 @@ export interface Frontmatter {
 export class MarkdownWithFrontmatterLoader extends BaseDocumentLoader {
   constructor(
     private filePath: string,
-    private encoding = 'utf8'
+    private encoding = 'utf8',
+    private baseDir?: string // Optional base directory to compute relative paths
   ) {
     super();
   }
@@ -36,13 +37,19 @@ export class MarkdownWithFrontmatterLoader extends BaseDocumentLoader {
     const content = await fs.promises.readFile(this.filePath, { encoding: this.encoding as BufferEncoding });
     const { frontmatter, content: markdownContent } = parseFrontmatter(content);
     
+    // Compute relative file path if baseDir is provided
+    let relativePath = this.filePath;
+    if (this.baseDir) {
+      relativePath = path.relative(this.baseDir, this.filePath);
+    }
+    
     const metadata: ProcessedMetadata = {
       framework: frontmatter.framework || 'common',
       source_url: frontmatter.source_url || '',
       title: frontmatter.title,
       ...frontmatter,
-      // Add file path for tracking
-      file_path: this.filePath
+      // Store relative path instead of absolute path
+      file_path: relativePath
     };
 
     const document = new Document({
@@ -64,6 +71,7 @@ export class DirectoryMarkdownLoader extends BaseDocumentLoader {
       recursive?: boolean;
       encoding?: string;
       includePattern?: RegExp;
+      baseDir?: string; // Base directory for relative path computation
     } = {}
   ) {
     super();
@@ -75,7 +83,11 @@ export class DirectoryMarkdownLoader extends BaseDocumentLoader {
 
     for (const filePath of files) {
       try {
-        const loader = new MarkdownWithFrontmatterLoader(filePath, this.options.encoding);
+        const loader = new MarkdownWithFrontmatterLoader(
+          filePath, 
+          this.options.encoding,
+          this.options.baseDir
+        );
         const docs = await loader.load();
         documents.push(...docs);
       } catch (error) {
@@ -192,22 +204,25 @@ function parseYamlFrontmatter(yaml: string): Frontmatter {
 }
 
 /**
- * Creates a document loader for a specific file
+ * Creates a document loader for a directory
  */
-export function createDocumentLoader(filePath: string): MarkdownWithFrontmatterLoader {
-  return new MarkdownWithFrontmatterLoader(filePath);
+export function createDirectoryLoader(
+  directoryPath: string, 
+  options?: { 
+    recursive?: boolean; 
+    encoding?: string; 
+    includePattern?: RegExp;
+    baseDir?: string;
+  }
+): DirectoryMarkdownLoader {
+  // Set baseDir to the directoryPath if not provided, so paths are relative to the markdown directory
+  const baseDir = options?.baseDir || directoryPath;
+  return new DirectoryMarkdownLoader(directoryPath, { ...options, baseDir });
 }
 
 /**
- * Creates a directory loader for loading all markdown files from a directory
+ * Creates a document loader for a specific file
  */
-export function createDirectoryLoader(
-  directoryPath: string,
-  options?: {
-    recursive?: boolean;
-    encoding?: string;
-    includePattern?: RegExp;
-  }
-): DirectoryMarkdownLoader {
-  return new DirectoryMarkdownLoader(directoryPath, options);
+export function createDocumentLoader(filePath: string, baseDir?: string): MarkdownWithFrontmatterLoader {
+  return new MarkdownWithFrontmatterLoader(filePath, 'utf8', baseDir);
 } 
