@@ -1,38 +1,55 @@
 {
-  "name": "mcp-server",
-  "version": "0.2.0",
-  "description": "MCP server for Vaadin documentation with hierarchical navigation",
+  "name": "vaadin-docs-mcp-server",
+  "version": "0.3.0",
+  "description": "MCP server for Vaadin documentation with hierarchical navigation and parent-child relationships",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "vaadin-docs-mcp": "./dist/index.js"
+    "vaadin-docs-mcp-server": "./dist/index.js"
   },
   "files": [
     "dist",
     "README.md",
+    "README.npm.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "node scripts/build.js",
     "prepublishOnly": "npm run build",
     "start": "bun run src/index.ts",
-    "test": "echo 'No tests yet' && exit 0"
+    "test": "bun run src/test-scenarios.ts --verbose",
+    "test:hierarchical": "bun run src/test-scenarios.ts --verbose",
+    "test:server": "bun run src/test-scenarios.ts --server=http://localhost:3001 --verbose"
   },
   "keywords": [
     "vaadin",
     "documentation",
     "mcp",
-    "model-context-protocol"
+    "model-context-protocol",
+    "hierarchical",
+    "parent-child",
+    "navigation",
+    "semantic-search",
+    "rag",
+    "ide-assistant"
   ],
   "author": "Vaadin",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vaadin/vaadin-documentation-services",
+    "directory": "packages/mcp-server"
+  },
+  "homepage": "https://github.com/vaadin/vaadin-documentation-services/tree/main/packages/mcp-server",
+  "bugs": {
+    "url": "https://github.com/vaadin/vaadin-documentation-services/issues"
+  },
   "devDependencies": {
     "@types/node": "^22.13.8",
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "core-types": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.6.1"
   }
 }

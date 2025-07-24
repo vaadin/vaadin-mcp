@@ -9,6 +9,20 @@ import type { SearchProvider, SemanticResult, KeywordResult } from './search-int
  * Mock test data that simulates what would be in Pinecone
  */
 const MOCK_PINECONE_DATA = [
+  // Top-level parent chunks
+  {
+    id: 'forms-index',
+    content: 'Vaadin provides comprehensive form handling capabilities for both Flow and Hilla frameworks. Forms are essential for user data input and include features like data binding, validation, and submission handling.',
+    metadata: {
+      chunk_id: 'forms-index',
+      parent_id: null,
+      framework: 'common',
+      source_url: 'https://vaadin.com/docs/latest/forms',
+      title: 'Forms Overview',
+      heading: 'Introduction to Forms'
+    },
+    score: 0.95
+  },
   {
     id: 'forms-binding-1',
     content: 'Form data binding in Vaadin Flow allows you to connect form fields to Java objects using the Binder class. The Binder automatically handles validation and data conversion.',
