@@ -143,10 +143,8 @@ export class ResultFormatter {
         content: result.content,
         source_url: result.metadata.source_url || '',
         metadata: {
-          ...result.metadata,
           title: result.metadata.title || 'Untitled',
           heading: result.metadata.heading || '',
-          framework: result.metadata.framework || ''
         },
         relevance_score: result.score,
       });

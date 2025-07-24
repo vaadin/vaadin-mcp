@@ -189,10 +189,8 @@ export class PineconeSearchProvider implements SearchProvider {
         content: String(match.metadata.content || ''),
         source_url: String(match.metadata.source_url || ''),
         metadata: {
-          ...match.metadata,
           title: String(match.metadata.title || 'Untitled'),
           heading: String(match.metadata.heading || ''),
-          framework: String(match.metadata.framework || '')
         },
         relevance_score: match.score || 0,
       };

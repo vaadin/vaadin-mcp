@@ -238,10 +238,8 @@ export class MockSearchProvider implements SearchProvider {
       content: item.content,
       source_url: item.metadata.source_url,
       metadata: {
-        ...item.metadata,
         title: item.metadata.title,
         heading: item.metadata.heading,
-        framework: item.metadata.framework
       },
       relevance_score: item.score
     };
