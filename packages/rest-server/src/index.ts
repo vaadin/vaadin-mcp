@@ -3,15 +3,17 @@
 /**
  * Vaadin Documentation REST Server
  * 
- * This server provides a REST API for searching Vaadin documentation.
- * It's used by the MCP server to perform searches.
+ * This server provides a REST API for searching Vaadin documentation with hybrid search.
+ * It uses clean dependency injection to separate production and test implementations.
  */
 
 import express from 'express';
 import type { Request, Response } from 'express';
 import cors from 'cors';
 import { config } from './config.js';
-import { searchDocumentation } from './pinecone-service.js';
+import { createSearchProvider } from './search-factory.js';
+import { HybridSearchService } from './hybrid-search-service.js';
+import type { RetrievalResult } from 'core-types';
 import OpenAI from 'openai';
 
 // Initialize OpenAI client
@@ -19,10 +21,19 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Initialize search service with appropriate provider
+const searchProvider = createSearchProvider();
+const searchService = new HybridSearchService(searchProvider);
+
 /**
- * Check for required environment variables
+ * Check for required environment variables (only in production mode)
  */
 function checkEnvironmentVariables() {
+  if (process.env.NODE_ENV === 'test' || process.env.MOCK_PINECONE === 'true') {
+    console.log('🧪 Running in test mode - skipping API key validation');
+    return;
+  }
+  
   if (!process.env.OPENAI_API_KEY) {
     console.error('OPENAI_API_KEY environment variable is required');
     process.exit(1);
@@ -60,7 +71,10 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Search endpoint - accepts only JSON body parameters
+/**
+ * Enhanced search endpoint with hybrid search support
+ * Maintains backward compatibility while adding new features
+ */
 app.post('/search', async (req: Request, res: Response) => {
   try {
     // Check if request has a body
@@ -70,12 +84,14 @@ app.post('/search', async (req: Request, res: Response) => {
       });
     }
     
-    const { query, max_results, max_tokens, framework } = req.body;
+    // Support both 'query' (legacy) and 'question' (new) parameters
+    const { query, question, max_results, max_tokens, framework, stream } = req.body;
+    const searchQuery = question || query;
     
-    // Validate query
-    if (!query || typeof query !== 'string') {
+    // Validate search query
+    if (!searchQuery || typeof searchQuery !== 'string') {
       return res.status(400).json({ 
-        error: 'Missing or invalid "query" parameter in request body' 
+        error: 'Missing or invalid "question" or "query" parameter in request body' 
       });
     }
     
@@ -89,16 +105,21 @@ app.post('/search', async (req: Request, res: Response) => {
       ? Math.min(Math.max(100, max_tokens), 10000) 
       : config.search.defaultMaxTokens;
     
-    // Validate framework parameter
-    const validFramework = framework === undefined || framework === '' || framework === 'flow' || framework === 'hilla'
+    // Validate framework parameter - support both 'flow'/'hilla' and empty string
+    const validFramework = (framework === 'flow' || framework === 'hilla' || framework === '') 
       ? framework || ''
       : '';
     
-    // Search documentation
-    const results = await searchDocumentation(query, maxResults, maxTokens, validFramework);
+    // Use hybrid search for enhanced results
+    const results = await searchService.hybridSearch(searchQuery, {
+      maxResults,
+      maxTokens,
+      framework: validFramework,
+    });
     
-    // Return results
+    // Return results in the expected format
     res.json({ results });
+    
   } catch (error) {
     console.error('Error searching documentation:', error);
     
@@ -109,20 +130,50 @@ app.post('/search', async (req: Request, res: Response) => {
 });
 
 /**
- * Prepare the context, prompt, and messages for OpenAI from the supporting documents
- * @param question - The user's question
- * @param documents - The supporting documents from the vector search
- * @returns An object containing the messages array for OpenAI
+ * Get specific document chunk endpoint
+ * This enables navigation through parent-child relationships
  */
-function prepareOpenAIRequest(question: string, documents: any[]): { messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> } {
+app.get('/chunk/:chunkId', async (req: Request, res: Response) => {
+  try {
+    const { chunkId } = req.params;
+    
+    if (!chunkId) {
+      return res.status(400).json({
+        error: 'Missing chunk ID parameter'
+      });
+    }
+    
+    const chunk = await searchService.getDocumentChunk(chunkId);
+    
+    if (!chunk) {
+      return res.status(404).json({
+        error: 'Document chunk not found'
+      });
+    }
+    
+    res.json(chunk);
+    
+  } catch (error) {
+    console.error('Error fetching document chunk:', error);
+    
+    res.status(500).json({
+      error: `Error fetching document chunk: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
+  }
+});
+
+/**
+ * Prepare the context, prompt, and messages for OpenAI from the supporting documents
+ */
+function prepareOpenAIRequest(question: string, documents: RetrievalResult[]): { messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> } {
   // Create a context from the documents
   const context = documents.map((doc, index) => {
     return `Document ${index + 1}:
-Title: ${doc.metadata.title}
-${doc.metadata.heading ? `Heading: ${doc.metadata.heading}\n` : ''}
-${doc.metadata.framework ? `Framework: ${doc.metadata.framework}\n` : ''}
-Source: ${doc.metadata.url}
-Content: ${doc.text}
+Title: ${doc.metadata?.title || 'Untitled'}
+${doc.metadata?.heading ? `Heading: ${doc.metadata.heading}\n` : ''}
+Framework: ${doc.framework}
+Source: ${doc.source_url}
+Content: ${doc.content}
 `;
   }).join('\n\n');
 
@@ -148,8 +199,6 @@ ${context}
 
 /**
  * Rewrite a user question to be more suitable for vector database search
- * @param originalQuestion - The original user question
- * @returns Promise with the rewritten question optimized for vector search
  */
 async function rewriteQuestionForSearch(originalQuestion: string): Promise<string> {
   const prompt = `
@@ -178,8 +227,6 @@ Rewritten question:`;
 
 /**
  * Check if a question is related to Vaadin or Java development
- * @param question The question to check
- * @returns A promise that resolves to an object with isRelevant and reason properties
  */
 async function isQuestionRelevant(question: string): Promise<{ isRelevant: boolean; reason: string }> {
   const prompt = `
@@ -260,15 +307,19 @@ app.post('/ask', async (req: Request, res: Response) => {
     }
 
     // Validate framework parameter
-    const validFramework = framework === undefined || framework === '' || framework === 'flow' || framework === 'hilla'
+    const validFramework = (framework === 'flow' || framework === 'hilla' || framework === '') 
       ? framework || ''
       : '';
 
     // Rewrite the question for better vector search
     const searchQuestion = await rewriteQuestionForSearch(question);
     
-    // Search for supporting documentation (fixed at 5 results)
-    const supportingDocs = await searchDocumentation(searchQuestion, 5, 4000, validFramework);
+    // Use hybrid search for better results (fixed at 5 results)
+    const supportingDocs = await searchService.hybridSearch(searchQuestion, {
+      maxResults: 5,
+      maxTokens: 4000,
+      framework: validFramework,
+    });
     
     // Prepare the OpenAI request (same for both streaming and non-streaming)
     const { messages } = prepareOpenAIRequest(question, supportingDocs);
@@ -330,4 +381,8 @@ app.post('/ask', async (req: Request, res: Response) => {
 const port = config.server.port;
 app.listen(port, () => {
   console.log(`Vaadin Documentation REST server running on http://localhost:${port}`);
+  console.log('✅ Enhanced with hybrid search (semantic + keyword + RRF)');
+  console.log('✅ Framework filtering for Flow/Hilla/common');
+  console.log('✅ Clean dependency injection architecture');
+  console.log('✅ Separated mock and production implementations');
 });

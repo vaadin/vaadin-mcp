@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'rest-server/**'
+      - 'packages/rest-server/**'
       - '.github/workflows/deploy-rest-server.yml'
   
   # Allow manual triggering
@@ -23,8 +23,20 @@ jobs:
       - name: Setup Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
       
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      
+      - name: Install workspace dependencies
+        run: bun install
+      
+      - name: Build REST server
+        working-directory: ./packages/rest-server
+        run: bun run build
+      
       - name: Deploy to Fly.io
-        working-directory: ./rest-server
+        working-directory: ./packages/rest-server
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: flyctl deploy --remote-only

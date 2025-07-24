@@ -9,7 +9,12 @@
   "scripts": {
     "build": "tsc",
     "start": "bun run src/index.ts",
-    "test": "echo 'No tests yet' && exit 0"
+    "test": "bun run src/hybrid-search.test.ts",
+    "test:unit": "bun run src/hybrid-search.test.ts",
+    "test:integration": "bun run src/test-suite.ts",
+    "test:quick": "bun run src/test-suite.ts --quick",
+    "test:verbose": "bun run src/test-suite.ts --verbose",
+    "test:server": "bun run src/test-suite.ts --endpoint=http://localhost:3001 --verbose"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
