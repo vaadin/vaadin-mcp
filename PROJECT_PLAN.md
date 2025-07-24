@@ -1,7 +1,7 @@
 # Vaadin RAG System Refactor - Project Plan & Tracking
 
-**Project Status**: 🟡 Epic 1 Complete - Ready for Epic 2.1  
-**Last Updated**: 2025-07-23  
+**Project Status**: 🟡 Epic 2 Complete - Ready for Epic 3  
+**Last Updated**: 2025-07-23 (Epic 2.2 completed)  
 **Context Window Limit**: 128k tokens per session  
 **⚠️ CRITICAL RULE**: Each agent completes ONE session only, then hands off
 
@@ -104,9 +104,10 @@ This project refactors the existing naive RAG system for Vaadin documentation in
 ---
 
 ### Epic 2: Implement Two-Step Ingestion Pipeline
-**Status**: 🔴 Not Started  
+**Status**: ✅ **COMPLETED**  
 **Complexity**: High (12-16 hours)  
-**Context Window**: 2-3 sessions
+**Context Window**: 2-3 sessions  
+**Completed**: 2025-07-23
 
 #### Epic 2.1: 1-asciidoc-converter Package
 **Status**: ✅ **COMPLETED**  
@@ -145,21 +146,22 @@ test-data/
 - [x] Test suite passes with 100% framework detection accuracy
 
 #### Epic 2.2: 2-embedding-generator Package  
-**Status**: 🔴 Not Started  
-**Session**: 2 (6-8 hours)
+**Status**: ✅ **COMPLETED**  
+**Session**: 2 (6-8 hours)  
+**Completed**: 2025-07-23
 
 **Input**: Markdown files from `1-asciidoc-converter/dist/markdown/`  
 **Output**: Embeddings stored in Pinecone with hierarchical relationships
 
 #### Tasks:
-- [ ] **2.2.1** Implement file hierarchy parser
-- [ ] **2.2.2** Create LangChain document loader for markdown with frontmatter
-- [ ] **2.2.3** Implement MarkdownHeaderTextSplitter for chunking
-- [ ] **2.2.4** Create parent-child relationship logic (cross-file)
-- [ ] **2.2.5** Create parent-child relationship logic (intra-file)
-- [ ] **2.2.6** Generate embeddings with OpenAI
-- [ ] **2.2.7** Upsert to Pinecone with rich metadata
-- [ ] **2.2.8** Create test suite for chunking and relationships
+- [x] **2.2.1** Implement file hierarchy parser
+- [x] **2.2.2** Create LangChain document loader for markdown with frontmatter
+- [x] **2.2.3** Implement MarkdownHeaderTextSplitter for chunking
+- [x] **2.2.4** Create parent-child relationship logic (cross-file)
+- [x] **2.2.5** Create parent-child relationship logic (intra-file)
+- [x] **2.2.6** Generate embeddings with OpenAI
+- [x] **2.2.7** Upsert to Pinecone in batches with rich metadata
+- [x] **2.2.8** Create test suite for chunking and relationships
 
 **Key Logic:**
 ```typescript
@@ -175,12 +177,39 @@ if (chunk.level > 1) {
 ```
 
 **Validation Criteria:**
-- [ ] Correctly parses file hierarchy
-- [ ] Creates proper parent-child relationships across files
-- [ ] Creates proper parent-child relationships within files  
-- [ ] Generates unique chunk_ids
-- [ ] Stores complete metadata in Pinecone
-- [ ] Test suite validates relationship accuracy
+- [x] Correctly parses file hierarchy
+- [x] Creates proper parent-child relationships across files
+- [x] Creates proper parent-child relationships within files  
+- [x] Generates unique chunk_ids
+- [x] Stores complete metadata in Pinecone
+- [x] Test suite validates relationship accuracy
+
+**Epic 2.2 Completed Successfully:**
+- ✅ Complete hierarchical markdown chunking pipeline implemented
+- ✅ File hierarchy parser with cross-file parent-child detection  
+- ✅ LangChain document loader with frontmatter parsing
+- ✅ Markdown header-based chunking with size limits
+- ✅ Sophisticated relationship builder for intra-file and cross-file relationships
+- ✅ OpenAI embeddings generation with batching and retry logic
+- ✅ Pinecone upserter with metadata management and batch processing
+- ✅ Comprehensive test suite for validation
+- ✅ Main pipeline function with complete error handling and timing
+- ✅ Environment variable configuration support
+- ✅ TypeScript compilation successful
+- ✅ All modules pass import validation
+- ✅ **Test data reorganized**: Each package has its own test-data directory
+- ✅ **All tests passing**: 100% success rate for both packages
+- ✅ **Production ready**: Compiled JavaScript tests pass
+
+**Notes for Next Agent (Epic 3):**
+- 2-embedding-generator package is ready for production use
+- Main function: `generateEmbeddings(config)` or `generateEmbeddingsFromEnv(markdownDir)`
+- All modules properly exported and TypeScript compiled
+- Rich metadata stored in Pinecone including parent_id, framework, source_url, headings
+- Cross-file relationships established based on directory structure
+- Intra-file relationships based on markdown header hierarchy
+- Comprehensive configuration validation and error handling
+- Ready for Epic 3: Enhanced REST Service implementation
 
 ---
 
@@ -498,38 +527,41 @@ export interface IngestionConfig {
 
 ## 🎯 Next Steps
 
-### 🔥 CURRENT SESSION FOCUS: Epic 2.2 - Embedding Generator
+### 🔥 CURRENT SESSION FOCUS: Epic 3 - Enhanced REST Service
 
-**⚠️ Next agent should ONLY complete Epic 2.2 and then stop ⚠️**
+**⚠️ Next agent should ONLY complete Epic 3 and then stop ⚠️**
 
-#### Session Scope (Epic 2.2):
+#### Session Scope (Epic 3):
 1. ✅ Epic 1 COMPLETED - Workspace structure ready
-2. ✅ Epic 2.1 COMPLETED - AsciiDoc converter ready
-3. **START HERE**: Implement 2-embedding-generator package
-4. Create LangChain document loader for markdown with frontmatter
-5. Implement MarkdownHeaderTextSplitter for chunking
-6. Create parent-child relationship logic (cross-file and intra-file)
-7. Generate embeddings with OpenAI
-8. Upsert to Pinecone with rich metadata
-9. Create test suite for chunking and relationships
-10. **Update this document** with Epic 2.2 progress
-11. **Document handoff** for next agent (Epic 3)
+2. ✅ Epic 2 COMPLETED - Complete ingestion pipeline ready
+3. **START HERE**: Implement enhanced REST service with hybrid search
+4. Implement LangChain Pinecone vector store connection
+5. Create hybrid search functionality with semantic and keyword search
+6. Implement framework filtering logic for Flow/Hilla/common
+7. Add Reciprocal Rank Fusion (RRF) for result combining
+8. Maintain existing API contract (question, framework, stream)
+9. Create test suite for search functionality
+10. **Update this document** with Epic 3 progress
+11. **Document handoff** for next agent (Epic 4)
 
-#### Epic 2.1 Completed Deliverables:
-- [x] Working 1-asciidoc-converter package
-- [x] Test data created in test-data/ directory  
-- [x] Framework detection working with 100% accuracy on test cases
-- [x] Markdown output with frontmatter capability
-- [x] Updated PROJECT_PLAN.md with Epic 2.1 status
-- [x] Clear instructions for next agent starting Epic 2.2
+#### Epic 2 Completed Deliverables:
+- [x] Working 1-asciidoc-converter package with framework detection
+- [x] Working 2-embedding-generator package with hierarchical chunking
+- [x] Complete LangChain document processing pipeline
+- [x] Hierarchical chunking with parent-child relationships (intra-file and cross-file)
+- [x] OpenAI embeddings generation with batching
+- [x] Pinecone integration with rich metadata storage
+- [x] Test suite validating relationship accuracy
+- [x] Updated PROJECT_PLAN.md with Epic 2 completion
 
-#### End-of-Session Deliverables for Epic 2.2:
-- [ ] Working 2-embedding-generator package
-- [ ] LangChain document processing pipeline
-- [ ] Hierarchical chunking with parent-child relationships
-- [ ] Pinecone integration with rich metadata
-- [ ] Test suite validating relationship accuracy
-- [ ] Updated PROJECT_PLAN.md with Epic 2.2 status
+#### End-of-Session Deliverables for Epic 3:
+- [ ] Enhanced REST service with hybrid search
+- [ ] LangChain Pinecone vector store integration
+- [ ] Framework filtering implementation
+- [ ] RRF fusion for improved search quality
+- [ ] Maintained API contract compatibility
+- [ ] Test suite for search functionality
+- [ ] Updated PROJECT_PLAN.md with Epic 3 status
 
 ### Overall Project Success Metrics:
 - **Accuracy**: >95% framework detection accuracy
@@ -539,14 +571,14 @@ export interface IngestionConfig {
 
 ---
 
-**🔄 Last Updated**: 2025-07-23 (Epic 2.1 completed)  
+**🔄 Last Updated**: 2025-07-23 (Epic 2.2 completed)  
 **📋 Total Tasks**: 33 across 4 epics  
 **⏱️ Estimated Time**: 27-38 hours across 5-7 sessions  
-**🎯 Current Focus**: Epic 2.2 ONLY - Embedding Generator Package  
-**⚠️ Session Limit**: Complete Epic 2.2 and stop - DO NOT continue to Epic 3
+**🎯 Current Focus**: Epic 3 ONLY - Enhanced REST Service  
+**⚠️ Session Limit**: Complete Epic 3 and stop - DO NOT continue to Epic 4
 
 **✅ Epic 1**: Completed - Project structure refactored
-**✅ Epic 2.1**: Completed - AsciiDoc converter implemented with 100% framework detection accuracy
-**🔴 Epic 2.2**: Next - Embedding generator with hierarchical chunking
-**🔴 Epic 3**: Pending - Enhanced REST service
+**✅ Epic 2.1**: Completed - AsciiDoc converter implemented with 100% framework detection accuracy  
+**✅ Epic 2.2**: Completed - Embedding generator with hierarchical chunking and relationship building
+**🔴 Epic 3**: Next - Enhanced REST service with hybrid search
 **🔴 Epic 4**: Pending - Updated MCP server 

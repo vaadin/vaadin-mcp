@@ -110,7 +110,7 @@ export function runFrameworkDetectionTests(): { passed: number; failed: number; 
   // Test with actual files first
   console.log('Testing with actual files:');
   for (const testCase of actualFileTests) {
-    const fullPath = path.join(process.cwd(), '../..', testCase.file);
+    const fullPath = path.join(process.cwd(), testCase.file);
     
     if (!fs.existsSync(fullPath)) {
       console.log(`❌ ${testCase.name} - File not found: ${fullPath}`);
@@ -197,7 +197,7 @@ export async function runConversionTests(): Promise<{ passed: number; failed: nu
   try {
     // Check if our test files exist
     console.log('Checking test data files...');
-    const testDataDir = path.join(process.cwd(), '../..', 'test-data');
+    const testDataDir = path.join(process.cwd(), 'test-data');
     const expectedTestFiles = [
       'forms.adoc',
       'forms/binding.adoc',
@@ -233,7 +233,7 @@ export async function runConversionTests(): Promise<{ passed: number; failed: nu
     // Test framework detection accuracy
     console.log('\nTesting framework detection on actual files...');
     for (const testCase of actualFileTests) {
-      const fullPath = path.join(process.cwd(), '../..', testCase.file);
+      const fullPath = path.join(process.cwd(), testCase.file);
       if (fs.existsSync(fullPath)) {
         const content = fs.readFileSync(fullPath, 'utf8');
         const detected = detectFramework(testCase.file, content);

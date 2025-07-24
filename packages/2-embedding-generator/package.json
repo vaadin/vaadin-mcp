@@ -7,8 +7,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "generate": "bun run src/index.ts",
-    "test": "bun test"
+    "generate": "bun run src/cli.ts",
+    "test": "bun run dist/test-suite.js",
+    "test:src": "bun run src/test-suite.ts"
   },
   "dependencies": {
     "core-types": "workspace:*",
