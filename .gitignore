@@ -2,7 +2,7 @@
 node_modules/
 
 # Bun
-bun.lockb
+# bun.lockb (commented out to allow tracking for reproducible builds)
 
 # Build artifacts
 dist/
