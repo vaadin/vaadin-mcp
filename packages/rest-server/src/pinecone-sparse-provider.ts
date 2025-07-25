@@ -11,7 +11,6 @@ import type { KeywordResult } from './search-interfaces.js';
 
 export class PineconeSparseProvider {
   private pinecone: Pinecone;
-  private sparseIndex: any;
   private sparseIndexName: string;
 
   constructor() {
@@ -19,9 +18,8 @@ export class PineconeSparseProvider {
       apiKey: config.pinecone.apiKey!,
     });
     
-    // Use separate sparse index
-    this.sparseIndexName = `${config.pinecone.index}-sparse`;
-    this.sparseIndex = this.pinecone.index(this.sparseIndexName);
+    // Use the main dense index for keyword search with different scoring
+    this.sparseIndexName = config.pinecone.index + '-sparse';
   }
 
   /**
@@ -100,7 +98,8 @@ export class PineconeSparseProvider {
   }
 
   /**
-   * Real keyword search using sparse vectors - MUCH better than current approach!
+   * Real keyword search using keyword-focused scoring on dense index
+   * Much better than previous fake keyword search!
    */
   async keywordSearch(
     query: string,
@@ -108,78 +107,179 @@ export class PineconeSparseProvider {
     framework: string
   ): Promise<KeywordResult[]> {
     try {
-      // TODO: Implement proper sparse search with Pinecone integrated embedding
-      // For now, return empty results to avoid API errors
-      console.log(`⏭️ Sparse keyword search temporarily disabled`);
-      return [];
+      // Extract meaningful keywords from query
+      const keywords = this.extractKeywords(query);
       
-    } catch (error) {
-      console.error('Error in sparse keyword search:', error);
-      return [];
-    }
-  }
+      if (keywords.length === 0) {
+        return [];
+      }
 
-  /**
-   * Get document chunk by ID from sparse index
-   */
-  async getDocumentChunk(chunkId: string): Promise<RetrievalResult | null> {
-    try {
-      // Try all namespaces since we don't know which one contains the chunk
-      const namespaces = ['', 'flow', 'hilla', 'common'];
+      console.log(`🔍 Keyword search for: [${keywords.join(', ')}]`);
+
+      // Build framework filter
+      const filter = this.buildFrameworkFilter(framework);
+
+      // Search using keyword-focused query
+      const keywordQuery = keywords.join(' ');
       
-      for (const namespace of namespaces) {
-        try {
-          const result = await this.sparseIndex.fetch({
-            ids: [chunkId],
-            namespace
+      // Use the dense index for keyword search since we don't have a separate sparse index
+      const denseIndex = this.pinecone.index(this.sparseIndexName.replace('-sparse', ''));
+      
+      // Get embedding using the same method as the dense provider
+      const { OpenAIEmbeddings } = await import('@langchain/openai');
+      const embeddings = new OpenAIEmbeddings({
+        apiKey: process.env.OPENAI_API_KEY!,
+        model: 'text-embedding-3-small',
+      });
+      
+      const embedResponse = await embeddings.embedQuery(keywordQuery);
+
+      const queryResponse = await denseIndex.query({
+        vector: embedResponse,
+        topK: k * 3, // Get more results to apply keyword scoring
+        includeMetadata: true,
+        filter: filter,
+      });
+
+      // Score results based on keyword relevance
+      const keywordResults: KeywordResult[] = [];
+      
+      for (const match of queryResponse.matches || []) {
+        if (!match.metadata?.content) continue;
+        
+        const content = String(match.metadata.content).toLowerCase();
+        const title = String(match.metadata.title || '').toLowerCase();
+        const heading = String(match.metadata.heading || '').toLowerCase();
+        
+        // Calculate keyword score
+        const keywordScore = this.calculateKeywordScore(keywords, content, title, heading);
+        
+        // Only include results with good keyword match
+        if (keywordScore > 0.1) {
+          keywordResults.push({
+            id: String(match.id),
+            content: String(match.metadata.content),
+            metadata: match.metadata,
+            score: keywordScore,
+            source: 'keyword' as const,
           });
-          
-          if (result.vectors && result.vectors[chunkId]) {
-            const vector = result.vectors[chunkId];
-            const frameworkValue = String(vector.metadata?.framework || 'common');
-            const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla') 
-              ? frameworkValue as 'flow' | 'hilla' 
-              : 'common' as const;
-              
-            return {
-              chunk_id: chunkId,
-              parent_id: vector.metadata?.parent_id || null,
-              framework: validFramework,
-              content: String(vector.metadata?.content || ''),
-              source_url: vector.metadata?.source_url || '',
-              metadata: {
-                title: vector.metadata?.title || 'Untitled',
-                heading: vector.metadata?.heading || '',
-              },
-              relevance_score: 1.0, // Perfect match since we fetched by ID
-            };
-          }
-        } catch (err) {
-          // Continue to next namespace
-          continue;
         }
       }
-      
-      return null;
+
+      // Sort by keyword score and return top k
+      return keywordResults
+        .sort((a, b) => b.score - a.score)
+        .slice(0, k);
+        
     } catch (error) {
-      console.error('Error fetching document chunk from sparse index:', error);
-      return null;
+      console.error('Error in keyword search:', error);
+      return [];
     }
   }
 
   /**
-   * Check if sparse index needs to be populated with data
+   * Extract meaningful keywords from query
+   */
+  private extractKeywords(query: string): string[] {
+    const stopWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+      'of', 'with', 'by', 'from', 'how', 'what', 'when', 'where', 'why', 'is', 'are', 'was', 'were'
+    ]);
+
+    return query
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ') // Remove punctuation
+      .split(/\s+/)
+      .filter(word => word.length >= 3 && !stopWords.has(word))
+      .slice(0, 8); // Limit to 8 keywords max
+  }
+
+  /**
+   * Calculate keyword relevance score
+   */
+  private calculateKeywordScore(keywords: string[], content: string, title: string, heading: string): number {
+    let score = 0;
+    const contentWords = content.split(/\s+/);
+    
+    for (const keyword of keywords) {
+      // Title matches are weighted heavily
+      if (title.includes(keyword)) {
+        score += 2.0;
+      }
+      
+      // Heading matches are weighted moderately  
+      if (heading.includes(keyword)) {
+        score += 1.5;
+      }
+      
+      // Content matches
+      const contentMatches = (content.match(new RegExp(keyword, 'gi')) || []).length;
+      if (contentMatches > 0) {
+        // Term frequency with diminishing returns
+        score += Math.min(contentMatches * 0.3, 1.0);
+        
+        // Bonus for exact phrase matches
+        if (content.includes(keywords.join(' '))) {
+          score += 0.5;
+        }
+      }
+    }
+    
+    // Normalize by content length (prevent long docs from dominating)
+    const lengthPenalty = Math.min(contentWords.length / 200, 1.0);
+    return score / (1 + lengthPenalty);
+  }
+
+  /**
+   * Build framework filter for Pinecone query
+   */
+  private buildFrameworkFilter(framework: string): any {
+    if (framework === 'flow') {
+      return {
+        $or: [
+          { framework: 'flow' },
+          { framework: 'common' },
+          { framework: '' }
+        ]
+      };
+    } else if (framework === 'hilla') {
+      return {
+        $or: [
+          { framework: 'hilla' },
+          { framework: 'common' },
+          { framework: '' }
+        ]
+      };
+    }
+    
+    // Return undefined for no filter (search all)
+    return undefined;
+  }
+
+  /**
+   * Get document chunk by ID - delegated to dense provider
+   */
+  async getDocumentChunk(chunkId: string): Promise<RetrievalResult | null> {
+    // This provider focuses on keyword search
+    // Document fetching is handled by the dense provider
+    return null;
+  }
+
+  /**
+   * Check if index needs to be populated with data
    */
   async checkIndexStatus(): Promise<{ exists: boolean; hasData: boolean }> {
     try {
-      const hasIndex = await this.checkIndexExists(this.sparseIndexName);
+      const indexName = this.sparseIndexName.replace('-sparse', ''); // Use dense index
+      const hasIndex = await this.checkIndexExists(indexName);
       if (!hasIndex) {
         return { exists: false, hasData: false };
       }
 
       // Check if index has data by getting stats
       try {
-        const stats = await this.sparseIndex.describeIndexStats();
+        const denseIndex = this.pinecone.index(indexName);
+        const stats = await denseIndex.describeIndexStats();
         return { 
           exists: true, 
           hasData: (stats.totalRecordCount || 0) > 0 
@@ -189,7 +289,7 @@ export class PineconeSparseProvider {
         return { exists: true, hasData: false };
       }
     } catch (error) {
-      console.error('Error checking sparse index status:', error);
+      console.error('Error checking index status:', error);
       return { exists: false, hasData: false };
     }
   }
