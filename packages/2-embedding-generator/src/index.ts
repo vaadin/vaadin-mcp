@@ -256,7 +256,7 @@ export async function generateEmbeddingsFromEnv(markdownDir: string, options: {
 } = {}): Promise<EmbeddingGenerationResult> {
   const openaiApiKey = process.env.OPENAI_API_KEY;
   const pineconeApiKey = process.env.PINECONE_API_KEY;
-  const pineconeIndexName = process.env.PINECONE_INDEX_NAME || 'vaadin-docs';
+  const pineconeIndexName = process.env.PINECONE_INDEX || 'vaadin-docs';
 
   if (!openaiApiKey) {
     throw new Error('OPENAI_API_KEY environment variable is required');

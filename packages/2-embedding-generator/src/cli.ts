@@ -42,7 +42,7 @@ Options:
 Environment Variables:
   OPENAI_API_KEY        Required: OpenAI API key for embeddings
   PINECONE_API_KEY      Required: Pinecone API key
-  PINECONE_INDEX_NAME   Optional: Pinecone index name (default: vaadin-docs)
+  PINECONE_INDEX        Optional: Pinecone index name (default: vaadin-docs)
 
 Examples:
   bun run generate
@@ -67,7 +67,7 @@ Examples:
   try {
     console.log(`📁 Input directory: ${markdownDir}`);
     console.log(`🔄 Update strategy: ${clearExistingIndex ? 'Clear & Rebuild' : smartUpdate ? 'Smart Update' : 'Simple Upsert'}`);
-    console.log(`🏷️ Index: ${process.env.PINECONE_INDEX_NAME || 'vaadin-docs'}\n`);
+    console.log(`🏷️ Index: ${process.env.PINECONE_INDEX || 'vaadin-docs'}\n`);
     
     const result = await generateEmbeddingsFromEnv(markdownDir, {
       clearExistingIndex,
