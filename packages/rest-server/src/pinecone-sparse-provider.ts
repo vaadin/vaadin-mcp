@@ -108,28 +108,13 @@ export class PineconeSparseProvider {
     framework: string
   ): Promise<KeywordResult[]> {
     try {
-      // Determine namespace based on framework
-      const namespace = this.getNamespace(framework);
-      
-      const results = await this.sparseIndex.search({
-        namespace,
-        query: {
-          topK: k,
-          inputs: { text: query }
-        }
-      });
-      
-      return results.result.hits.map((hit: any) => ({
-        id: String(hit._id),
-        content: String(hit.fields?.content || hit.content || ''),
-        metadata: hit.metadata || hit.fields || {},
-        score: hit._score,
-        source: 'keyword' as const,
-      }));
+      // TODO: Implement proper sparse search with Pinecone integrated embedding
+      // For now, return empty results to avoid API errors
+      console.log(`⏭️ Sparse keyword search temporarily disabled`);
+      return [];
       
     } catch (error) {
-      console.error('Sparse search error:', error);
-      // Graceful fallback - return empty results rather than crash
+      console.error('Error in sparse keyword search:', error);
       return [];
     }
   }
@@ -192,19 +177,17 @@ export class PineconeSparseProvider {
         return { exists: false, hasData: false };
       }
 
-      // Check if index has data by trying a simple query
-      const testResult = await this.sparseIndex.search({
-        namespace: '',
-        query: {
-          topK: 1,
-          inputs: { text: 'test' }
-        }
-      });
-
-      return { 
-        exists: true, 
-        hasData: testResult.result.hits.length > 0 
-      };
+      // Check if index has data by getting stats
+      try {
+        const stats = await this.sparseIndex.describeIndexStats();
+        return { 
+          exists: true, 
+          hasData: (stats.totalRecordCount || 0) > 0 
+        };
+      } catch (error) {
+        // If we can't get stats, assume index exists but has no data
+        return { exists: true, hasData: false };
+      }
     } catch (error) {
       console.error('Error checking sparse index status:', error);
       return { exists: false, hasData: false };

@@ -46,8 +46,8 @@ export class PineconeSearchProvider implements SearchProvider {
     k: number,
     framework: string
   ): Promise<SemanticResult[]> {
-    // Build filter for framework
-    let filter = {};
+    // Build filter for framework - use undefined if no specific framework filter needed
+    let filter: any = undefined;
     
     if (framework === 'flow') {
       filter = {
@@ -66,6 +66,7 @@ export class PineconeSearchProvider implements SearchProvider {
         ]
       };
     }
+    // For any other framework value (including empty string), search all documents
 
     // Perform similarity search with LangChain
     const results = await this.vectorStore.similaritySearchWithScore(query, k, filter);
