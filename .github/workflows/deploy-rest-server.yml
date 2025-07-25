@@ -36,7 +36,6 @@ jobs:
         run: bun run build
       
       - name: Deploy to Fly.io
-        working-directory: ./packages/rest-server
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --config packages/rest-server/fly.toml --dockerfile packages/rest-server/Dockerfile
