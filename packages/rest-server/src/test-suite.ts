@@ -3,12 +3,12 @@
  * Uses the clean architecture with dependency injection
  */
 
-import { createSearchProviderWithMode } from './search-factory.js';
+import { MockSearchProvider } from './mock-search-provider.js';
 import { HybridSearchService } from './hybrid-search-service.js';
 import type { RetrievalResult } from 'core-types';
 
 // Create service with mock provider for testing
-const mockProvider = createSearchProviderWithMode(true);
+const mockProvider = new MockSearchProvider();
 const searchService = new HybridSearchService(mockProvider);
 
 /**
