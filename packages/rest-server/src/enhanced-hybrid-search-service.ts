@@ -197,84 +197,49 @@ export class EnhancedHybridSearchService {
    */
   private async rerank(query: string, results: any[], topN: number): Promise<RetrievalResult[]> {
     try {
-      // Prepare documents for reranking
-      const documents = results.map(result => ({
-        _id: result.id,
-        content: result.content,
-        metadata: result.metadata
-      }));
+      if (!results || results.length === 0) {
+        return [];
+      }
 
-      // Use Pinecone's native reranking
-      const rerankedResponse = await this.pinecone.inference.rerank({
-        model: 'bge-reranker-v2-m3',
-        query: query,
-        documents: documents,
-        rankFields: ['content'],
-        topN: Math.min(topN, documents.length),
-        returnDocuments: true
-      });
+      // Prepare documents for reranking - use simple string array format
+      const documents = results.map(result => result.content || '').filter(content => content.length > 0);
+      
+      if (documents.length === 0) {
+        console.warn('No valid documents for reranking, returning original order');
+        return results.slice(0, topN).map(result => this.convertToRetrievalResult(result));
+      }
+
+      console.log(`🔄 Reranking ${documents.length} documents...`);
+
+      // Use Pinecone's rerank API with correct format
+      const rerankedResponse = await this.pinecone.inference.rerank(
+        'bge-reranker-v2-m3',
+        query,
+        documents,
+        {
+          topN: Math.min(topN, documents.length),
+          returnDocuments: true
+        }
+      );
 
       // Convert reranked results back to RetrievalResult format
-      return rerankedResponse.data.map((item: any) => {
-        const originalResult = results.find(r => r.id === item.document._id);
-        const frameworkValue = String(originalResult?.metadata?.framework || 'common');
-        const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla') 
-          ? frameworkValue as 'flow' | 'hilla' 
-          : 'common' as const;
+      const rerankedResults: RetrievalResult[] = [];
+      
+      for (const item of rerankedResponse.data || []) {
+        const originalIndex = item.index;
+        if (originalIndex >= 0 && originalIndex < results.length) {
+          const originalResult = results[originalIndex];
+          rerankedResults.push(this.convertToRetrievalResult(originalResult));
+        }
+      }
 
-        return {
-          chunk_id: item.document._id,
-          parent_id: originalResult?.metadata?.parent_id || null,
-          framework: validFramework,
-          content: item.document.content,
-          source_url: originalResult?.metadata?.source_url || '',
-          metadata: {
-            title: originalResult?.metadata?.title || 'Untitled',
-            heading: originalResult?.metadata?.heading || '',
-          },
-          relevance_score: item.score, // Use reranker score
-        };
-      });
+      console.log(`✅ Reranked to ${rerankedResults.length} results`);
+      return rerankedResults;
 
     } catch (error) {
       console.error('Reranking failed, falling back to original order:', error);
-      
-      // Fallback: simple score-based sorting
-      return results
-        .sort((a, b) => {
-          // Prefer results that appear in both semantic and keyword search
-          const aMultiSource = a.sources.length > 1 ? 1 : 0;
-          const bMultiSource = b.sources.length > 1 ? 1 : 0;
-          
-          if (aMultiSource !== bMultiSource) {
-            return bMultiSource - aMultiSource;
-          }
-          
-          // Then sort by combined score
-          const aScore = (a.semanticScore || 0) + (a.keywordScore || 0);
-          const bScore = (b.semanticScore || 0) + (b.keywordScore || 0);
-          return bScore - aScore;
-        })
-        .slice(0, topN)
-        .map(result => {
-          const frameworkValue = String(result.metadata?.framework || 'common');
-          const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla') 
-            ? frameworkValue as 'flow' | 'hilla' 
-            : 'common' as const;
-
-          return {
-            chunk_id: result.id,
-            parent_id: result.metadata?.parent_id || null,
-            framework: validFramework,
-            content: result.content,
-            source_url: result.metadata?.source_url || '',
-            metadata: {
-              title: result.metadata?.title || 'Untitled',
-              heading: result.metadata?.heading || '',
-            },
-            relevance_score: result.score || 0,
-          };
-        });
+      // Fallback to original order
+      return results.slice(0, topN).map(result => this.convertToRetrievalResult(result));
     }
   }
 
@@ -319,7 +284,7 @@ export class EnhancedHybridSearchService {
         title: result.metadata?.title || 'Untitled',
         heading: result.metadata?.heading || '',
       },
-      relevance_score: result.score || 0,
+      relevance_score: result.score || 0
     };
   }
 
