@@ -1,8 +1,5 @@
-# Vaadin Enhanced RAG System
+# Vaadin Documentation RAG Service
 
-[![Project Status](https://img.shields.io/badge/Status-Complete-success)](PROJECT_PLAN.md)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Architecture](https://img.shields.io/badge/Architecture-Microservices-orange)](packages/)
 
 A sophisticated, hierarchically-aware Retrieval-Augmented Generation (RAG) system for Vaadin documentation that understands document structure, provides framework-specific filtering, and enables intelligent parent-child navigation through documentation sections.
 

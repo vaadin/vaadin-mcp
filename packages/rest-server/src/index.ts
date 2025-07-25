@@ -381,8 +381,4 @@ app.post('/ask', async (req: Request, res: Response) => {
 const port = config.server.port;
 app.listen(port, () => {
   console.log(`Vaadin Documentation REST server running on http://localhost:${port}`);
-  console.log('✅ Enhanced with hybrid search (semantic + keyword + RRF)');
-  console.log('✅ Framework filtering for Flow/Hilla/common');
-  console.log('✅ Clean dependency injection architecture');
-  console.log('✅ Separated mock and production implementations');
 });
