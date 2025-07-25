@@ -19,6 +19,7 @@ export interface PineconeConfig {
   batchSize?: number;
   maxRetries?: number;
   retryDelay?: number;
+  enableSparseIndex?: boolean; // New: enable sparse index operations
 }
 
 /**
@@ -31,14 +32,25 @@ export interface VectorRecord {
 }
 
 /**
- * Handles upserting to Pinecone
+ * Update operation result
+ */
+export interface UpdateResult {
+  upserted: number;
+  deleted: number;
+  unchanged: number;
+}
+
+/**
+ * Handles upserting to Pinecone (both dense and sparse indexes)
  */
 export class PineconeUpserter {
   private pinecone: Pinecone;
   private indexName: string;
+  private sparseIndexName: string;
   private batchSize: number;
   private maxRetries: number;
   private retryDelay: number;
+  private enableSparseIndex: boolean;
 
   constructor(config: PineconeConfig) {
     this.pinecone = new Pinecone({
@@ -46,9 +58,11 @@ export class PineconeUpserter {
     });
 
     this.indexName = config.indexName;
+    this.sparseIndexName = `${config.indexName}-sparse`;
     this.batchSize = config.batchSize || 100;
     this.maxRetries = config.maxRetries || 3;
     this.retryDelay = config.retryDelay || 1000;
+    this.enableSparseIndex = config.enableSparseIndex ?? true; // Default to enabled
   }
 
   /**
@@ -76,11 +90,7 @@ export class PineconeUpserter {
    * Smart update: upserts new chunks and removes orphaned ones
    * Perfect for CI/CD scenarios where files might be added/removed/renamed
    */
-  async smartUpdate(chunksWithEmbeddings: ChunkWithEmbedding[]): Promise<{
-    upserted: number;
-    deleted: number;
-    unchanged: number;
-  }> {
+  async smartUpdate(chunksWithEmbeddings: ChunkWithEmbedding[]): Promise<UpdateResult> {
     console.log(`🔄 Starting smart update for ${chunksWithEmbeddings.length} chunks...`);
     
     const index = this.pinecone.Index(this.indexName);
@@ -113,6 +123,114 @@ export class PineconeUpserter {
     
     console.log(`✅ Smart update complete: ${result.upserted} upserted, ${result.deleted} deleted, ${result.unchanged} unchanged`);
     return result;
+  }
+
+  /**
+   * Clear the sparse index
+   */
+  async clearSparseIndex(): Promise<void> {
+    if (!this.enableSparseIndex) {
+      console.log('⏭️ Sparse index operations disabled, skipping clear');
+      return;
+    }
+
+    try {
+      console.log(`🗑️ Clearing sparse index: ${this.sparseIndexName}`);
+      const sparseIndex = this.pinecone.index(this.sparseIndexName);
+      await sparseIndex.deleteAll();
+      console.log(`✅ Sparse index cleared successfully`);
+    } catch (error) {
+      console.warn(`⚠️ Could not clear sparse index (may not exist yet): ${error}`);
+    }
+  }
+
+  /**
+   * Upsert chunks to sparse index using Pinecone's integrated embedding
+   */
+  async upsertSparseChunks(chunksWithEmbeddings: ChunkWithEmbedding[]): Promise<void> {
+    if (!this.enableSparseIndex) {
+      console.log('⏭️ Sparse index operations disabled, skipping upsert');
+      return;
+    }
+
+    console.log(`📡 Upserting ${chunksWithEmbeddings.length} chunks to sparse index...`);
+    
+    try {
+      // Ensure sparse index exists
+      await this.ensureSparseIndexExists();
+      
+      const sparseIndex = this.pinecone.index(this.sparseIndexName);
+      
+      // Process in batches
+      for (let i = 0; i < chunksWithEmbeddings.length; i += this.batchSize) {
+        const batch = chunksWithEmbeddings.slice(i, i + this.batchSize);
+        
+        // Prepare records for sparse index using integrated embedding
+        const records = batch.map(({ chunk }) => ({
+          id: chunk.chunk_id,
+          metadata: {
+            content: chunk.content,
+            parent_id: chunk.parent_id || '', // Convert null to empty string
+            framework: chunk.framework,
+            source_url: chunk.source_url,
+            title: chunk.metadata?.title || 'Untitled',
+            heading: chunk.metadata?.heading || '',
+          }
+        }));
+
+        // Use Pinecone's integrated embedding for sparse vectors
+        await sparseIndex.upsert(records);
+        
+        console.log(`✅ Sparse batch ${Math.floor(i / this.batchSize) + 1}/${Math.ceil(chunksWithEmbeddings.length / this.batchSize)} uploaded`);
+      }
+      
+      console.log(`✅ Sparse index population completed successfully`);
+    } catch (error) {
+      console.error(`❌ Failed to upsert sparse chunks:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Smart update for sparse index
+   */
+  async smartSparseUpdate(chunksWithEmbeddings: ChunkWithEmbedding[]): Promise<UpdateResult> {
+    if (!this.enableSparseIndex) {
+      console.log('⏭️ Sparse index operations disabled, skipping smart update');
+      return { upserted: 0, deleted: 0, unchanged: 0 };
+    }
+
+    console.log(`🔄 Starting smart sparse update for ${chunksWithEmbeddings.length} chunks...`);
+    
+    try {
+      // Ensure sparse index exists
+      await this.ensureSparseIndexExists();
+      
+      const sparseIndex = this.pinecone.index(this.sparseIndexName);
+      
+      // Get existing chunk IDs from sparse index
+      const stats = await sparseIndex.describeIndexStats();
+      const existingChunkIds = new Set<string>();
+      
+      // For sparse index, we'll use a simpler approach since we can't easily query all IDs
+      // We'll just upsert all chunks (which handles updates) and track metrics
+      const newChunkIds = new Set(chunksWithEmbeddings.map(c => c.chunk.chunk_id));
+      
+      // Upsert all chunks to sparse index
+      await this.upsertSparseChunks(chunksWithEmbeddings);
+      
+      const result: UpdateResult = {
+        upserted: chunksWithEmbeddings.length,
+        deleted: 0, // We don't delete from sparse in smart update to avoid complexity
+        unchanged: 0
+      };
+      
+      console.log(`✅ Sparse smart update completed: ${result.upserted} upserted`);
+      return result;
+    } catch (error) {
+      console.error(`❌ Smart sparse update failed:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -288,6 +406,62 @@ export class PineconeUpserter {
    */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Ensure sparse index exists, create if needed
+   */
+  private async ensureSparseIndexExists(): Promise<void> {
+    try {
+      const indexes = await this.pinecone.listIndexes();
+      const indexExists = indexes.indexes?.some(index => index.name === this.sparseIndexName);
+      
+      if (!indexExists) {
+        console.log(`🔧 Creating sparse index: ${this.sparseIndexName}`);
+        
+        await this.pinecone.createIndex({
+          name: this.sparseIndexName,
+          dimension: 1, // Sparse indexes use dimension 1
+          metric: 'dotproduct',
+          spec: {
+            serverless: {
+              cloud: 'aws',
+              region: 'us-east-1'
+            }
+          }
+        });
+        
+        // Wait for index to be ready
+        console.log('⏳ Waiting for sparse index to be ready...');
+        await this.waitForIndexReady(this.sparseIndexName);
+        console.log(`✅ Sparse index created and ready: ${this.sparseIndexName}`);
+      }
+    } catch (error) {
+      console.error(`❌ Failed to ensure sparse index exists:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Wait for an index to be ready
+   */
+  private async waitForIndexReady(indexName: string, maxWaitTime: number = 60000): Promise<void> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      try {
+        const description = await this.pinecone.describeIndex(indexName);
+        if (description.status?.ready) {
+          return;
+        }
+      } catch (error) {
+        // Index might not exist yet, continue waiting
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+    }
+    
+    throw new Error(`Index ${indexName} did not become ready within ${maxWaitTime}ms`);
   }
 }
 

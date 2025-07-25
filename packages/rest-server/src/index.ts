@@ -7,12 +7,10 @@
  * It uses clean dependency injection to separate production and test implementations.
  */
 
-import express from 'express';
-import type { Request, Response } from 'express';
+import express, { type Request, type Response } from 'express';
 import cors from 'cors';
+import { getSearchService } from './search-factory.js';
 import { config } from './config.js';
-import { createSearchProvider } from './search-factory.js';
-import { HybridSearchService } from './hybrid-search-service.js';
 import type { RetrievalResult } from 'core-types';
 import OpenAI from 'openai';
 
@@ -21,9 +19,23 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Initialize search service with appropriate provider
-const searchProvider = createSearchProvider();
-const searchService = new HybridSearchService(searchProvider);
+// Initialize search service
+let searchService: any = null;
+
+// Initialize the search service on startup
+async function initializeSearchService() {
+  try {
+    console.log('🚀 Initializing search service...');
+    searchService = await getSearchService();
+    console.log('✅ Search service initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize search service:', error);
+    process.exit(1);
+  }
+}
+
+// Call initialization
+initializeSearchService();
 
 /**
  * Check for required environment variables (only in production mode)
@@ -57,7 +69,11 @@ checkEnvironmentVariables();
 const app = express();
 
 // Enable CORS
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'https://vaadin-docs-search.fly.dev'],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 
 // Parse JSON request bodies
 app.use(express.json());

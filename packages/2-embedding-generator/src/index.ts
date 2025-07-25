@@ -142,28 +142,35 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     const embeddingTime = Date.now() - embeddingStart;
     console.log(`✅ Generated embeddings for ${chunksWithEmbeddings.length} chunks (${embeddingTime}ms)`);
 
-    // Step 6: Upload to Pinecone
-    console.log('\n📡 Step 6: Uploading to Pinecone...');
+    // Step 6: Upload to Pinecone (Dense + Sparse)
+    console.log('\n📡 Step 6: Uploading to Pinecone (Dense + Sparse)...');
     const pineconeStart = Date.now();
     
     const pineconeUpserter = createPineconeUpserter(config.pinecone);
     
     // Choose update strategy based on configuration
     if (config.clearExistingIndex) {
-      console.log('🗑️ Clearing existing Pinecone index...');
+      console.log('🗑️ Clearing existing Pinecone indexes...');
       await pineconeUpserter.clearIndex();
+      await pineconeUpserter.clearSparseIndex(); // Also clear sparse index
       await pineconeUpserter.upsertChunks(chunksWithEmbeddings);
+      await pineconeUpserter.upsertSparseChunks(chunksWithEmbeddings); // Also populate sparse
     } else if (config.smartUpdate) {
       console.log('🔄 Using smart update (recommended for CI/CD)...');
       const updateResult = await pineconeUpserter.smartUpdate(chunksWithEmbeddings);
-      console.log(`📊 Update summary: ${updateResult.upserted} upserted, ${updateResult.deleted} deleted, ${updateResult.unchanged} unchanged`);
+      console.log(`📊 Dense update summary: ${updateResult.upserted} upserted, ${updateResult.deleted} deleted, ${updateResult.unchanged} unchanged`);
+      
+      // Also do smart update for sparse index
+      const sparseUpdateResult = await pineconeUpserter.smartSparseUpdate(chunksWithEmbeddings);
+      console.log(`📊 Sparse update summary: ${sparseUpdateResult.upserted} upserted, ${sparseUpdateResult.deleted} deleted, ${sparseUpdateResult.unchanged} unchanged`);
     } else {
       console.log('📤 Using simple upsert (may leave orphaned chunks)...');
       await pineconeUpserter.upsertChunks(chunksWithEmbeddings);
+      await pineconeUpserter.upsertSparseChunks(chunksWithEmbeddings); // Also upsert to sparse
     }
     
     const pineconeTime = Date.now() - pineconeStart;
-    console.log(`✅ Uploaded to Pinecone (${pineconeTime}ms)`);
+    console.log(`✅ Uploaded to both Dense and Sparse Pinecone indexes (${pineconeTime}ms)`);
 
     // Final statistics
     const totalTime = Date.now() - startTime;
