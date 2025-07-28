@@ -280,6 +280,7 @@ export class EnhancedHybridSearchService {
       framework: validFramework,
       content: result.content,
       source_url: result.metadata?.source_url || '',
+      file_path: result.metadata?.file_path || '',
       metadata: {
         title: result.metadata?.title || 'Untitled',
         heading: result.metadata?.heading || '',

@@ -13,6 +13,9 @@ RUN bun install
 # Copy rest-server source code
 COPY packages/rest-server/ packages/rest-server/
 
+# Copy converted markdown files for document endpoint
+COPY packages/1-asciidoc-converter/dist/markdown/ packages/1-asciidoc-converter/dist/markdown/
+
 # Build the application
 WORKDIR /app/packages/rest-server
 RUN bun run build

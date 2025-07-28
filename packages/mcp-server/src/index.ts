@@ -75,7 +75,7 @@ class VaadinDocsServer {
       tools: [
         {
           name: 'search_vaadin_docs',
-          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. This tool returns results with hierarchical parent-child relationships. When using this tool, try to deduce the correct framework from context: use "flow" for Java-based views, "hilla" for React-based views, or empty string for both frameworks. Each result includes a parent_id that can be used with getDocumentChunk to explore broader context.',
+          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. This tool returns search results that include file_path information for complete document retrieval. When using this tool, try to deduce the correct framework from context: use "flow" for Java-based views, "hilla" for React-based views, or empty string for both frameworks. Use getFullDocument with the file_path from results when you need complete context.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -105,17 +105,17 @@ class VaadinDocsServer {
           }
         },
         {
-          name: 'getDocumentChunk',
-          description: 'Retrieve a specific document chunk by its ID. This tool enables navigation through the hierarchical structure of Vaadin documentation. Use this when you need to get parent context from a search result, or when you want to explore related content. The chunk_id can be found in the search results.',
+          name: 'getFullDocument',
+          description: 'Retrieves the complete documentation page for a given file path. Use this when you need full context beyond what search results provide. After finding relevant chunks via search_vaadin_docs, use this to get complete context, examples, and cross-references. The response includes the complete markdown content with full context.',
           inputSchema: {
             type: 'object',
             properties: {
-              chunk_id: {
+              file_path: {
                 type: 'string',
-                description: 'The unique identifier of the document chunk to retrieve. This is typically found in search results or as a parent_id reference.'
+                description: 'The file path from search results (e.g., "building-apps/forms-data/add-form/fields-and-binding/hilla.md"). This identifies which complete documentation page to retrieve.'
               }
             },
-            required: ['chunk_id']
+            required: ['file_path']
           }
         }
       ]
@@ -126,8 +126,8 @@ class VaadinDocsServer {
       switch (request.params.name) {
         case 'search_vaadin_docs':
           return this.handleSearchTool(request.params.arguments as any);
-        case 'getDocumentChunk':
-          return this.handleGetDocumentChunkTool(request.params.arguments as any);
+        case 'getFullDocument':
+          return this.handleGetFullDocumentTool(request.params.arguments as any);
         default:
           throw new McpError(
             ErrorCode.MethodNotFound,
@@ -198,20 +198,20 @@ class VaadinDocsServer {
   }
 
   /**
-   * Handle getDocumentChunk tool
+   * Handle getFullDocument tool
    */
-  private async handleGetDocumentChunkTool(args: any) {
+  private async handleGetFullDocumentTool(args: any) {
     // Validate arguments
-    if (!args.chunk_id || typeof args.chunk_id !== 'string') {
+    if (!args.file_path || typeof args.file_path !== 'string') {
       throw new McpError(
         ErrorCode.InvalidParams,
-        'Missing or invalid chunk_id parameter'
+        'Missing or invalid file_path parameter'
       );
     }
 
     try {
-      // Call REST server chunk endpoint
-      const response = await fetch(`${config.restServer.url}/chunk/${encodeURIComponent(args.chunk_id)}`);
+      // Call REST server document endpoint
+      const response = await fetch(`${config.restServer.url}/document/${encodeURIComponent(args.file_path)}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -219,7 +219,7 @@ class VaadinDocsServer {
             content: [
               {
                 type: 'text',
-                text: `Document chunk with ID "${args.chunk_id}" not found. This may indicate an invalid chunk ID or the chunk may have been removed from the index.`
+                text: `Document with file path "${args.file_path}" not found. This may indicate an invalid file path or the document may not be available.`
               }
             ]
           };
@@ -229,27 +229,27 @@ class VaadinDocsServer {
         throw new Error(errorData.error || `HTTP error ${response.status}`);
       }
 
-      const chunk: RetrievalResult = await response.json();
+      const document = await response.json();
 
-      // Format the chunk for display
-      const formattedChunk = this.formatDocumentChunk(chunk);
+      // Format the document for display
+      const formattedDocument = this.formatFullDocument(document);
 
       return {
         content: [
           {
             type: 'text',
-            text: formattedChunk
+            text: formattedDocument
           }
         ]
       };
     } catch (error) {
-      console.error('Error fetching document chunk:', error);
+      console.error('Error fetching full document:', error);
 
       return {
         content: [
           {
             type: 'text',
-            text: `Error fetching document chunk: ${error instanceof Error ? error.message : 'Unknown error'}`
+            text: `Error fetching full document: ${error instanceof Error ? error.message : 'Unknown error'}`
           }
         ],
         isError: true
@@ -258,7 +258,7 @@ class VaadinDocsServer {
   }
 
   /**
-   * Format search results for display with hierarchical information
+   * Format search results for display with document information
    * @param results - Search results from the enhanced API
    * @returns Formatted results as a string
    */
@@ -275,8 +275,8 @@ class VaadinDocsServer {
       output += `**Framework:** ${result.framework}\n`;
       output += `**Chunk ID:** ${result.chunk_id}\n`;
       
-      if (result.parent_id) {
-        output += `**Parent Chunk:** ${result.parent_id} (use getDocumentChunk to get parent context)\n`;
+      if (result.file_path) {
+        output += `**Document Path:** ${result.file_path} (use getFullDocument to get complete context)\n`;
       }
       
       output += `**Relevance Score:** ${result.relevance_score.toFixed(3)}\n\n`;
@@ -292,29 +292,23 @@ class VaadinDocsServer {
   }
 
   /**
-   * Format a single document chunk for display
-   * @param chunk - Document chunk to format
-   * @returns Formatted chunk as a string
+   * Format a full document for display
+   * @param document - Complete document data from the API
+   * @returns Formatted document as a string
    */
-  private formatDocumentChunk(chunk: RetrievalResult): string {
-    let output = `# ${chunk.metadata?.title || 'Document Chunk'}\n\n`;
+  private formatFullDocument(document: any): string {
+    let output = `# ${document.metadata?.title || 'Documentation'}\n\n`;
     
-    output += `**Chunk ID:** ${chunk.chunk_id}\n`;
-    output += `**Framework:** ${chunk.framework}\n`;
-    output += `**Source:** ${chunk.source_url}\n`;
+    output += `**File Path:** ${document.file_path}\n`;
+    output += `**Framework:** ${document.metadata?.framework || 'unknown'}\n`;
+    output += `**Source URL:** ${document.metadata?.source_url || 'N/A'}\n\n`;
     
-    if (chunk.parent_id) {
-      output += `**Parent Chunk:** ${chunk.parent_id} (use getDocumentChunk to get parent context)\n`;
-    } else {
-      output += `**Parent Chunk:** None (this is a top-level document)\n`;
-    }
-    
-    output += `**Relevance Score:** ${chunk.relevance_score.toFixed(3)}\n\n`;
-    
-    output += `## Content\n\n${chunk.content}\n`;
+    output += `## Complete Documentation\n\n${document.content}\n`;
     
     return output;
   }
+
+
 
   /**
    * Run the server with stdio transport

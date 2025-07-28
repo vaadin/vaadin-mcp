@@ -47,6 +47,7 @@ export interface DocumentChunk {
  */
 export interface RetrievalResult extends DocumentChunk {
   relevance_score: number;
+  file_path?: string;
 }
 
 /**

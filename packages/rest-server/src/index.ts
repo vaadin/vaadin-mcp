@@ -9,6 +9,8 @@
 
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
 import { getSearchService } from './search-factory.js';
 import { config } from './config.js';
 import type { RetrievalResult } from 'core-types';
@@ -174,6 +176,94 @@ app.get('/chunk/:chunkId', async (req: Request, res: Response) => {
     
     res.status(500).json({
       error: `Error fetching document chunk: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
+  }
+});
+
+/**
+ * Get full document endpoint
+ * This enables retrieval of complete documentation pages instead of just chunks
+ */
+app.get('/document/:file_path(*)', async (req: Request, res: Response) => {
+  try {
+    const filePath = req.params.file_path;
+    
+    if (!filePath) {
+      return res.status(400).json({
+        error: 'Missing file path parameter'
+      });
+    }
+    
+    // Decode URL-encoded file path
+    const decodedFilePath = decodeURIComponent(filePath);
+    
+    // Construct absolute path to markdown file
+    // In production: /app/packages/1-asciidoc-converter/dist/markdown/
+    // In development: Navigate up from rest-server to project root, then to markdown dir
+    const markdownDir = process.env.NODE_ENV === 'production' 
+      ? '/app/packages/1-asciidoc-converter/dist/markdown'
+      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
+    
+    const fullPath = path.join(markdownDir, decodedFilePath);
+    
+    // Security check: ensure the path is within the markdown directory
+    const resolvedPath = path.resolve(fullPath);
+    const resolvedMarkdownDir = path.resolve(markdownDir);
+    
+    if (!resolvedPath.startsWith(resolvedMarkdownDir)) {
+      return res.status(403).json({
+        error: 'Access denied: path traversal not allowed'
+      });
+    }
+    
+    // Check if file exists
+    if (!fs.existsSync(resolvedPath)) {
+      return res.status(404).json({
+        error: 'Document not found',
+        file_path: decodedFilePath
+      });
+    }
+    
+    // Read the markdown file
+    const content = fs.readFileSync(resolvedPath, 'utf8');
+    
+    // Parse frontmatter and content
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    let metadata: Record<string, string> = {};
+    let markdownContent = content;
+    
+    if (frontmatterMatch) {
+      try {
+        // Parse YAML frontmatter
+        const yamlContent = frontmatterMatch[1];
+        const lines = yamlContent.split('\n');
+        for (const line of lines) {
+          const colonIndex = line.indexOf(':');
+          if (colonIndex > 0) {
+            const key = line.substring(0, colonIndex).trim();
+            const value = line.substring(colonIndex + 1).trim().replace(/^["']|["']$/g, '');
+            metadata[key] = value;
+          }
+        }
+        markdownContent = frontmatterMatch[2];
+      } catch (error) {
+        console.warn('Failed to parse frontmatter:', error);
+      }
+    }
+    
+    // Return the complete document
+    res.json({
+      file_path: decodedFilePath,
+      content: markdownContent,
+      metadata,
+      full_path: decodedFilePath // For compatibility
+    });
+    
+  } catch (error) {
+    console.error('Error fetching document:', error);
+    
+    res.status(500).json({
+      error: `Error fetching document: ${error instanceof Error ? error.message : 'Unknown error'}`
     });
   }
 });
