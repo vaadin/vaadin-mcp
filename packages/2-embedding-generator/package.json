@@ -12,18 +12,19 @@
     "test:src": "bun run src/test-suite.ts"
   },
   "dependencies": {
-    "core-types": "workspace:*",
-    "langchain": "0.3.30",
-    "@langchain/core": "0.3.66",
     "@langchain/community": "0.3.48",
+    "@langchain/core": "0.3.66",
     "@langchain/openai": "^0.3.0",
     "@langchain/pinecone": "^0.1.0",
     "@pinecone-database/pinecone": "^5.1.0",
-    "openai": "^4.86.1",
-    "nanoid": "^5.1.2"
+    "core-types": "workspace:*",
+    "dotenv": "^17.2.1",
+    "langchain": "0.3.30",
+    "nanoid": "^5.1.2",
+    "openai": "^4.86.1"
   },
   "devDependencies": {
     "@types/node": "^22.13.8",
     "typescript": "^5.8.2"
   }
-} 
+}

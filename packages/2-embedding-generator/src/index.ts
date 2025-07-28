@@ -9,6 +9,7 @@
  */
 
 import path from 'path';
+import { config as dotenvConfig } from 'dotenv';
 import type { DocumentChunk } from 'core-types';
 
 // Core module exports
@@ -155,6 +156,10 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
  * CLI interface for the embedding generator
  */
 export async function runCLI(): Promise<void> {
+  // Load environment variables from .env file in project root
+  const projectRoot = path.resolve(process.cwd(), '..', '..');
+  dotenvConfig({ path: path.join(projectRoot, '.env') });
+  
   const args = process.argv.slice(2);
   const clearFlag = args.includes('--clear');
   
