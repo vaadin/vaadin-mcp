@@ -63,6 +63,39 @@ function getFrameworkAttributes(framework: Framework, repoPath: string): Record<
 }
 
 /**
+ * Convert absolute paths in markdown content to relative paths
+ * @param markdown - The markdown content with absolute paths
+ * @param repoPath - The base repository path
+ * @returns The markdown content with relative paths
+ */
+function fixRelativePaths(markdown: string, repoPath: string): string {
+  // Find the articles directory path
+  const articlesPath = path.join(repoPath, 'articles');
+  
+  // Convert absolute paths to relative paths
+  // This handles both Windows and Unix paths
+  const absolutePathRegex = new RegExp(articlesPath.replace(/[/\\]/g, '[/\\\\]'), 'g');
+  
+  // Replace absolute paths with relative paths
+  // For links like: /full/path/to/articles/components/button
+  // Convert to: components/button
+  let fixedMarkdown = markdown.replace(absolutePathRegex, '');
+  
+  // Handle image paths - remove leading slashes from image paths
+  // Convert: images//full/path/... to images/...
+  fixedMarkdown = fixedMarkdown.replace(/images\/\/[^)]+?\/articles\//g, 'images/');
+  
+  // Handle regular links - remove leading slashes and convert to relative paths
+  // Convert: ](/full/path/to/articles/styling) to: (styling)
+  fixedMarkdown = fixedMarkdown.replace(/\]\([^)]*\/articles\//g, '](');
+  
+  // Handle remaining double slashes in paths
+  fixedMarkdown = fixedMarkdown.replace(/\/\/+/g, '/');
+  
+  return fixedMarkdown;
+}
+
+/**
  * Process AsciiDoc content and convert to Markdown
  * @param content - The AsciiDoc content to process
  * @param filePath - The path to the source file
@@ -107,7 +140,10 @@ export async function processAsciiDoc(
       }
     });
     
-    return markdown;
+    // Fix relative paths in the generated markdown
+    const fixedMarkdown = fixRelativePaths(markdown, repoPath);
+    
+    return fixedMarkdown;
   } catch (error) {
     console.error('Error processing AsciiDoc:', error);
     // Return original content if processing fails
