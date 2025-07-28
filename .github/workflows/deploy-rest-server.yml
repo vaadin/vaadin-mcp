@@ -40,19 +40,19 @@ jobs:
       - name: Install workspace dependencies
         run: bun install
       
-      - name: Build packages
-        run: bun run build
+      - name: Build core-types first
+        run: bun run --filter='core-types' build
       
       - name: Convert AsciiDoc to Markdown
         working-directory: ./packages/1-asciidoc-converter
         run: |
           echo "🔄 Converting AsciiDoc files to Markdown for production..."
+          bun run build
           bun run convert
           echo "✅ AsciiDoc conversion completed"
       
-      - name: Build REST server
-        working-directory: ./packages/rest-server
-        run: bun run build
+      - name: Build remaining packages
+        run: bun run --filter='!core-types && !1-asciidoc-converter' build
       
       - name: Deploy to Fly.io
         env:
