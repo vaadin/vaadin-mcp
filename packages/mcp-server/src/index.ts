@@ -106,16 +106,26 @@ class VaadinDocsServer {
         },
         {
           name: 'get_full_document',
-          description: 'Retrieves the complete documentation page for a given file path. Use this when you need full context beyond what search results provide. After finding relevant chunks via search_vaadin_docs, use this to get complete context, examples, and cross-references. The response includes the complete markdown content with full context.',
+          description: 'Retrieves complete documentation pages for one or more file paths. Use this when you need full context beyond what search results provide. After finding relevant chunks via search_vaadin_docs, use this to get complete context, examples, and cross-references. The response includes the complete markdown content with full context. Supports fetching multiple files at once to reduce roundtrips.',
           inputSchema: {
             type: 'object',
             properties: {
               file_path: {
                 type: 'string',
-                description: 'The file path from search results (e.g., "building-apps/forms-data/add-form/fields-and-binding/hilla.md"). This identifies which complete documentation page to retrieve.'
+                description: 'A single file path from search results (e.g., "building-apps/forms-data/add-form/fields-and-binding/hilla.md"). Use this for fetching a single document.'
+              },
+              file_paths: {
+                type: 'array',
+                items: {
+                  type: 'string'
+                },
+                description: 'An array of file paths from search results. Use this for fetching multiple documents at once to reduce roundtrips.'
               }
             },
-            required: ['file_path']
+            anyOf: [
+              { required: ['file_path'] },
+              { required: ['file_paths'] }
+            ]
           }
         }
       ]
@@ -202,54 +212,80 @@ class VaadinDocsServer {
    */
   private async handleGetFullDocumentTool(args: any) {
     // Validate arguments
-    if (!args.file_path || typeof args.file_path !== 'string') {
+    if (!args.file_path && !args.file_paths) {
       throw new McpError(
         ErrorCode.InvalidParams,
-        'Missing or invalid file_path parameter'
+        'Missing file_path or file_paths parameter'
       );
     }
 
-    try {
-      // Call REST server document endpoint
-      const response = await fetch(`${config.restServer.url}/document/${encodeURIComponent(args.file_path)}`);
+    // Validate file_path if provided
+    if (args.file_path && typeof args.file_path !== 'string') {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'file_path must be a string'
+      );
+    }
 
-      if (!response.ok) {
-        if (response.status === 404) {
+    // Validate file_paths if provided
+    if (args.file_paths && (!Array.isArray(args.file_paths) || args.file_paths.some((path: any) => typeof path !== 'string'))) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'file_paths must be an array of strings'
+      );
+    }
+
+    // Determine file paths to fetch
+    const filePaths = args.file_paths || [args.file_path];
+
+    try {
+      // Fetch all documents in parallel
+      const fetchPromises = filePaths.map(async (filePath: string) => {
+        const response = await fetch(`${config.restServer.url}/document/${encodeURIComponent(filePath)}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            return {
+              error: `Document with file path "${filePath}" not found`,
+              filePath
+            };
+          }
+          
+          const errorData = await response.json();
           return {
-            content: [
-              {
-                type: 'text',
-                text: `Document with file path "${args.file_path}" not found. This may indicate an invalid file path or the document may not be available.`
-              }
-            ]
+            error: errorData.error || `HTTP error ${response.status} for ${filePath}`,
+            filePath
           };
         }
-        
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error ${response.status}`);
-      }
 
-      const document = await response.json();
+        const document = await response.json();
+        return {
+          document,
+          filePath
+        };
+      });
 
-      // Format the document for display
-      const formattedDocument = this.formatFullDocument(document);
+      const results = await Promise.all(fetchPromises);
+
+      // Format the results
+      const formattedResults = this.formatFullDocuments(results);
 
       return {
         content: [
           {
             type: 'text',
-            text: formattedDocument
+            text: formattedResults
           }
         ]
       };
     } catch (error) {
-      console.error('Error fetching full document:', error);
+      console.error('Error fetching full documents:', error);
 
       return {
         content: [
           {
             type: 'text',
-            text: `Error fetching full document: ${error instanceof Error ? error.message : 'Unknown error'}`
+            text: `Error fetching full documents: ${error instanceof Error ? error.message : 'Unknown error'}`
           }
         ],
         isError: true
@@ -303,15 +339,53 @@ class VaadinDocsServer {
   private formatFullDocument(document: any): string {
     let output = `# ${document.metadata?.title || 'Documentation'}\n\n`;
     
-    output += `**File Path:** ${document.file_path}\n`;
-    output += `**Framework:** ${document.metadata?.framework || 'unknown'}\n`;
-    output += `**Source URL:** ${document.metadata?.source_url || 'N/A'}\n\n`;
+    output += `----\n`;
+    output += `File Path: ${document.file_path}\n`;
+    output += `Framework: ${document.metadata?.framework || 'unknown'}\n`;
+    output += `Source URL: ${document.metadata?.source_url || 'N/A'}\n`;
+    output += `----\n\n`;
     
     output += `## Complete Documentation\n\n${document.content}\n`;
     
     return output;
   }
 
+  /**
+   * Format multiple full documents for display
+   * @param results - Array of result objects that may contain document or error
+   * @returns Formatted documents as a string
+   */
+  private formatFullDocuments(results: Array<{ document?: any; filePath: string; error?: string }>): string {
+    if (results.length === 0) {
+      return 'No documents found.';
+    }
+
+    let output = `Found ${results.length} document${results.length > 1 ? 's' : ''}:\n\n`;
+
+    results.forEach((result, index) => {
+      if (result.error) {
+        output += `## ${index + 1}. Error fetching document\n`;
+        output += `----\n`;
+        output += `File Path: ${result.filePath}\n`;
+        output += `Error: ${result.error}\n`;
+        output += `----\n\n`;
+      } else {
+        output += `## ${index + 1}. ${result.document.metadata?.title || 'Untitled'}\n`;
+        output += `----\n`;
+        output += `File Path: ${result.filePath}\n`;
+        output += `Framework: ${result.document.metadata?.framework || 'unknown'}\n`;
+        output += `Source URL: ${result.document.metadata?.source_url || 'N/A'}\n`;
+        output += `----\n\n`;
+        output += `### Complete Documentation\n\n${result.document.content}\n\n`;
+      }
+      
+      if (index < results.length - 1) {
+        output += '================\n\n';
+      }
+    });
+
+    return output;
+  }
 
 
   /**
