@@ -415,7 +415,7 @@ export async function runHierarchicalTests(config: TestConfig): Promise<void> {
 /**
  * CLI interface for running hierarchical tests
  */
-if (import.meta.main) {
+if ((import.meta as any).main) {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose') || args.includes('-v');
   const restServerUrl = args.find(arg => arg.startsWith('--server='))?.split('=')[1] || config.restServer.url;

@@ -9,7 +9,11 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "baseUrl": ".",
+    "paths": {
+      "core-types": ["../core-types/src/index.ts"],
+      "core-types/*": ["../core-types/src/*"]
+    }
   },
   "include": [
     "src/**/*"
