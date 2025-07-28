@@ -58,14 +58,14 @@ POST /search
 **Request Body:**
 ```json
 {
-  "query": "How to create a Vaadin Grid",
+  "question": "How to create a Vaadin Grid",
   "max_results": 5,
   "max_tokens": 1500
 }
 ```
 
 **Parameters:**
-- `query` (required): The search query or question about Vaadin
+- `question` (required): The search query or question about Vaadin
 - `max_results` (optional): Maximum number of results to return (default: 5)
 - `max_tokens` (optional): Maximum number of tokens to return (default: 1500)
 

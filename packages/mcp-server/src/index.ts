@@ -75,11 +75,11 @@ class VaadinDocsServer {
       tools: [
         {
           name: 'search_vaadin_docs',
-          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. This tool returns search results that include file_path information for complete document retrieval. When using this tool, try to deduce the correct framework from context: use "flow" for Java-based views, "hilla" for React-based views, or empty string for both frameworks. Use getFullDocument with the file_path from results when you need complete context.',
+          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. This tool returns search results that include file_path information for complete document retrieval. When using this tool, try to deduce the correct framework from context: use "flow" for Java-based views, "hilla" for React-based views, or empty string for both frameworks. Use get_full_document with the file_path from results when you need complete context.',
           inputSchema: {
             type: 'object',
             properties: {
-              query: {
+              question: {
                 type: 'string',
                 description: 'The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword).'
               },
@@ -101,11 +101,11 @@ class VaadinDocsServer {
                 enum: ['flow', 'hilla', '']
               }
             },
-            required: ['query']
+            required: ['question']
           }
         },
         {
-          name: 'getFullDocument',
+          name: 'get_full_document',
           description: 'Retrieves the complete documentation page for a given file path. Use this when you need full context beyond what search results provide. After finding relevant chunks via search_vaadin_docs, use this to get complete context, examples, and cross-references. The response includes the complete markdown content with full context.',
           inputSchema: {
             type: 'object',
@@ -126,7 +126,7 @@ class VaadinDocsServer {
       switch (request.params.name) {
         case 'search_vaadin_docs':
           return this.handleSearchTool(request.params.arguments as any);
-        case 'getFullDocument':
+        case 'get_full_document':
           return this.handleGetFullDocumentTool(request.params.arguments as any);
         default:
           throw new McpError(
@@ -142,10 +142,10 @@ class VaadinDocsServer {
    */
   private async handleSearchTool(args: any) {
     // Validate arguments
-    if (!args.query || typeof args.query !== 'string') {
+    if (!args.question || typeof args.question !== 'string') {
       throw new McpError(
         ErrorCode.InvalidParams,
-        'Missing or invalid query parameter'
+        'Missing or invalid question parameter'
       );
     }
 
@@ -157,7 +157,7 @@ class VaadinDocsServer {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          question: args.query, // Use 'question' for the enhanced API
+          question: args.question, // Use 'question' for the enhanced API
           max_results: args.max_results,
           max_tokens: args.max_tokens,
           framework: args.framework || ''

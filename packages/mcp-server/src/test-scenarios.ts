@@ -209,18 +209,18 @@ class MockMCPTestClient {
   /**
    * Simulate search_vaadin_docs tool call with mock data
    */
-  async searchVaadinDocs(query: string, framework: string = '', maxResults: number = 5): Promise<RetrievalResult[]> {
+  async searchVaadinDocs(question: string, framework: string = '', maxResults: number = 5): Promise<RetrievalResult[]> {
     // Simulate async behavior
     await new Promise(resolve => setTimeout(resolve, 10));
     
-    // Filter mock results based on query and framework
+    // Filter mock results based on question and framework
     let results = [...MOCK_SEARCH_RESULTS];
     
-    // Simple query matching - check if query terms appear in content
-    if (query.trim()) {
-      const queryTerms = query.toLowerCase().split(/\s+/);
+    // Simple question matching - check if question terms appear in content
+    if (question.trim()) {
+      const questionTerms = question.toLowerCase().split(/\s+/);
       results = results.filter(result => 
-        queryTerms.some(term => 
+        questionTerms.some(term => 
           result.content.toLowerCase().includes(term) ||
           result.metadata?.title?.toLowerCase().includes(term) ||
           result.metadata?.heading?.toLowerCase().includes(term)
@@ -240,9 +240,9 @@ class MockMCPTestClient {
   }
 
   /**
-   * Simulate getFullDocument tool call with mock data
+   * Simulate get_full_document tool call with mock data
    */
-  async getFullDocument(filePath: string): Promise<any | null> {
+  async get_full_document(filePath: string): Promise<any | null> {
     // Simulate async behavior
     await new Promise(resolve => setTimeout(resolve, 5));
     
@@ -345,7 +345,7 @@ const DOCUMENT_TEST_SCENARIOS = [
         }
 
         // Step 3: Retrieve the complete document
-        const fullDocument = await client.getFullDocument(resultWithFile.file_path!);
+        const fullDocument = await client.get_full_document(resultWithFile.file_path!);
         
         if (!fullDocument) {
           return {
@@ -418,13 +418,13 @@ const DOCUMENT_TEST_SCENARIOS = [
   },
 
   {
-    name: 'getFullDocument error handling',
+    name: 'get_full_document error handling',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
       
       try {
         // Test with invalid file path
-        const invalidDocument = await client.getFullDocument('non-existent-file-path.md');
+        const invalidDocument = await client.get_full_document('non-existent-file-path.md');
         
         if (invalidDocument !== null) {
           return {
@@ -476,7 +476,7 @@ const DOCUMENT_TEST_SCENARIOS = [
         
         for (const result of searchResults) {
           if (result.file_path) {
-            const fullDocument = await client.getFullDocument(result.file_path);
+            const fullDocument = await client.get_full_document(result.file_path);
             if (fullDocument) {
               documentsRetrieved.push({
                 filePath: result.file_path,

@@ -43,7 +43,7 @@ flowchart TD
     end
 
     subgraph "Step 3: Agent Integration"
-        MCP["🤖 MCP Server<br/>• search_vaadin_docs<br/>• getDocumentChunk<br/>• Parent-child navigation"]
+        MCP["🤖 MCP Server<br/>• search_vaadin_docs<br/>• get_full_document<br/>• Full document retrieval"]
         IDEs["💻 IDE Assistants<br/>• Context-aware search<br/>• Hierarchical exploration<br/>• Framework-specific help"]
     end
 
@@ -203,21 +203,21 @@ bun run test:verbose   # Detailed test output
 
 ### MCP Server (`packages/mcp-server/`)
 Model Context Protocol server for IDE assistant integration:
-- **Hierarchical Tools**: `search_vaadin_docs` and `getDocumentChunk`
-- **Parent-Child Navigation**: Enables exploration of documentation structure
+- **Document Tools**: `search_vaadin_docs` and `get_full_document`
+- **Full Document Retrieval**: Complete documentation pages with context
 - **Framework Awareness**: Intelligent framework detection and filtering
 - **Error Handling**: Graceful degradation for missing content
 
 ```bash
 cd packages/mcp-server
 bun run build          # Build for distribution
-bun run test           # Run hierarchical navigation tests
+bun run test           # Run document-based tests
 npm publish            # Publish to npm (when ready)
 ```
 
 **Available Tools:**
-- `search_vaadin_docs`: Search with hierarchical awareness
-- `getDocumentChunk`: Navigate parent-child relationships
+- `search_vaadin_docs`: Search with semantic and keyword matching
+- `get_full_document`: Retrieve complete documentation pages
 
 ## 🧪 Testing
 
