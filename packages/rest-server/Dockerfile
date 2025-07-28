@@ -20,8 +20,8 @@ COPY packages/1-asciidoc-converter/dist/markdown/ packages/1-asciidoc-converter/
 WORKDIR /app/packages/rest-server
 RUN bun run build
 
-# Expose the port the server runs on
-EXPOSE 3001
+# Expose the port the server runs on (matching fly.toml internal_port)
+EXPOSE 8080
 
 # Start the server from built files
-CMD ["bun", "run", "start"]
+CMD ["bun", "run", "start:prod"]

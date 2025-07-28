@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc",
     "start": "bun run src/index.ts",
+    "start:prod": "bun run dist/index.js",
     "test": "bun run src/hybrid-search.test.ts",
     "test:unit": "bun run src/hybrid-search.test.ts",
     "test:integration": "bun run src/test-suite.ts",
