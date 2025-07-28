@@ -13,8 +13,9 @@ export interface DocumentChunk {
    * The chunk_id of the direct parent document or section.
    * This enables hierarchical lookups. Null for top-level documents.
    * e.g., 'forms-binder-intro'
+   * @deprecated No longer used in document-based approach
    */
-  parent_id: string | null;
+  parent_id?: string | null;
 
   /**
    * The framework this chunk applies to.

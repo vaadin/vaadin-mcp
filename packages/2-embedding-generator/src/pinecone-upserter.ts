@@ -256,7 +256,6 @@ export class PineconeUpserter {
     // Pinecone metadata has restrictions - only strings, numbers, booleans, arrays of strings
     const metadata: RecordMetadata = {
       chunk_id: chunk.chunk_id,
-      parent_id: chunk.parent_id || '',
       framework: chunk.framework,
       source_url: chunk.source_url,
       content: chunk.content,

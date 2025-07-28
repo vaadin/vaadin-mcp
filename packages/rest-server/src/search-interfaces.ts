@@ -138,7 +138,6 @@ export class ResultFormatter {
       
       results.push({
         chunk_id: result.id,
-        parent_id: result.metadata.parent_id || null,
         framework: validFramework,
         content: result.content,
         source_url: result.metadata.source_url || '',

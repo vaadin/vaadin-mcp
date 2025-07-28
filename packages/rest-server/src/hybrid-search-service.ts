@@ -266,7 +266,7 @@ export class HybridSearchService {
   }
 
   /**
-   * Convert search result to RetrievalResult format
+   * Converts search results to standard RetrievalResult format
    */
   private convertToRetrievalResult(result: any): RetrievalResult {
     const frameworkValue = String(result.metadata?.framework || 'common');
@@ -274,9 +274,9 @@ export class HybridSearchService {
       ? frameworkValue as 'flow' | 'hilla' 
       : 'common' as const;
 
-    return {
+    // Explicitly construct response without parent_id
+    const response = {
       chunk_id: result.id,
-      parent_id: result.metadata?.parent_id || null,
       framework: validFramework,
       content: result.content,
       source_url: result.metadata?.source_url || '',
@@ -286,7 +286,12 @@ export class HybridSearchService {
         heading: result.metadata?.heading || '',
       },
       relevance_score: result.score || 0
-    };
+    } as RetrievalResult;
+
+    // Ensure parent_id is not present in the response
+    delete (response as any).parent_id;
+    
+    return response;
   }
 
   /**
@@ -300,7 +305,6 @@ export class HybridSearchService {
 
     return {
       chunk_id: result.id,
-      parent_id: result.metadata?.parent_id || null,
       framework: validFramework,
       content: result.content,
       source_url: result.metadata?.source_url || '',

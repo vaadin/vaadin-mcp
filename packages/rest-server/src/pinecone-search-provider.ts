@@ -185,7 +185,6 @@ export class PineconeSearchProvider implements SearchProvider {
       
       return {
         chunk_id: chunkId,
-        parent_id: String(match.metadata.parent_id || '') || null,
         framework: validFramework,
         content: String(match.metadata.content || ''),
         source_url: String(match.metadata.source_url || ''),

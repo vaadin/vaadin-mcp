@@ -158,7 +158,8 @@ export async function runCLI(): Promise<void> {
   const args = process.argv.slice(2);
   const clearFlag = args.includes('--clear');
   
-  const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), 'dist/markdown');
+  // Default to the AsciiDoc converter's output directory
+  const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), '..', '1-asciidoc-converter', 'dist', 'markdown');
   
   if (!process.env.OPENAI_API_KEY) {
     console.error('❌ OPENAI_API_KEY environment variable is required');
