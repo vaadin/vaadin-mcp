@@ -47,9 +47,9 @@ interface TestSuiteResult {
  */
 const API_TEST_CASES = [
   {
-    name: 'Basic search with query parameter (legacy)',
+    name: 'Basic search with question parameter',
     request: {
-      query: 'How to create a grid',
+      question: 'How to create a grid',
       framework: '',
       max_results: 5
     },

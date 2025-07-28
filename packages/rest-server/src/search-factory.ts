@@ -12,7 +12,7 @@ import { HybridSearchService } from './hybrid-search-service.js';
 
 // Global service instance (initialized once)
 let enhancedSearchService: EnhancedHybridSearchService | null = null;
-let legacySearchService: HybridSearchService | null = null;
+let fallbackSearchService: HybridSearchService | null = null;
 
 /**
  * Create and initialize the enhanced hybrid search service
@@ -51,41 +51,41 @@ export async function createEnhancedSearchService(): Promise<EnhancedHybridSearc
 }
 
 /**
- * Create the legacy hybrid search service (fallback)
- * Uses the old RRF approach with fake keyword search
+ * Create the fallback hybrid search service
+ * Uses RRF approach when enhanced search is unavailable
  */
-export function createLegacySearchService(): HybridSearchService {
-  if (legacySearchService) {
-    return legacySearchService;
+export function createFallbackSearchService(): HybridSearchService {
+  if (fallbackSearchService) {
+    return fallbackSearchService;
   }
 
-  console.log('🏭 Creating Legacy Search Service (fallback)...');
+  console.log('🏭 Creating Fallback Search Service...');
 
   // Check if we have the required API keys
   if (!config.pinecone.apiKey || !config.pinecone.index) {
     console.log('⚠️  Missing Pinecone config, using mock provider');
     const mockProvider = new MockSearchProvider();
-    legacySearchService = new HybridSearchService(mockProvider);
+    fallbackSearchService = new HybridSearchService(mockProvider);
   } else {
     const pineconeProvider = new PineconeSearchProvider();
-    legacySearchService = new HybridSearchService(pineconeProvider);
+    fallbackSearchService = new HybridSearchService(pineconeProvider);
   }
 
-  console.log('✅ Legacy Search Service ready');
-  return legacySearchService;
+  console.log('✅ Fallback Search Service ready');
+  return fallbackSearchService;
 }
 
 /**
  * Get the appropriate search service
- * Tries enhanced first, falls back to legacy if needed
+ * Tries enhanced first, falls back to basic hybrid search if needed
  */
 export async function getSearchService(): Promise<EnhancedHybridSearchService | HybridSearchService> {
   try {
     // Try to get enhanced service first
     return await createEnhancedSearchService();
   } catch (error) {
-    console.warn('⚠️  Enhanced search service failed, falling back to legacy:', error instanceof Error ? error.message : String(error));
-    return createLegacySearchService();
+    console.warn('⚠️  Enhanced search service failed, falling back to basic hybrid search:', error instanceof Error ? error.message : String(error));
+    return createFallbackSearchService();
   }
 }
 
@@ -94,5 +94,5 @@ export async function getSearchService(): Promise<EnhancedHybridSearchService | 
  */
 export function resetServices(): void {
   enhancedSearchService = null;
-  legacySearchService = null;
+  fallbackSearchService = null;
 } 

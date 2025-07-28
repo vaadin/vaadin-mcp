@@ -90,8 +90,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 /**
- * Enhanced search endpoint with hybrid search support
- * Maintains backward compatibility while adding new features
+ * Search endpoint with hybrid search support
  */
 app.post('/search', async (req: Request, res: Response) => {
   try {
@@ -102,14 +101,12 @@ app.post('/search', async (req: Request, res: Response) => {
       });
     }
     
-    // Support both 'query' (legacy) and 'question' (new) parameters
-    const { query, question, max_results, max_tokens, framework, stream } = req.body;
-    const searchQuery = question || query;
+    const { question, max_results, max_tokens, framework, stream } = req.body;
     
     // Validate search query
-    if (!searchQuery || typeof searchQuery !== 'string') {
+    if (!question || typeof question !== 'string') {
       return res.status(400).json({ 
-        error: 'Missing or invalid "question" or "query" parameter in request body' 
+        error: 'Missing or invalid "question" parameter in request body' 
       });
     }
     
@@ -129,7 +126,7 @@ app.post('/search', async (req: Request, res: Response) => {
       : '';
     
     // Use hybrid search for enhanced results
-    const results = await searchService.hybridSearch(searchQuery, {
+    const results = await searchService.hybridSearch(question, {
       maxResults,
       maxTokens,
       framework: validFramework,
