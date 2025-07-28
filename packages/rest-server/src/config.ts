@@ -21,5 +21,29 @@ export const config = {
     defaultMaxResults: 10,
     defaultMaxTokens: 5000,
     scoreThreshold: 0.5, // Minimum similarity score to include in results
-  }
+  },
+
+  // OpenAI model configurations
+  openai: {
+    // Configuration for rewriting user questions for better vector search
+    questionRewriter: {
+      model: 'gpt-4.1',
+      temperature: 0.3,
+      maxTokens: 400,
+    },
+    
+    // Configuration for checking if questions are relevant to Vaadin/Java
+    relevanceChecker: {
+      model: 'gpt-4.1-nano',
+      temperature: 0,
+      maxTokens: 400,
+    },
+    
+    // Configuration for generating answers (both streaming and non-streaming)
+    answerGenerator: {
+      model: 'gpt-4.1',
+      temperature: 0,
+      maxTokens: 1500,
+    },
+  },
 };

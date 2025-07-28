@@ -181,7 +181,7 @@ app.get('/chunk/:chunkId', async (req: Request, res: Response) => {
 /**
  * Prepare the context, prompt, and messages for OpenAI from the supporting documents
  */
-function prepareOpenAIRequest(question: string, documents: RetrievalResult[]): { messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> } {
+function prepareOpenAIRequest(question: string, documents: RetrievalResult[], framework: string): { messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> } {
   // Create a context from the documents
   const context = documents.map((doc, index) => {
     return `Document ${index + 1}:
@@ -196,6 +196,7 @@ Content: ${doc.content}
   // Create the prompt for OpenAI
   const prompt = `
 You are an expert on Vaadin development. Answer the following question about Vaadin using the provided documentation.
+The user is using the ${framework} framework.
 Provide clear, concise answers with code examples when appropriate.
 
 Question: ${question}
@@ -229,13 +230,13 @@ Rewrite this question to be more effective for searching technical documentation
 Rewritten question:`;
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: config.openai.questionRewriter.model,
     messages: [
       { role: 'system', content: 'You are a helpful assistant that specializes in optimizing search queries for technical documentation.' },
       { role: 'user', content: prompt }
     ],
-    temperature: 0.3,
-    max_tokens: 400
+    temperature: config.openai.questionRewriter.temperature,
+    max_tokens: config.openai.questionRewriter.maxTokens
   });
 
   return response.choices[0]?.message?.content?.trim() || originalQuestion;
@@ -261,13 +262,13 @@ Relevant: [YES or NO]
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: config.openai.relevanceChecker.model,
       messages: [
         { role: 'system', content: 'You are a guardrail system that determines if questions are on-topic.' },
         { role: 'user', content: prompt }
       ],
-      temperature: 0,
-      max_tokens: 400
+      temperature: config.openai.relevanceChecker.temperature,
+      max_tokens: config.openai.relevanceChecker.maxTokens
     });
 
     const content = response.choices[0]?.message?.content || '';
@@ -338,7 +339,7 @@ app.post('/ask', async (req: Request, res: Response) => {
     });
     
     // Prepare the OpenAI request (same for both streaming and non-streaming)
-    const { messages } = prepareOpenAIRequest(question, supportingDocs);
+    const { messages } = prepareOpenAIRequest(question, supportingDocs, framework);
     
     // If streaming is requested, handle streaming response
     if (stream === true) {
@@ -349,10 +350,10 @@ app.post('/ask', async (req: Request, res: Response) => {
       
       // Generate the answer using OpenAI with streaming
       const stream = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: config.openai.answerGenerator.model,
         messages,
-        temperature: 0,
-        max_tokens: 1500,
+        temperature: config.openai.answerGenerator.temperature,
+        max_tokens: config.openai.answerGenerator.maxTokens,
         stream: true,
       });
 
@@ -371,10 +372,10 @@ app.post('/ask', async (req: Request, res: Response) => {
     } else {
       // Generate answer using OpenAI with the original question (non-streaming)
       const response = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: config.openai.answerGenerator.model,
         messages,
-        temperature: 0,
-        max_tokens: 1500
+        temperature: config.openai.answerGenerator.temperature,
+        max_tokens: config.openai.answerGenerator.maxTokens
       });
       
       const answer = response.choices[0]?.message?.content || 'Unable to generate an answer.';
