@@ -5,11 +5,13 @@
 
 import { MockSearchProvider } from './mock-search-provider.js';
 import { HybridSearchService } from './hybrid-search-service.js';
+import { PineconeSparseProvider } from './pinecone-sparse-provider.js';
 import type { RetrievalResult } from 'core-types';
 
 // Create service with mock provider for testing
 const mockProvider = new MockSearchProvider();
-const searchService = new HybridSearchService(mockProvider);
+const sparseProvider = new PineconeSparseProvider(); // Will work in mock mode
+const searchService = new HybridSearchService(mockProvider, sparseProvider);
 
 /**
  * Test configuration
