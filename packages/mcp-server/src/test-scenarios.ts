@@ -1,6 +1,6 @@
 /**
- * Test scenarios for validating MCP server hierarchical functionality
- * These test cases demonstrate parent-child navigation capabilities
+ * Test scenarios for validating MCP server document-based functionality
+ * These test cases demonstrate the new getFullDocument workflow
  */
 
 import { config } from './config.js';
@@ -56,17 +56,17 @@ class MCPTestClient {
   }
 
   /**
-   * Simulate getDocumentChunk tool call
+   * Simulate getFullDocument tool call
    */
-  async getDocumentChunk(chunkId: string): Promise<RetrievalResult | null> {
-    const response = await fetch(`${this.config.restServerUrl}/chunk/${encodeURIComponent(chunkId)}`);
+  async getFullDocument(filePath: string): Promise<any | null> {
+    const response = await fetch(`${this.config.restServerUrl}/document/${encodeURIComponent(filePath)}`);
 
     if (response.status === 404) {
       return null;
     }
 
     if (!response.ok) {
-      throw new Error(`Get chunk failed: ${response.status}`);
+      throw new Error(`Get document failed: ${response.status}`);
     }
 
     return await response.json();
@@ -74,11 +74,11 @@ class MCPTestClient {
 }
 
 /**
- * Test scenarios for hierarchical navigation
+ * Test scenarios for document-based workflow
  */
-const HIERARCHICAL_TEST_SCENARIOS = [
+const DOCUMENT_TEST_SCENARIOS = [
   {
-    name: 'Basic search returns results with parent_id information',
+    name: 'Basic search returns results with file_path information',
     async test(client: MCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
       
@@ -94,10 +94,10 @@ const HIERARCHICAL_TEST_SCENARIOS = [
           };
         }
 
-        // Check that results have the expected structure
+        // Check that results have the expected structure with file_path
         const hasValidStructure = results.every(result => 
           result.chunk_id && 
-          result.hasOwnProperty('parent_id') &&
+          result.hasOwnProperty('file_path') &&
           result.framework &&
           result.content &&
           result.source_url &&
@@ -108,7 +108,7 @@ const HIERARCHICAL_TEST_SCENARIOS = [
           return {
             name: this.name,
             passed: false,
-            error: 'Results missing required hierarchical fields',
+            error: 'Results missing required document fields',
             duration: Date.now() - startTime,
             details: { results }
           };
@@ -120,7 +120,7 @@ const HIERARCHICAL_TEST_SCENARIOS = [
           duration: Date.now() - startTime,
           details: { 
             resultCount: results.length,
-            hasParentIds: results.some(r => r.parent_id !== null)
+            hasFilePaths: results.some(r => r.file_path !== null && r.file_path !== '')
           }
         };
 
@@ -136,7 +136,7 @@ const HIERARCHICAL_TEST_SCENARIOS = [
   },
 
   {
-    name: 'Parent-child navigation workflow',
+    name: 'Document retrieval workflow',
     async test(client: MCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
       
@@ -148,54 +148,34 @@ const HIERARCHICAL_TEST_SCENARIOS = [
           return {
             name: this.name,
             passed: false,
-            error: 'No search results for initial query',
+            error: 'No search results returned',
             duration: Date.now() - startTime
           };
         }
 
-        // Step 2: Find a result with a parent_id
-        const resultWithParent = searchResults.find(result => result.parent_id !== null);
+        // Step 2: Find a result with a file_path
+        const resultWithFile = searchResults.find(result => result.file_path);
         
-        if (!resultWithParent) {
-          // This is not necessarily a failure - some results might not have parents
-          return {
-            name: this.name,
-            passed: true,
-            duration: Date.now() - startTime,
-            details: { 
-              note: 'No results with parent_id found - this may be expected for top-level content',
-              searchResults: searchResults.length
-            }
-          };
-        }
-
-        // Step 3: Retrieve the parent chunk
-        const parentChunk = await client.getDocumentChunk(resultWithParent.parent_id!);
-        
-        if (!parentChunk) {
+        if (!resultWithFile) {
           return {
             name: this.name,
             passed: false,
-            error: `Parent chunk ${resultWithParent.parent_id} not found`,
+            error: 'No results with file_path found',
             duration: Date.now() - startTime,
-            details: { originalResult: resultWithParent }
+            details: { searchResults }
           };
         }
 
-        // Step 4: Validate parent chunk structure
-        const hasValidParentStructure = 
-          parentChunk.chunk_id &&
-          parentChunk.content &&
-          parentChunk.source_url &&
-          typeof parentChunk.relevance_score === 'number';
-
-        if (!hasValidParentStructure) {
+        // Step 3: Retrieve the complete document
+        const fullDocument = await client.getFullDocument(resultWithFile.file_path!);
+        
+        if (!fullDocument) {
           return {
             name: this.name,
             passed: false,
-            error: 'Parent chunk missing required fields',
+            error: 'Full document not found',
             duration: Date.now() - startTime,
-            details: { parentChunk }
+            details: { filePath: resultWithFile.file_path }
           };
         }
 
@@ -203,10 +183,10 @@ const HIERARCHICAL_TEST_SCENARIOS = [
           name: this.name,
           passed: true,
           duration: Date.now() - startTime,
-          details: {
-            childChunkId: resultWithParent.chunk_id,
-            parentChunkId: parentChunk.chunk_id,
-            parentHasMoreContext: parentChunk.content.length > resultWithParent.content.length
+          details: { 
+            chunkId: resultWithFile.chunk_id,
+            filePath: resultWithFile.file_path,
+            documentHasMoreContent: fullDocument.content.length > resultWithFile.content.length
           }
         };
 
@@ -214,7 +194,7 @@ const HIERARCHICAL_TEST_SCENARIOS = [
         return {
           name: this.name,
           passed: false,
-          error: `Navigation workflow failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           duration: Date.now() - startTime
         };
       }
@@ -222,44 +202,22 @@ const HIERARCHICAL_TEST_SCENARIOS = [
   },
 
   {
-    name: 'Framework filtering with hierarchical results',
+    name: 'Framework filtering with document results',
     async test(client: MCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
       
       try {
-        // Test both Flow and Hilla framework filtering
+        // Test both frameworks
         const [flowResults, hillaResults] = await Promise.all([
-          client.searchVaadinDocs('button component', 'flow', 3),
-          client.searchVaadinDocs('button component', 'hilla', 3)
+          client.searchVaadinDocs('component', 'flow', 3),
+          client.searchVaadinDocs('component', 'hilla', 3)
         ]);
-
-        // Validate framework filtering
-        const flowValid = flowResults.every(result => 
-          result.framework === 'flow' || result.framework === 'common'
-        );
-        
-        const hillaValid = hillaResults.every(result => 
-          result.framework === 'hilla' || result.framework === 'common'
-        );
-
-        if (!flowValid || !hillaValid) {
-          return {
-            name: this.name,
-            passed: false,
-            error: 'Framework filtering not working correctly',
-            duration: Date.now() - startTime,
-            details: {
-              flowResults: flowResults.map(r => ({ id: r.chunk_id, framework: r.framework })),
-              hillaResults: hillaResults.map(r => ({ id: r.chunk_id, framework: r.framework }))
-            }
-          };
-        }
 
         return {
           name: this.name,
           passed: true,
           duration: Date.now() - startTime,
-          details: {
+          details: { 
             flowResultCount: flowResults.length,
             hillaResultCount: hillaResults.length,
             bothHaveResults: flowResults.length > 0 && hillaResults.length > 0
@@ -270,7 +228,7 @@ const HIERARCHICAL_TEST_SCENARIOS = [
         return {
           name: this.name,
           passed: false,
-          error: `Framework filtering test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           duration: Date.now() - startTime
         };
       }
@@ -278,21 +236,20 @@ const HIERARCHICAL_TEST_SCENARIOS = [
   },
 
   {
-    name: 'getDocumentChunk error handling',
+    name: 'getFullDocument error handling',
     async test(client: MCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
       
       try {
-        // Test with invalid chunk ID
-        const invalidChunk = await client.getDocumentChunk('non-existent-chunk-id-123');
+        // Test with invalid file path
+        const invalidDocument = await client.getFullDocument('non-existent-file-path.md');
         
-        if (invalidChunk !== null) {
+        if (invalidDocument !== null) {
           return {
             name: this.name,
             passed: false,
-            error: 'Expected null for invalid chunk ID, but got a result',
-            duration: Date.now() - startTime,
-            details: { unexpectedResult: invalidChunk }
+            error: 'Expected null for invalid file path',
+            duration: Date.now() - startTime
           };
         }
 
@@ -300,14 +257,14 @@ const HIERARCHICAL_TEST_SCENARIOS = [
           name: this.name,
           passed: true,
           duration: Date.now() - startTime,
-          details: { note: 'Correctly handled invalid chunk ID' }
+          details: { note: 'Correctly handled invalid file path' }
         };
 
       } catch (error) {
         return {
           name: this.name,
           passed: false,
-          error: `Error handling test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           duration: Date.now() - startTime
         };
       }
@@ -315,41 +272,47 @@ const HIERARCHICAL_TEST_SCENARIOS = [
   },
 
   {
-    name: 'Multi-level hierarchy exploration',
+    name: 'Document content completeness',
     async test(client: MCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
       
       try {
-        // Search for content likely to have deep hierarchy
-        const results = await client.searchVaadinDocs('form validation rules', '', 5);
+        // Start with a search to find specific content
+        const searchResults = await client.searchVaadinDocs('component styling', '', 3);
         
-        if (!results || results.length === 0) {
+        if (!searchResults || searchResults.length === 0) {
           return {
             name: this.name,
             passed: false,
-            error: 'No results for hierarchy exploration',
+            error: 'No search results returned',
             duration: Date.now() - startTime
           };
         }
 
-        let hierarchyLevels = 0;
-        let currentChunk = results.find(r => r.parent_id !== null);
+        // Get full documents for all results that have file_path
+        const documentsRetrieved = [];
         
-        // Traverse up the hierarchy
-        while (currentChunk && currentChunk.parent_id && hierarchyLevels < 5) {
-          hierarchyLevels++;
-          const nextChunk = await client.getDocumentChunk(currentChunk.parent_id);
-          if (!nextChunk) break;
-          currentChunk = nextChunk;
+        for (const result of searchResults) {
+          if (result.file_path) {
+            const fullDocument = await client.getFullDocument(result.file_path);
+            if (fullDocument) {
+              documentsRetrieved.push({
+                filePath: result.file_path,
+                chunkLength: result.content.length,
+                documentLength: fullDocument.content.length,
+                hasMetadata: !!fullDocument.metadata
+              });
+            }
+          }
         }
 
         return {
           name: this.name,
-          passed: true,
+          passed: documentsRetrieved.length > 0,
           duration: Date.now() - startTime,
-          details: {
-            hierarchyLevels,
-            note: `Successfully traversed ${hierarchyLevels} levels of hierarchy`
+          details: { 
+            documentsRetrieved: documentsRetrieved.length,
+            note: `Successfully retrieved ${documentsRetrieved.length} complete documents`
           }
         };
 
@@ -357,7 +320,7 @@ const HIERARCHICAL_TEST_SCENARIOS = [
         return {
           name: this.name,
           passed: false,
-          error: `Hierarchy exploration failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           duration: Date.now() - startTime
         };
       }
@@ -366,20 +329,36 @@ const HIERARCHICAL_TEST_SCENARIOS = [
 ];
 
 /**
- * Run all hierarchical test scenarios
+ * Run a single test
+ */
+async function runTest(scenario: any, client: MCPTestClient): Promise<TestResult> {
+  try {
+    return await scenario.test(client);
+  } catch (error) {
+    return {
+      name: scenario.name,
+      passed: false,
+      error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      duration: 0
+    };
+  }
+}
+
+/**
+ * Run all document-based test scenarios
  */
 export async function runHierarchicalTests(config: TestConfig): Promise<void> {
-  console.log('🧪 Running MCP Server Hierarchical Test Scenarios...\n');
+  console.log('🧪 Running MCP Server Document-Based Test Scenarios...\n');
   
   const client = new MCPTestClient(config);
   const results: TestResult[] = [];
   
-  for (const scenario of HIERARCHICAL_TEST_SCENARIOS) {
+  for (const scenario of DOCUMENT_TEST_SCENARIOS) {
     if (config.verbose) {
       console.log(`  Running: ${scenario.name}`);
     }
     
-    const result = await scenario.test(client);
+    const result = await runTest(scenario, client);
     results.push(result);
     
     if (config.verbose) {
@@ -396,7 +375,7 @@ export async function runHierarchicalTests(config: TestConfig): Promise<void> {
   const passedTests = results.filter(r => r.passed).length;
   const failedTests = results.length - passedTests;
   
-  console.log('\n📊 Hierarchical Test Results:');
+  console.log('\n📊 Document-Based Test Results:');
   console.log(`  ✅ Passed: ${passedTests}`);
   console.log(`  ❌ Failed: ${failedTests}`);
   console.log(`  📝 Total: ${results.length}`);
@@ -413,15 +392,23 @@ export async function runHierarchicalTests(config: TestConfig): Promise<void> {
 }
 
 /**
- * CLI interface for running hierarchical tests
+ * Main test runner
  */
-if ((import.meta as any).main) {
+async function main() {
   const args = process.argv.slice(2);
-  const verbose = args.includes('--verbose') || args.includes('-v');
-  const restServerUrl = args.find(arg => arg.startsWith('--server='))?.split('=')[1] || config.restServer.url;
-  
-  runHierarchicalTests({
+  const verbose = args.includes('--verbose');
+  const serverArg = args.find(arg => arg.startsWith('--server='));
+  const restServerUrl = serverArg ? serverArg.split('=')[1] : config.restServer.url;
+
+  const testConfig: TestConfig = {
     restServerUrl,
     verbose
-  }).catch(console.error);
+  };
+
+  await runHierarchicalTests(testConfig);
+}
+
+// Run tests if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
 } 

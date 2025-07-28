@@ -1,8 +1,8 @@
 /**
- * Hierarchical Markdown Chunker
+ * Simplified Markdown Chunker
  * 
- * Uses LangChain's MarkdownHeaderTextSplitter to create chunks while preserving
- * the hierarchical structure of markdown documents.
+ * Uses LangChain's MarkdownHeaderTextSplitter to create chunks for search while
+ * preserving file_path metadata for full document retrieval.
  */
 
 import { MarkdownTextSplitter, RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
@@ -20,27 +20,26 @@ export interface ChunkingConfig {
 }
 
 /**
- * Represents a chunk with hierarchical information
+ * Represents a chunk with basic metadata for document retrieval
  */
-export interface HierarchicalChunk {
+export interface BasicChunk {
   chunk_id: string;
   content: string;
   level: number;
   heading?: string;
-  parent_chunk_id?: string;
   metadata: {
     framework: Framework;
     source_url: string;
     title?: string;
-    file_path?: string;
+    file_path: string;
     [key: string]: any;
   };
 }
 
 /**
- * Chunks markdown documents with hierarchical awareness
+ * Chunks markdown documents for search with file_path metadata for full document retrieval
  */
-export class HierarchicalMarkdownChunker {
+export class MarkdownChunker {
   private markdownSplitter: MarkdownTextSplitter;
   private textSplitter: RecursiveCharacterTextSplitter;
 
@@ -60,9 +59,9 @@ export class HierarchicalMarkdownChunker {
   }
 
   /**
-   * Chunks a single document into hierarchical chunks
+   * Chunks a single document into basic chunks with file_path metadata
    */
-  async chunkDocument(document: Document): Promise<HierarchicalChunk[]> {
+  async chunkDocument(document: Document): Promise<BasicChunk[]> {
     const filePath = document.metadata.file_path || '';
     const baseId = this.generateBaseId(filePath);
     
@@ -70,7 +69,7 @@ export class HierarchicalMarkdownChunker {
     const chunks = await this.markdownSplitter.splitDocuments([document]);
     
     // Process each chunk
-    const hierarchicalChunks: HierarchicalChunk[] = [];
+    const basicChunks: BasicChunk[] = [];
     
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
@@ -81,36 +80,107 @@ export class HierarchicalMarkdownChunker {
       
       for (let j = 0; j < subChunks.length; j++) {
         const subChunk = subChunks[j];
-        const chunkId = this.generateChunkId(baseId, i, j);
-        
-        const hierarchicalChunk: HierarchicalChunk = {
+        const chunkId = this.config.generateChunkIds !== false 
+          ? `${baseId}-${i}-${j}`
+          : `${baseId}-${i}`;
+
+        const basicChunk: BasicChunk = {
           chunk_id: chunkId,
-          content: subChunk.pageContent,
+          content: subChunk.pageContent.trim(),
           level,
           heading: this.extractHeading(subChunk.pageContent),
           metadata: {
+            ...document.metadata,
             framework: document.metadata.framework || 'common',
             source_url: document.metadata.source_url || '',
             title: document.metadata.title,
             file_path: filePath,
-            ...document.metadata,
-            chunk_index: i,
-            sub_chunk_index: j
+            heading: this.extractHeading(subChunk.pageContent),
+            level
           }
         };
-        
-        hierarchicalChunks.push(hierarchicalChunk);
+
+        basicChunks.push(basicChunk);
       }
     }
-
-    // Establish parent-child relationships within the document
-    this.establishIntraFileRelationships(hierarchicalChunks);
     
-    return hierarchicalChunks;
+    return basicChunks;
   }
 
   /**
-   * Splits a large chunk into smaller pieces if necessary
+   * Converts BasicChunk to DocumentChunk format
+   */
+  convertToDocumentChunk(basicChunk: BasicChunk): DocumentChunk {
+    return {
+      chunk_id: basicChunk.chunk_id,
+      parent_id: null, // No longer using hierarchical relationships
+      framework: basicChunk.metadata.framework,
+      content: basicChunk.content,
+      source_url: basicChunk.metadata.source_url,
+      metadata: {
+        ...basicChunk.metadata,
+        title: basicChunk.metadata.title,
+        heading: basicChunk.heading,
+        level: basicChunk.level
+      }
+    };
+  }
+
+  /**
+   * Processes multiple documents and returns DocumentChunks
+   */
+  async processDocuments(documents: Document[]): Promise<DocumentChunk[]> {
+    const allChunks: DocumentChunk[] = [];
+    
+    for (const document of documents) {
+      const basicChunks = await this.chunkDocument(document);
+      const documentChunks = basicChunks.map(chunk => this.convertToDocumentChunk(chunk));
+      allChunks.push(...documentChunks);
+    }
+    
+    return allChunks;
+  }
+
+  /**
+   * Generates a base ID for chunks from a file path
+   */
+  private generateBaseId(filePath: string): string {
+    return filePath
+      .replace(/\.md$/, '')
+      .replace(/[^a-zA-Z0-9]/g, '-')
+      .toLowerCase();
+  }
+
+  /**
+   * Determines the header level of a chunk
+   */
+  private determineHeaderLevel(content: string): number {
+    const lines = content.split('\n');
+    for (const line of lines) {
+      const match = line.match(/^(#+)\s/);
+      if (match) {
+        return match[1].length;
+      }
+    }
+    return 0;
+  }
+
+  /**
+   * Extracts heading text from content
+   */
+  private extractHeading(content: string): string | undefined {
+    const lines = content.split('\n');
+    for (const line of lines) {
+      const match = line.match(/^#+\s+(.+)$/);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Splits large chunks into smaller pieces
    */
   private async splitLargeChunk(chunk: Document): Promise<Document[]> {
     const maxSize = this.config.maxChunkSize || 1000;
@@ -119,126 +189,14 @@ export class HierarchicalMarkdownChunker {
       return [chunk];
     }
     
-    // Use text splitter for oversized chunks
+    // Use text splitter for large chunks
     return await this.textSplitter.splitDocuments([chunk]);
   }
-
-  /**
-   * Determines the header level from chunk content
-   */
-  private determineHeaderLevel(content: string): number {
-    // Check content for markdown headers
-    const lines = content.split('\n');
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine.startsWith('#')) {
-        const headerMatch = trimmedLine.match(/^(#{1,6})\s/);
-        if (headerMatch) {
-          return headerMatch[1].length;
-        }
-      }
-    }
-    
-    return 0; // Content without explicit headers
-  }
-
-  /**
-   * Extracts the heading text from content
-   */
-  private extractHeading(content: string): string | undefined {
-    // Try to extract from content
-    const headingMatch = content.match(/^#{1,6}\s+(.+)$/m);
-    return headingMatch?.[1];
-  }
-
-  /**
-   * Generates a base ID from file path
-   */
-  private generateBaseId(filePath: string): string {
-    if (!filePath) {
-      return nanoid(8);
-    }
-    
-    // Normalize the file path to use forward slashes and ensure it's relative
-    let normalizedPath = filePath.replace(/\\/g, '/');
-    
-    // Remove any leading slashes or drive letters to ensure relative path
-    normalizedPath = normalizedPath.replace(/^[A-Za-z]:/, '').replace(/^\/+/, '');
-    
-    // Convert file path to a clean identifier
-    return normalizedPath
-      .replace(/\.md$/, '')
-      .replace(/[^a-zA-Z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-  }
-
-  /**
-   * Generates a unique chunk ID
-   */
-  private generateChunkId(baseId: string, chunkIndex: number, subChunkIndex: number = 0): string {
-    if (this.config.generateChunkIds === false) {
-      return nanoid(12);
-    }
-    
-    let id = `${baseId}-${chunkIndex}`;
-    if (subChunkIndex > 0) {
-      id += `-${subChunkIndex}`;
-    }
-    
-    return id;
-  }
-
-  /**
-   * Establishes parent-child relationships within a document based on header hierarchy
-   */
-  private establishIntraFileRelationships(chunks: HierarchicalChunk[]): void {
-    const headerStack: HierarchicalChunk[] = [];
-    
-    for (const chunk of chunks) {
-      if (chunk.level === 0) {
-        // Content without headers - no parent relationship within file
-        continue;
-      }
-      
-      // Find the appropriate parent by traversing up the header stack
-      while (headerStack.length > 0 && headerStack[headerStack.length - 1].level >= chunk.level) {
-        headerStack.pop();
-      }
-      
-      // Set parent relationship
-      if (headerStack.length > 0) {
-        chunk.parent_chunk_id = headerStack[headerStack.length - 1].chunk_id;
-      }
-      
-      // Add this chunk to the stack if it's a header
-      headerStack.push(chunk);
-    }
-  }
 }
 
 /**
- * Converts HierarchicalChunk to DocumentChunk format
+ * Factory function to create a chunker with default configuration
  */
-export function toDocumentChunk(hierarchicalChunk: HierarchicalChunk, crossFileParentId?: string): DocumentChunk {
-  return {
-    chunk_id: hierarchicalChunk.chunk_id,
-    parent_id: crossFileParentId || hierarchicalChunk.parent_chunk_id || null,
-    framework: hierarchicalChunk.metadata.framework,
-    content: hierarchicalChunk.content,
-    source_url: hierarchicalChunk.metadata.source_url,
-    metadata: {
-      title: hierarchicalChunk.metadata.title,
-      heading: hierarchicalChunk.heading,
-      level: hierarchicalChunk.level,
-      ...hierarchicalChunk.metadata
-    }
-  };
-}
-
-/**
- * Creates a chunker with default configuration
- */
-export function createChunker(config?: ChunkingConfig): HierarchicalMarkdownChunker {
-  return new HierarchicalMarkdownChunker(config);
+export function createChunker(config: ChunkingConfig = {}): MarkdownChunker {
+  return new MarkdownChunker(config);
 } 

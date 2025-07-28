@@ -3,28 +3,23 @@
  * 
  * This package handles:
  * - Loading Markdown files with frontmatter
- * - Chunking with header-based splitting
- * - Creating hierarchical relationships (intra-file and cross-file)
+ * - Chunking with header-based splitting for search relevance
  * - Generating embeddings
- * - Storing in Pinecone with metadata
+ * - Storing in Pinecone with file_path metadata for document retrieval
  */
 
 import path from 'path';
 import type { DocumentChunk } from 'core-types';
 
 // Core module exports
-export * from './hierarchy-parser.js';
 export * from './document-loader.js';
 export * from './chunker.js';
-export * from './relationship-builder.js';
 export * from './embeddings-generator.js';
 export * from './pinecone-upserter.js';
 
 // Import the modules we need for the main function
-import { parseFileHierarchy } from './hierarchy-parser.js';
 import { createDirectoryLoader } from './document-loader.js';
 import { createChunker } from './chunker.js';
-import { buildChunkRelationships } from './relationship-builder.js';
 import { createEmbeddingsGenerator, type EmbeddingsConfig } from './embeddings-generator.js';
 import { createPineconeUpserter, type PineconeConfig } from './pinecone-upserter.js';
 
@@ -49,13 +44,10 @@ export interface EmbeddingGenerationConfig {
 export interface EmbeddingGenerationResult {
   totalChunks: number;
   totalFiles: number;
-  hierarchyDepth: number;
   errors: string[];
   timings: {
-    hierarchyParsing: number;
     documentLoading: number;
     chunking: number;
-    relationshipBuilding: number;
     embeddingGeneration: number;
     pineconeUpserting: number;
     total: number;
@@ -69,23 +61,12 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
   const startTime = Date.now();
   const errors: string[] = [];
   
-  console.log('🚀 Starting embedding generation pipeline...');
+  console.log('🚀 Starting simplified embedding generation pipeline...');
   console.log(`📁 Processing markdown directory: ${config.markdownDir}`);
   
   try {
-    // Step 1: Parse file hierarchy
-    console.log('\n📊 Step 1: Parsing file hierarchy...');
-    const hierarchyStart = Date.now();
-    
-    const directoryStructure = parseFileHierarchy(config.markdownDir);
-    const totalFiles = Object.keys(directoryStructure).length;
-    const hierarchyDepth = Math.max(...Object.values(directoryStructure).map(h => h.level));
-    
-    const hierarchyTime = Date.now() - hierarchyStart;
-    console.log(`✅ Parsed ${totalFiles} files with max depth ${hierarchyDepth} (${hierarchyTime}ms)`);
-
-    // Step 2: Load documents
-    console.log('\n📖 Step 2: Loading markdown documents...');
+    // Step 1: Load documents
+    console.log('\n📖 Step 1: Loading markdown documents...');
     const loadingStart = Date.now();
     
     const loader = createDirectoryLoader(config.markdownDir, { 
@@ -101,8 +82,8 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
       throw new Error('No markdown documents found in the specified directory');
     }
 
-    // Step 3: Chunk documents
-    console.log('\n✂️ Step 3: Chunking documents...');
+    // Step 2: Chunk documents with file_path metadata
+    console.log('\n✂️ Step 2: Chunking documents...');
     const chunkingStart = Date.now();
     
     const chunker = createChunker({
@@ -110,30 +91,13 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
       chunkOverlap: config.chunking?.chunkOverlap
     });
 
-    const allChunks = new Map<string, any[]>();
+    const documentChunks = await chunker.processDocuments(documents);
     
-    for (const document of documents) {
-      // Document file_path should already be relative due to baseDir in loader
-      const filePath = document.metadata.file_path;
-      const chunks = await chunker.chunkDocument(document);
-      allChunks.set(filePath, chunks);
-    }
-
-    const totalChunks = Array.from(allChunks.values()).reduce((sum, chunks) => sum + chunks.length, 0);
     const chunkingTime = Date.now() - chunkingStart;
-    console.log(`✅ Created ${totalChunks} chunks across ${allChunks.size} files (${chunkingTime}ms)`);
+    console.log(`✅ Created ${documentChunks.length} chunks across ${documents.length} files (${chunkingTime}ms)`);
 
-    // Step 4: Build relationships
-    console.log('\n🔗 Step 4: Building hierarchical relationships...');
-    const relationshipStart = Date.now();
-    
-    const documentChunks: DocumentChunk[] = buildChunkRelationships(allChunks, directoryStructure);
-    
-    const relationshipTime = Date.now() - relationshipStart;
-    console.log(`✅ Built relationships for ${documentChunks.length} chunks (${relationshipTime}ms)`);
-
-    // Step 5: Generate embeddings
-    console.log('\n🧠 Step 5: Generating embeddings...');
+    // Step 3: Generate embeddings
+    console.log('\n🧠 Step 3: Generating embeddings...');
     const embeddingStart = Date.now();
     
     const embeddingsGenerator = createEmbeddingsGenerator(config.embeddings);
@@ -142,149 +106,112 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     const embeddingTime = Date.now() - embeddingStart;
     console.log(`✅ Generated embeddings for ${chunksWithEmbeddings.length} chunks (${embeddingTime}ms)`);
 
-    // Step 6: Upload to Pinecone (Dense + Sparse)
-    console.log('\n📡 Step 6: Uploading to Pinecone (Dense + Sparse)...');
+    // Step 4: Upload to Pinecone (Dense + Sparse)
+    console.log('\n📡 Step 4: Uploading to Pinecone (Dense + Sparse)...');
     const pineconeStart = Date.now();
     
     const pineconeUpserter = createPineconeUpserter(config.pinecone);
     
-    // Choose update strategy based on configuration
     if (config.clearExistingIndex) {
-      console.log('🗑️ Clearing existing Pinecone indexes...');
+      console.log('🗑️ Clearing existing Pinecone index...');
       await pineconeUpserter.clearIndex();
-      await pineconeUpserter.clearSparseIndex(); // Also clear sparse index
-      await pineconeUpserter.upsertChunks(chunksWithEmbeddings);
-      await pineconeUpserter.upsertSparseChunks(chunksWithEmbeddings); // Also populate sparse
-    } else if (config.smartUpdate) {
-      console.log('🔄 Using smart update (recommended for CI/CD)...');
-      const updateResult = await pineconeUpserter.smartUpdate(chunksWithEmbeddings);
-      console.log(`📊 Dense update summary: ${updateResult.upserted} upserted, ${updateResult.deleted} deleted, ${updateResult.unchanged} unchanged`);
-      
-      // Also do smart update for sparse index
-      const sparseUpdateResult = await pineconeUpserter.smartSparseUpdate(chunksWithEmbeddings);
-      console.log(`📊 Sparse update summary: ${sparseUpdateResult.upserted} upserted, ${sparseUpdateResult.deleted} deleted, ${sparseUpdateResult.unchanged} unchanged`);
-    } else {
-      console.log('📤 Using simple upsert (may leave orphaned chunks)...');
-      await pineconeUpserter.upsertChunks(chunksWithEmbeddings);
-      await pineconeUpserter.upsertSparseChunks(chunksWithEmbeddings); // Also upsert to sparse
+      console.log('✅ Index cleared');
     }
     
+    await pineconeUpserter.upsertChunks(chunksWithEmbeddings);
+    
     const pineconeTime = Date.now() - pineconeStart;
-    console.log(`✅ Uploaded to both Dense and Sparse Pinecone indexes (${pineconeTime}ms)`);
+    console.log(`✅ Uploaded ${chunksWithEmbeddings.length} chunks to Pinecone (${pineconeTime}ms)`);
 
-    // Final statistics
+    // Final results
     const totalTime = Date.now() - startTime;
     
-    const result: EmbeddingGenerationResult = {
+    console.log('\n🎉 Embedding generation completed successfully!');
+    console.log(`📊 Summary: ${documentChunks.length} chunks from ${documents.length} files in ${totalTime}ms`);
+    
+    return {
       totalChunks: documentChunks.length,
-      totalFiles,
-      hierarchyDepth,
+      totalFiles: documents.length,
       errors,
       timings: {
-        hierarchyParsing: hierarchyTime,
         documentLoading: loadingTime,
         chunking: chunkingTime,
-        relationshipBuilding: relationshipTime,
         embeddingGeneration: embeddingTime,
         pineconeUpserting: pineconeTime,
         total: totalTime
       }
     };
 
-    console.log('\n🎉 Embedding generation completed successfully!');
-    console.log(`📊 Total processing time: ${totalTime}ms`);
-    console.log(`📁 Files processed: ${totalFiles}`);
-    console.log(`📄 Chunks created: ${totalChunks}`);
-    console.log(`🔗 Hierarchy depth: ${hierarchyDepth}`);
-    
-    return result;
-
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-    errors.push(errorMsg);
-    console.error('❌ Embedding generation failed:', errorMsg);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`❌ Embedding generation failed: ${errorMessage}`);
+    errors.push(errorMessage);
+    
     throw error;
   }
 }
 
 /**
- * Validates the complete configuration
+ * CLI interface for the embedding generator
  */
-export function validateConfig(config: Partial<EmbeddingGenerationConfig>): {
-  valid: boolean;
-  errors: string[];
-} {
-  const errors: string[] = [];
-
-  if (!config.markdownDir) {
-    errors.push('Markdown directory is required');
+export async function runCLI(): Promise<void> {
+  const args = process.argv.slice(2);
+  const clearFlag = args.includes('--clear');
+  
+  const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), 'dist/markdown');
+  
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('❌ OPENAI_API_KEY environment variable is required');
+    process.exit(1);
   }
-
-  if (!config.embeddings) {
-    errors.push('Embeddings configuration is required');
-  } else {
-    if (!config.embeddings.openaiApiKey) {
-      errors.push('OpenAI API key is required');
-    }
+  
+  if (!process.env.PINECONE_API_KEY) {
+    console.error('❌ PINECONE_API_KEY environment variable is required');
+    process.exit(1);
   }
-
-  if (!config.pinecone) {
-    errors.push('Pinecone configuration is required');
-  } else {
-    if (!config.pinecone.apiKey) {
-      errors.push('Pinecone API key is required');
-    }
-    if (!config.pinecone.indexName) {
-      errors.push('Pinecone index name is required');
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors
-  };
-}
-
-/**
- * Convenience function to run the embedding generation with environment variables
- */
-export async function generateEmbeddingsFromEnv(markdownDir: string, options: {
-  clearExistingIndex?: boolean;
-  smartUpdate?: boolean;
-  maxChunkSize?: number;
-  chunkOverlap?: number;
-} = {}): Promise<EmbeddingGenerationResult> {
-  const openaiApiKey = process.env.OPENAI_API_KEY;
-  const pineconeApiKey = process.env.PINECONE_API_KEY;
-  const pineconeIndexName = process.env.PINECONE_INDEX || 'vaadin-docs';
-
-  if (!openaiApiKey) {
-    throw new Error('OPENAI_API_KEY environment variable is required');
-  }
-
-  if (!pineconeApiKey) {
-    throw new Error('PINECONE_API_KEY environment variable is required');
+  
+  if (!process.env.PINECONE_INDEX) {
+    console.error('❌ PINECONE_INDEX environment variable is required');
+    process.exit(1);
   }
 
   const config: EmbeddingGenerationConfig = {
     markdownDir,
     embeddings: {
-      openaiApiKey,
+      openaiApiKey: process.env.OPENAI_API_KEY,
       modelName: 'text-embedding-3-small',
+      dimensions: 1536,
       batchSize: 50
     },
     pinecone: {
-      apiKey: pineconeApiKey,
-      indexName: pineconeIndexName,
-      batchSize: 100
+      apiKey: process.env.PINECONE_API_KEY,
+      indexName: process.env.PINECONE_INDEX
     },
     chunking: {
-      maxChunkSize: options.maxChunkSize || 1000,
-      chunkOverlap: options.chunkOverlap || 200
+      maxChunkSize: 1000,
+      chunkOverlap: 200
     },
-    clearExistingIndex: options.clearExistingIndex,
-    smartUpdate: options.smartUpdate ?? true // Default to smart update for better CI/CD experience
+    clearExistingIndex: clearFlag
   };
 
-  return generateEmbeddings(config);
+  try {
+    const result = await generateEmbeddings(config);
+    console.log('\n📈 Final Results:');
+    console.log(`  Files processed: ${result.totalFiles}`);
+    console.log(`  Chunks created: ${result.totalChunks}`);
+    console.log(`  Total time: ${result.timings.total}ms`);
+    
+    if (result.errors.length > 0) {
+      console.log(`  Errors: ${result.errors.length}`);
+      result.errors.forEach(error => console.log(`    - ${error}`));
+    }
+  } catch (error) {
+    console.error('\n❌ Process failed:', error);
+    process.exit(1);
+  }
+}
+
+// Run CLI if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runCLI().catch(console.error);
 } 

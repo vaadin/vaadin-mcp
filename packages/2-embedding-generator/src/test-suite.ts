@@ -1,15 +1,13 @@
 /**
- * Test Suite for Embedding Generator
+ * Test Suite for Simplified Embedding Generator
  * 
- * Validates chunking logic, relationship building, and overall pipeline functionality.
+ * Validates chunking logic, file_path metadata, and overall pipeline functionality.
  */
 
 import fs from 'fs';
 import path from 'path';
-import { parseFileHierarchy } from './hierarchy-parser.js';
 import { parseFrontmatter } from './document-loader.js';
 import { createChunker } from './chunker.js';
-import { buildChunkRelationships, validateRelationships } from './relationship-builder.js';
 import { Document } from '@langchain/core/documents';
 
 /**
@@ -40,14 +38,9 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
   failed: number;
   results: TestResult[];
 }> {
-  console.log('🧪 Running Embedding Generator Test Suite...\n');
+  console.log('🧪 Running Simplified Embedding Generator Test Suite...\n');
   
   const testCases: TestCase[] = [
-    {
-      name: 'File Hierarchy Parsing',
-      description: 'Tests file hierarchy detection and parent-child relationships',
-      testFn: () => testFileHierarchy(testDataDir)
-    },
     {
       name: 'Frontmatter Parsing',
       description: 'Tests markdown frontmatter extraction',
@@ -55,18 +48,18 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
     },
     {
       name: 'Document Chunking',
-      description: 'Tests document chunking with header detection',
+      description: 'Tests document chunking with file_path metadata',
       testFn: () => testDocumentChunking(testDataDir)
     },
     {
-      name: 'Relationship Building',
-      description: 'Tests intra-file and cross-file relationship creation',
-      testFn: () => testRelationshipBuilding(testDataDir)
+      name: 'File Path Metadata',
+      description: 'Tests that chunks contain proper file_path for document retrieval',
+      testFn: () => testFilePathMetadata(testDataDir)
     },
     {
-      name: 'Relationship Validation',
-      description: 'Tests validation of chunk relationships',
-      testFn: () => testRelationshipValidation()
+      name: 'Chunk Structure',
+      description: 'Tests that chunks have simplified structure without parent_id',
+      testFn: () => testChunkStructure(testDataDir)
     }
   ];
 
@@ -85,28 +78,29 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
       const duration = Date.now() - startTime;
       
       if (success) {
-        console.log(`   ✅ PASSED (${duration}ms)\n`);
+        console.log(`   ✅ PASSED (${duration}ms)`);
         passed++;
         results.push({ name: testCase.name, passed: true, duration });
       } else {
-        console.log(`   ❌ FAILED (${duration}ms)\n`);
+        console.log(`   ❌ FAILED (${duration}ms)`);
         failed++;
         results.push({ name: testCase.name, passed: false, duration });
       }
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.log(`   ❌ ERROR: ${errorMsg} (${duration}ms)\n`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`   ❌ FAILED (${duration}ms): ${errorMessage}`);
       failed++;
-      results.push({ name: testCase.name, passed: false, error: errorMsg, duration });
+      results.push({ 
+        name: testCase.name, 
+        passed: false, 
+        error: errorMessage, 
+        duration 
+      });
     }
+    
+    console.log('');
   }
-
-  console.log('📊 Test Suite Results:');
-  console.log(`   Total: ${testCases.length}`);
-  console.log(`   Passed: ${passed}`);
-  console.log(`   Failed: ${failed}`);
-  console.log(`   Success Rate: ${((passed / testCases.length) * 100).toFixed(1)}%`);
 
   return {
     totalTests: testCases.length,
@@ -117,222 +111,194 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
 }
 
 /**
- * Tests file hierarchy parsing
- */
-async function testFileHierarchy(testDataDir: string): Promise<boolean> {
-  const structure = parseFileHierarchy(testDataDir);
-  
-  // Check that forms.md is detected as parent
-  const formsHierarchy = structure['forms.md'];
-  if (!formsHierarchy || formsHierarchy.level !== 0) {
-    throw new Error('forms.md should be a root level file');
-  }
-
-  // Check that forms/binding.md has forms.md as parent
-  const bindingHierarchy = structure['forms/binding.md'];
-  if (!bindingHierarchy || bindingHierarchy.parentPath !== 'forms.md') {
-    throw new Error('forms/binding.md should have forms.md as parent');
-  }
-
-  console.log(`     📁 Found ${Object.keys(structure).length} files in hierarchy`);
-  return true;
-}
-
-/**
- * Tests frontmatter parsing
+ * Tests frontmatter parsing functionality
  */
 async function testFrontmatterParsing(testDataDir: string): Promise<boolean> {
-  // Create a test markdown content with frontmatter
-  const testContent = `---
-framework: flow
-source_url: https://vaadin.com/docs/test
-title: Test Document
----
-
-# Test Heading
-
-This is test content.`;
-
-  const { frontmatter, content } = parseFrontmatter(testContent);
+  const testFile = path.join(testDataDir, 'forms.md');
   
-  if (frontmatter.framework !== 'flow') {
-    throw new Error('Framework should be "flow"');
+  if (!fs.existsSync(testFile)) {
+    throw new Error(`Test file not found: ${testFile}`);
   }
   
-  if (!content.includes('# Test Heading')) {
-    throw new Error('Content should include the heading');
-  }
-
+  const fileContent = fs.readFileSync(testFile, 'utf-8');
+  const { frontmatter, content } = parseFrontmatter(fileContent);
+  
   console.log(`     📄 Parsed frontmatter with ${Object.keys(frontmatter).length} fields`);
-  return true;
+  
+  // Should have basic frontmatter fields
+  return Object.keys(frontmatter).length > 0 && content.length > 0;
 }
 
 /**
- * Tests document chunking
+ * Tests document chunking functionality
  */
 async function testDocumentChunking(testDataDir: string): Promise<boolean> {
-  const testContent = `# Main Heading
-
-This is the introduction with enough content to potentially trigger splitting.
-
-## Sub Heading 1
-
-Content for sub heading 1 with more details to make it substantial enough for the chunker.
-
-### Deep Heading
-
-Nested content that should be detected as level 3.
-
-## Sub Heading 2
-
-Content for sub heading 2 with additional text to ensure proper chunking behavior.`;
-
+  const testFile = path.join(testDataDir, 'forms/binding.md');
+  
+  if (!fs.existsSync(testFile)) {
+    throw new Error(`Test file not found: ${testFile}`);
+  }
+  
+  const fileContent = fs.readFileSync(testFile, 'utf-8');
+  const { frontmatter, content } = parseFrontmatter(fileContent);
+  
   const document = new Document({
-    pageContent: testContent,
+    pageContent: content,
     metadata: {
-      framework: 'flow',
-      source_url: 'https://example.com',
-      file_path: 'test.md'
+      ...frontmatter,
+      file_path: 'forms/binding.md'
     }
   });
-
-  const chunker = createChunker({ maxChunkSize: 500, chunkOverlap: 100 });
-  const chunks = await chunker.chunkDocument(document);
   
-  if (chunks.length === 0) {
-    throw new Error('Should produce at least one chunk');
-  }
-
-  // Check that hierarchy is preserved - should detect at least some headers
-  const hasAnyLevel = chunks.some(chunk => chunk.level > 0);
+  const chunker = createChunker();
+  const chunks = await chunker.processDocuments([document]);
   
-  if (!hasAnyLevel) {
-    throw new Error(`Should detect at least some header levels. Found levels: ${chunks.map(c => c.level).join(', ')}`);
-  }
-
-  console.log(`     ✂️ Created ${chunks.length} chunks with proper hierarchy`);
-  return true;
+  console.log(`     ✂️ Created ${chunks.length} chunks with proper structure`);
+  
+  // Should create at least one chunk with proper structure
+  return chunks.length > 0 && 
+         chunks.every(chunk => 
+           chunk.chunk_id && 
+           chunk.content && 
+           chunk.metadata &&
+           chunk.metadata.file_path === 'forms/binding.md' &&
+           chunk.parent_id === null // No hierarchical relationships
+         );
 }
 
 /**
- * Tests relationship building
+ * Tests that chunks contain proper file_path metadata
  */
-async function testRelationshipBuilding(testDataDir: string): Promise<boolean> {
-  // Mock some hierarchical chunks
-  const mockChunks = new Map();
+async function testFilePathMetadata(testDataDir: string): Promise<boolean> {
+  const documents: Document[] = [];
   
-  // Parent file chunks
-  mockChunks.set('forms.md', [{
-    chunk_id: 'forms-0',
-    content: '# Forms Overview\n\nThis covers form basics.',
-    level: 1,
-    heading: 'Forms Overview',
-    metadata: { framework: 'common' as const, source_url: '', title: 'Forms' }
-  }]);
+  // Load multiple test documents
+  const testFiles = ['forms.md', 'forms/binding.md', 'forms/validation.md'];
   
-  // Child file chunks
-  mockChunks.set('forms/binding.md', [{
-    chunk_id: 'forms-binding-0',
-    content: '# Data Binding\n\nHow to bind data to forms.',
-    level: 1,
-    heading: 'Data Binding',
-    metadata: { framework: 'flow' as const, source_url: '', title: 'Binding' }
-  }]);
-
-  const mockStructure = {
-    'forms.md': {
-      filePath: 'forms.md',
-      parentPath: null,
-      children: ['forms/binding.md'],
-      level: 0
-    },
-    'forms/binding.md': {
-      filePath: 'forms/binding.md',
-      parentPath: 'forms.md',
-      children: [],
-      level: 1
+  for (const testFile of testFiles) {
+    const fullPath = path.join(testDataDir, testFile);
+    if (fs.existsSync(fullPath)) {
+      const fileContent = fs.readFileSync(fullPath, 'utf-8');
+      const { frontmatter, content } = parseFrontmatter(fileContent);
+      
+      documents.push(new Document({
+        pageContent: content,
+        metadata: {
+          ...frontmatter,
+          file_path: testFile
+        }
+      }));
     }
-  };
-
-  const documentChunks = buildChunkRelationships(mockChunks, mockStructure);
+  }
   
-  if (documentChunks.length !== 2) {
-    throw new Error('Should produce 2 document chunks');
+  if (documents.length === 0) {
+    throw new Error('No test documents found');
   }
-
-  // Check that child chunk has parent relationship
-  const childChunk = documentChunks.find(chunk => chunk.chunk_id === 'forms-binding-0');
-  if (!childChunk || childChunk.parent_id !== 'forms-0') {
-    throw new Error('Child chunk should reference parent chunk');
-  }
-
-  console.log(`     🔗 Built relationships for ${documentChunks.length} chunks`);
-  return true;
+  
+  const chunker = createChunker();
+  const chunks = await chunker.processDocuments(documents);
+  
+  console.log(`     📁 Processed ${documents.length} documents into ${chunks.length} chunks`);
+  
+  // All chunks should have file_path metadata
+  const hasValidFilePaths = chunks.every(chunk => 
+    chunk.metadata?.file_path && 
+    typeof chunk.metadata.file_path === 'string' &&
+    chunk.metadata.file_path.length > 0
+  );
+  
+  // Should have chunks from different files
+  const uniqueFilePaths = new Set(chunks.map(chunk => chunk.metadata?.file_path));
+  
+  return hasValidFilePaths && uniqueFilePaths.size > 1;
 }
 
 /**
- * Tests relationship validation
+ * Tests that chunks have simplified structure without hierarchical complexity
  */
-async function testRelationshipValidation(): Promise<boolean> {
-  const validChunks = [
-    {
-      chunk_id: 'chunk-1',
-      parent_id: null,
-      framework: 'common' as const,
-      content: 'Root content',
-      source_url: 'https://example.com',
-      metadata: {}
-    },
-    {
-      chunk_id: 'chunk-2',
-      parent_id: 'chunk-1',
-      framework: 'flow' as const,
-      content: 'Child content',
-      source_url: 'https://example.com',
-      metadata: {}
-    }
-  ];
-
-  const validation = validateRelationships(validChunks);
+async function testChunkStructure(testDataDir: string): Promise<boolean> {
+  const testFile = path.join(testDataDir, 'forms/binding.md');
   
-  if (!validation.valid) {
-    throw new Error(`Validation should pass for valid chunks: ${validation.errors.join(', ')}`);
+  if (!fs.existsSync(testFile)) {
+    throw new Error(`Test file not found: ${testFile}`);
   }
-
-  // Test invalid chunks
-  const invalidChunks = [
-    {
-      chunk_id: 'chunk-1',
-      parent_id: 'nonexistent',
-      framework: 'common' as const,
-      content: 'Invalid content',
-      source_url: 'https://example.com',
-      metadata: {}
-    }
-  ];
-
-  const invalidValidation = validateRelationships(invalidChunks);
   
-  if (invalidValidation.valid) {
-    throw new Error('Validation should fail for invalid parent reference');
-  }
-
-  console.log(`     ✅ Validation correctly identified ${invalidValidation.errors.length} errors`);
-  return true;
+  const fileContent = fs.readFileSync(testFile, 'utf-8');
+  const { frontmatter, content } = parseFrontmatter(fileContent);
+  
+  const document = new Document({
+    pageContent: content,
+    metadata: {
+      ...frontmatter,
+      file_path: 'forms/binding.md'
+    }
+  });
+  
+  const chunker = createChunker();
+  const chunks = await chunker.processDocuments([document]);
+  
+  console.log(`     🏗️ Validated structure of ${chunks.length} chunks`);
+  
+  // All chunks should have simplified structure
+  return chunks.every(chunk => {
+    return (
+      // Required fields
+      typeof chunk.chunk_id === 'string' &&
+      typeof chunk.content === 'string' &&
+      typeof chunk.framework === 'string' &&
+      typeof chunk.source_url === 'string' &&
+      // Note: relevance_score is only added during search, not in base DocumentChunk
+      chunk.parent_id === null && // No hierarchical relationships
+      chunk.metadata &&
+      typeof chunk.metadata.file_path === 'string' &&
+      chunk.metadata.file_path.length > 0
+    );
+  });
 }
 
 /**
- * Utility to run tests from command line
+ * Prints test results summary
  */
-export async function main(): Promise<void> {
-  const results = await runTestSuite();
+export function printTestResults(results: {
+  totalTests: number;
+  passed: number;
+  failed: number;
+  results: TestResult[];
+}): void {
+  console.log(`📊 Test Suite Results:`);
+  console.log(`  Total: ${results.totalTests}`);
+  console.log(`  Passed: ${results.passed}`);
+  console.log(`  Failed: ${results.failed}`);
+  console.log(`  Success Rate: ${((results.passed / results.totalTests) * 100).toFixed(1)}%`);
   
   if (results.failed > 0) {
+    console.log('\n❌ Failed Tests:');
+    results.results
+      .filter(r => !r.passed)
+      .forEach(result => {
+        console.log(`  - ${result.name}: ${result.error || 'Test returned false'}`);
+      });
+  }
+}
+
+/**
+ * Main test runner
+ */
+export async function main(): Promise<void> {
+  try {
+    const results = await runTestSuite();
+    printTestResults(results);
+    
+    if (results.failed > 0) {
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error('Test suite failed:', error);
     process.exit(1);
   }
 }
 
-// Run tests when file is executed directly
-if (import.meta.main) {
+// Run tests if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 } 

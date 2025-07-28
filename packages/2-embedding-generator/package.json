@@ -1,7 +1,7 @@
 {
   "name": "2-embedding-generator",
   "version": "1.0.0",
-  "description": "Document chunking, embedding generation, and vector storage with hierarchical relationships",
+  "description": "Document chunking, embedding generation, and vector storage with file_path metadata for document retrieval",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
