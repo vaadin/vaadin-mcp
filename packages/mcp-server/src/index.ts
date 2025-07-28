@@ -198,7 +198,7 @@ class VaadinDocsServer {
   }
 
   /**
-   * Handle getFullDocument tool
+   * Handle get_full_document tool
    */
   private async handleGetFullDocumentTool(args: any) {
     // Validate arguments
@@ -271,20 +271,24 @@ class VaadinDocsServer {
 
     results.forEach((result, index) => {
       output += `## ${index + 1}. ${result.metadata?.title || 'Untitled'}\n`;
-      output += `**Source:** ${result.source_url}\n`;
-      output += `**Framework:** ${result.framework}\n`;
-      output += `**Chunk ID:** ${result.chunk_id}\n`;
+      
+      // Format metadata as markdown front matter
+      output += `----\n`;
+      output += `Source: ${result.source_url}\n`;
+      output += `Framework: ${result.framework}\n`;
+      output += `Chunk ID: ${result.chunk_id}\n`;
       
       if (result.file_path) {
-        output += `**Document Path:** ${result.file_path} (use getFullDocument to get complete context)\n`;
+        output += `Document Path: ${result.file_path} (use get_full_document to get complete context)\n`;
       }
       
-      output += `**Relevance Score:** ${result.relevance_score.toFixed(3)}\n\n`;
+      output += `Relevance Score: ${result.relevance_score.toFixed(3)}\n`;
+      output += `----\n\n`;
       
       output += `${result.content}\n\n`;
 
       if (index < results.length - 1) {
-        output += '---\n\n';
+        output += '================\n\n';
       }
     });
 
