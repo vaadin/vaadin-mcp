@@ -23,12 +23,15 @@ const openai = new OpenAI({
 
 // Initialize search service
 let searchService: any = null;
+let searchServiceInitialized = false;
+let initializationPromise: Promise<void> | null = null;
 
 // Initialize the search service on startup
 async function initializeSearchService() {
   try {
     console.log('🚀 Initializing search service...');
     searchService = await getSearchService();
+    searchServiceInitialized = true;
     console.log('✅ Search service initialized successfully');
   } catch (error) {
     console.error('❌ Failed to initialize search service:', error);
@@ -36,8 +39,21 @@ async function initializeSearchService() {
   }
 }
 
+// Ensure search service is ready before using it
+async function ensureSearchServiceReady(): Promise<void> {
+  if (searchServiceInitialized && searchService) {
+    return;
+  }
+  
+  if (!initializationPromise) {
+    initializationPromise = initializeSearchService();
+  }
+  
+  await initializationPromise;
+}
+
 // Call initialization
-initializeSearchService();
+initializationPromise = initializeSearchService();
 
 /**
  * Check for required environment variables (only in production mode)
@@ -94,6 +110,9 @@ app.get('/health', (req: Request, res: Response) => {
  */
 app.post('/search', async (req: Request, res: Response) => {
   try {
+    // Ensure search service is ready
+    await ensureSearchServiceReady();
+    
     // Check if request has a body
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({
@@ -150,6 +169,9 @@ app.post('/search', async (req: Request, res: Response) => {
  */
 app.get('/chunk/:chunkId', async (req: Request, res: Response) => {
   try {
+    // Ensure search service is ready
+    await ensureSearchServiceReady();
+    
     const { chunkId } = req.params;
     
     if (!chunkId) {
@@ -384,6 +406,9 @@ Relevant: [YES or NO]
 // Ask endpoint - accepts a question and returns an AI-generated answer
 app.post('/ask', async (req: Request, res: Response) => {
   try {
+    // Ensure search service is ready
+    await ensureSearchServiceReady();
+    
     // Check if request has a body
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({
