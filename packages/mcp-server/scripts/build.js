@@ -22,6 +22,18 @@ const __dirname = path.dirname(__filename);
 console.log('Running TypeScript compiler...');
 execSync('tsc', { stdio: 'inherit' });
 
+// Copy the primer file to the dist directory
+console.log('Copying vaadin-primer.md...');
+const primerSourcePath = path.join(__dirname, '..', 'src', 'vaadin-primer.md');
+const primerDestPath = path.join(__dirname, '..', 'dist', 'vaadin-primer.md');
+
+if (fs.existsSync(primerSourcePath)) {
+  fs.copyFileSync(primerSourcePath, primerDestPath);
+  console.log('Copied vaadin-primer.md to dist directory');
+} else {
+  console.error('Warning: vaadin-primer.md not found in src directory');
+}
+
 // Ensure the shebang line is preserved in the compiled JavaScript file
 console.log('Ensuring shebang line is preserved...');
 const indexJsPath = path.join(__dirname, '..', 'dist', 'index.js');

@@ -19,6 +19,8 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { config } from './config.js';
 import type { RetrievalResult } from './types.js';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Search result interface (legacy compatibility)
@@ -74,8 +76,17 @@ class VaadinDocsServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: [
         {
+          name: 'get_vaadin_primer',
+          description: '🚨 IMPORTANT: Always use this tool FIRST before working with Vaadin. Returns a comprehensive primer document with current (2024+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Flow vs Hilla, project structure, components, and best practices. Essential reading to avoid outdated assumptions.',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+            additionalProperties: false
+          }
+        },
+        {
           name: 'search_vaadin_docs',
-          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. This tool returns search results that include file_path information for complete document retrieval. When using this tool, try to deduce the correct framework from context: use "flow" for Java-based views, "hilla" for React-based views, or empty string for both frameworks. Use get_full_document with the file_path from results when you need complete context.',
+          description: 'Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. ⚠️ IMPORTANT: Use get_vaadin_primer FIRST to understand modern Vaadin before searching. This tool returns search results that include file_path information for complete document retrieval. When using this tool, try to deduce the correct framework from context: use "flow" for Java-based views, "hilla" for React-based views, or empty string for both frameworks. Use get_full_document with the file_path from results when you need complete context.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -106,7 +117,7 @@ class VaadinDocsServer {
         },
         {
           name: 'get_full_document',
-          description: 'Retrieves complete documentation pages for one or more file paths. Use this when you need full context beyond what search results provide. After finding relevant chunks via search_vaadin_docs, use this to get complete context, examples, and cross-references. The response includes the complete markdown content with full context. Supports fetching multiple files at once to reduce roundtrips.',
+          description: 'Retrieves complete documentation pages for one or more file paths. Use this when you need full context beyond what search results provide. ⚠️ IMPORTANT: Use get_vaadin_primer FIRST to understand modern Vaadin fundamentals. After finding relevant chunks via search_vaadin_docs, use this to get complete context, examples, and cross-references. The response includes the complete markdown content with full context. Supports fetching multiple files at once to reduce roundtrips.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -134,6 +145,8 @@ class VaadinDocsServer {
     // Handle tool calls
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       switch (request.params.name) {
+        case 'get_vaadin_primer':
+          return this.handleGetVaadinPrimerTool();
         case 'search_vaadin_docs':
           return this.handleSearchTool(request.params.arguments as any);
         case 'get_full_document':
@@ -145,6 +158,40 @@ class VaadinDocsServer {
           );
       }
     });
+  }
+
+  /**
+   * Handle get_vaadin_primer tool
+   */
+  private async handleGetVaadinPrimerTool() {
+    try {
+      // Get the path to the primer document
+      const primerPath = path.join(__dirname, 'vaadin-primer.md');
+      
+      // Read the primer document
+      const primerContent = fs.readFileSync(primerPath, 'utf-8');
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: primerContent
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('Error reading Vaadin primer:', error);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error reading Vaadin primer: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }
+        ],
+        isError: true
+      };
+    }
   }
 
   /**
