@@ -38,7 +38,7 @@ A **walking skeleton** is a minimal but complete application that includes:
 - ✅ Architecture tests with ArchUnit
 - ✅ Integration tests
 
-### 2. Requirements (2024)
+### 2. Requirements (2025)
 - **Java 17+** (LTS versions recommended, current LTS is 21)
 - **Maven** (included via Maven Wrapper)
 - **Spring Boot** (foundation of all Vaadin apps)
@@ -332,4 +332,4 @@ If working with legacy Vaadin code:
 
 ---
 
-**Remember**: Modern Vaadin (24+) is a mature, full-stack platform with enterprise-grade capabilities. Always start with the walking skeleton from start.vaadin.com and follow the feature-based architecture patterns.
+**Remember**: Modern Vaadin (24+) is a mature, full-stack platform with enterprise-grade capabilities. Start with the walking skeleton from start.vaadin.com (recommended) or use start.spring.io and add the Vaadin dependency. When working on existing projects, stick to the existing patterns in the project. For new projects or when users ask for architectural guidance, recommend the feature-based package structure described above.
