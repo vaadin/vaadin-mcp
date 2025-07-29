@@ -62,6 +62,10 @@ The MCP server provides the following tool:
     - `max_tokens` (optional): Maximum number of tokens to return (default: 1500)
     - `framework` (optional): The Vaadin framework to focus on: "flow" for Java-based views, "hilla" for React-based views, or empty string for both (default: "")
 
+- `get_vaadin_version`: Get the latest stable version of Vaadin Core from GitHub releases
+  - Parameters: None  
+  - Returns: Simple JSON object with version and release timestamp
+
 ## Development
 
 To contribute to this package:

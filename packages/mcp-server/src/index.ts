@@ -138,6 +138,15 @@ class VaadinDocsServer {
               { required: ['file_paths'] }
             ]
           }
+        },
+        {
+          name: 'get_vaadin_version',
+          description: 'Returns the latest stable version of Vaadin Core as a simple JSON object. This is useful when setting up new projects, checking for updates, or when helping with dependency management. Returns: {version, released}.',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+            additionalProperties: false
+          }
         }
       ]
     }));
@@ -151,6 +160,8 @@ class VaadinDocsServer {
           return this.handleSearchTool(request.params.arguments as any);
         case 'get_full_document':
           return this.handleGetFullDocumentTool(request.params.arguments as any);
+        case 'get_vaadin_version':
+          return this.handleGetVaadinVersionTool();
         default:
           throw new McpError(
             ErrorCode.MethodNotFound,
@@ -333,6 +344,52 @@ class VaadinDocsServer {
           {
             type: 'text',
             text: `Error fetching full documents: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+
+  /**
+   * Handle get_vaadin_version tool
+   */
+  private async handleGetVaadinVersionTool() {
+    try {
+      // Forward request to REST server
+      const response = await fetch(`${config.restServer.url}/vaadin-version`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Return simple JSON structure with only version and release timestamp
+      const versionInfo = {
+        version: data.version,
+        released: data.released
+      };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(versionInfo, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('Error fetching Vaadin version:', error);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: `Failed to fetch Vaadin version: ${error instanceof Error ? error.message : 'Unknown error'}`
+            }, null, 2)
           }
         ],
         isError: true

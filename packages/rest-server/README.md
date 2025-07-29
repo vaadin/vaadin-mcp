@@ -138,6 +138,26 @@ The endpoint internally:
 2. Uses OpenAI to generate a comprehensive answer based on the documentation
 3. Returns the generated answer to the client (either as a complete JSON response or as a stream)
 
+### Get Vaadin Version
+
+```
+GET /vaadin-version
+```
+
+Returns the latest stable Vaadin version from GitHub releases.
+
+**Response:**
+```json
+{
+  "version": "24.8.4",
+  "released": "2025-07-22T09:01:33Z"
+}
+```
+
+**Parameters:** None
+
+This endpoint queries the GitHub API to get the latest release from the [Vaadin platform repository](https://github.com/vaadin/platform), ensuring accurate version information even when patch releases for older versions are published later.
+
 ## Error Handling
 
 The server returns appropriate HTTP status codes and error messages:

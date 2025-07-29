@@ -7,9 +7,13 @@
  * It uses clean dependency injection to separate production and test implementations.
  */
 
+// Load environment variables from project root
+import { config as dotenvConfig } from 'dotenv';
+import path from 'path';
+dotenvConfig({ path: path.resolve(process.cwd(), '../../.env') });
+
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
-import path from 'path';
 import fs from 'fs';
 import { getSearchService } from './search-factory.js';
 import { config } from './config.js';
@@ -103,6 +107,59 @@ app.get('/health', (req: Request, res: Response) => {
     server: config.server.name, 
     version: config.server.version 
   });
+});
+
+/**
+ * Vaadin Version endpoint - returns the latest stable version from GitHub Releases
+ */
+app.get('/vaadin-version', async (req: Request, res: Response) => {
+  try {
+    // Query GitHub API for the latest Vaadin platform release
+    const githubUrl = 'https://api.github.com/repos/vaadin/platform/releases/latest';
+    
+    console.log('🔍 Fetching latest Vaadin version from GitHub...');
+    const response = await fetch(githubUrl, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'vaadin-docs-rest-server'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`GitHub API request failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.tag_name) {
+      throw new Error('No tag_name found in GitHub release response');
+    }
+    
+    // Extract version from tag (e.g., "24.8.4" from tag_name like "24.8.4")
+    const latestVersion = data.tag_name;
+    
+    // Validate that it's a stable version (semantic versioning pattern)
+    if (!/^\d+\.\d+\.\d+$/.test(latestVersion)) {
+      throw new Error(`Invalid version format: ${latestVersion}`);
+    }
+    
+    console.log(`✅ Latest Vaadin version: ${latestVersion}`);
+    console.log(`📅 Released: ${data.published_at}`);
+    console.log(`🏷️ Release: ${data.name || data.tag_name}`);
+    
+    res.json({
+      version: latestVersion,
+      released: data.published_at
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching Vaadin version:', error);
+    
+    res.status(500).json({
+      error: `Failed to fetch Vaadin version: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 /**

@@ -200,6 +200,7 @@ bun run test:verbose   # Detailed test output
 - `GET /chunk/:chunkId` - Retrieve specific document chunk
 - `POST /ask` - AI-generated answers (with streaming support)
 - `GET /health` - Health check
+- `GET /vaadin-version` - Get latest Vaadin version from GitHub releases
 
 ### MCP Server (`packages/mcp-server/`)
 Model Context Protocol server for IDE assistant integration:
@@ -218,6 +219,7 @@ npm publish            # Publish to npm (when ready)
 **Available Tools:**
 - `search_vaadin_docs`: Search with semantic and keyword matching
 - `get_full_document`: Retrieve complete documentation pages
+- `get_vaadin_version`: Get latest Vaadin version and release timestamp
 
 ## 🧪 Testing
 

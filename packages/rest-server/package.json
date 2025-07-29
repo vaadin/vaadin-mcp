@@ -24,15 +24,16 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "core-types": "workspace:*",
-    "langchain": "0.3.30",
-    "@langchain/core": "0.3.66",
     "@langchain/community": "0.3.48",
+    "@langchain/core": "0.3.66",
     "@langchain/openai": "^0.3.0",
     "@langchain/pinecone": "^0.1.0",
     "@pinecone-database/pinecone": "^5.1.0",
+    "core-types": "workspace:*",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
     "express": "^4.18.2",
+    "langchain": "0.3.30",
     "openai": "^4.86.1"
   }
 }
