@@ -380,33 +380,7 @@ ${context}
   };
 }
 
-/**
- * Rewrite a user question to be more suitable for vector database search
- */
-async function rewriteQuestionForSearch(originalQuestion: string): Promise<string> {
-  const prompt = `
-You are an expert on Vaadin documentation. Your task is to rewrite the following user question into a format that's more suitable for searching in a vector database of Vaadin documentation.
 
-The documentation is likely organized at a more generic level than specific use cases. For example, if a user asks about "how to add a date picker column to a grid", you should rewrite it to search for "how to add a component column to a grid" since the documentation probably covers the general concept rather than specific component types.
-
-Original question: ${originalQuestion}
-
-Rewrite this question to be more effective for searching technical documentation while preserving the core information need. Focus on general concepts and patterns rather than specific implementations.
-
-Rewritten question:`;
-
-  const response = await openai.chat.completions.create({
-    model: config.openai.questionRewriter.model,
-    messages: [
-      { role: 'system', content: 'You are a helpful assistant that specializes in optimizing search queries for technical documentation.' },
-      { role: 'user', content: prompt }
-    ],
-    temperature: config.openai.questionRewriter.temperature,
-    max_tokens: config.openai.questionRewriter.maxTokens
-  });
-
-  return response.choices[0]?.message?.content?.trim() || originalQuestion;
-}
 
 /**
  * Check if a question is related to Vaadin or Java development
@@ -497,11 +471,8 @@ app.post('/ask', async (req: Request, res: Response) => {
       ? framework || ''
       : '';
 
-    // Rewrite the question for better vector search
-    const searchQuestion = await rewriteQuestionForSearch(question);
-    
     // Use hybrid search for better results (fixed at 5 results)
-    const supportingDocs = await searchService.hybridSearch(searchQuestion, {
+    const supportingDocs = await searchService.hybridSearch(question, {
       maxResults: 5,
       maxTokens: 4000,
       framework: validFramework,

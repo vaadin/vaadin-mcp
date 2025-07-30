@@ -25,13 +25,6 @@ export const config = {
 
   // OpenAI model configurations
   openai: {
-    // Configuration for rewriting user questions for better vector search
-    questionRewriter: {
-      model: 'gpt-4.1',
-      temperature: 0.3,
-      maxTokens: 400,
-    },
-    
     // Configuration for checking if questions are relevant to Vaadin/Java
     relevanceChecker: {
       model: 'gpt-4.1-nano',
