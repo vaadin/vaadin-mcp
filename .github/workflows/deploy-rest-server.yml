@@ -56,5 +56,5 @@ jobs:
       
       - name: Deploy to Fly.io
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_MCP }}
         run: flyctl deploy --remote-only --config packages/rest-server/fly.toml --dockerfile packages/rest-server/Dockerfile

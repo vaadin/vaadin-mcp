@@ -1,4 +1,11 @@
-# Vaadin Development Primer (2025+)
+/**
+ * Vaadin Development Primer Content
+ * 
+ * This file exports the primer content as a TypeScript constant to avoid 
+ * the need for file system operations and custom build scripts.
+ */
+
+export const VAADIN_PRIMER_CONTENT = `# Vaadin Development Primer (2025+)
 
 **⚠️ Important: Read this document before working with Vaadin to ensure you have an accurate, up-to-date understanding of modern Vaadin development.**
 
@@ -23,13 +30,13 @@ Vaadin is a **full-stack platform** for building business web applications in Ja
 
 **Requirements**: Java 17+, Maven (via wrapper), Spring Boot foundation, Node.js (auto-handled)
 
-**Run**: `./mvnw` → http://localhost:8080
+**Run**: \`./mvnw\` → http://localhost:8080
 
 ## 📁 Modern Project Structure
 
 Vaadin promotes **feature-based packaging** (not layer-based):
 
-```
+\`\`\`
 src/main/java/
 ├── com.example.myapp/
 │   ├── Application.java              # Spring Boot main class
@@ -41,10 +48,10 @@ src/main/java/
 │       ├── domain/                   # Entities, repositories
 │       ├── service/                  # Business logic
 │       └── ui/view/ (Flow only)      # UI components
-```
+\`\`\`
 
 ### Frontend Structure (Hilla only)
-```
+\`\`\`
 src/main/frontend/
 ├── components/                       # Reusable React components
 ├── security/                         # Auth context
@@ -53,7 +60,7 @@ src/main/frontend/
 │   ├── @layout.tsx                   # Layout wrapper
 │   └── task-list.tsx                 # Feature views
 └── index.tsx                         # App entry point
-```
+\`\`\`
 
 ## 🔐 Built-in Security
 
@@ -62,19 +69,19 @@ src/main/frontend/
 ## 🌐 Creating Views
 
 ### Flow Views (Java)
-Add `@Route("path")` annotation to classes extending Vaadin layouts:
-```java
+Add \`@Route("path")\` annotation to classes extending Vaadin layouts:
+\`\`\`java
 @Route("dashboard")
 public class DashboardView extends VerticalLayout {
     // View implementation
 }
-```
+\`\`\`
 
 ### Hilla Views (React)
-Use **filesystem-based routing** in `src/main/frontend/views/`:
-- `views/dashboard.tsx` → `/dashboard` route
-- `views/@layout.tsx` → shared layout wrapper
-- `views/@index.tsx` → root `/` route
+Use **filesystem-based routing** in \`src/main/frontend/views/\`:
+- \`views/dashboard.tsx\` → \`/dashboard\` route
+- \`views/@layout.tsx\` → shared layout wrapper
+- \`views/@index.tsx\` → root \`/\` route
 
 ## 🧩 Component Ecosystem
 
@@ -94,17 +101,17 @@ Use **filesystem-based routing** in `src/main/frontend/views/`:
 
 ## 🏗️ Architecture Principles
 
-**Feature-Based Organization**: Each feature in its own package (domain, service, ui). Use `@Service` + `@Transactional` + security annotations for business logic.
+**Feature-Based Organization**: Each feature in its own package (domain, service, ui). Use \`@Service\` + \`@Transactional\` + security annotations for business logic.
 
-**Hilla Type Safety**: `@BrowserCallable` services auto-generate TypeScript APIs with runtime validation.
+**Hilla Type Safety**: \`@BrowserCallable\` services auto-generate TypeScript APIs with runtime validation.
 
 ## 🌐 Hilla @BrowserCallable Endpoints
 
-Hilla's key feature is **type-safe communication** between React frontend and Java backend through `@BrowserCallable` endpoints.
+Hilla's key feature is **type-safe communication** between React frontend and Java backend through \`@BrowserCallable\` endpoints.
 
 ### Defining Endpoints in Java
 
-```java
+\`\`\`java
 @BrowserCallable
 @Service
 public class TaskEndpoint {
@@ -121,31 +128,31 @@ public class TaskEndpoint {
         taskService.deleteTask(taskId);
     }
 }
-```
+\`\`\`
 
 ### DTO Classes (Automatically Converted to TypeScript)
 
-```java
+\`\`\`java
 public record CreateTaskRequest(
     @NotBlank String title,
     @Size(max = 500) String description
 ) {}
-```
+\`\`\`
 
 ### Package-level Null Safety
 
-Create `package-info.java` in your endpoint package to avoid repetitive `@NotNull`:
+Create \`package-info.java\` in your endpoint package to avoid repetitive \`@NotNull\`:
 
-```java
+\`\`\`java
 @org.springframework.lang.NonNullApi
 package com.example.endpoints;
-```
+\`\`\`
 
 ### Calling from TypeScript
 
-After running `./mvnw compile vaadin:generate`, you get type-safe TypeScript clients:
+After running \`./mvnw compile vaadin:generate\`, you get type-safe TypeScript clients:
 
-```typescript
+\`\`\`typescript
 import { TaskEndpoint } from 'Frontend/generated/endpoints';
 import type { CreateTaskRequest } from 'Frontend/generated/com/example/data';
 
@@ -158,7 +165,7 @@ const createTask = async (request: CreateTaskRequest) => {
         console.error('Validation or business logic error:', error);
     }
 };
-```
+\`\`\`
 
 ### Key Benefits & Best Practices
 
@@ -166,23 +173,23 @@ const createTask = async (request: CreateTaskRequest) => {
 
 **🎯 Best Practices:**
 - Use **record classes** for DTOs and **Bean Validation** annotations
-- Add `@NonNullApi` to `package-info.java` to avoid repetitive `@NotNull`
+- Add \`@NonNullApi\` to \`package-info.java\` to avoid repetitive \`@NotNull\`
 - Keep endpoints **stateless** - delegate to injected services
-- Generate API after changes: `./mvnw compile vaadin:generate`
+- Generate API after changes: \`./mvnw compile vaadin:generate\`
 
-**⚠️ Important:** Only `@BrowserCallable` methods are exposed. Security annotations (`@RolesAllowed`, etc.) work on endpoints.
+**⚠️ Important:** Only \`@BrowserCallable\` methods are exposed. Security annotations (\`@RolesAllowed\`, etc.) work on endpoints.
 
 ## 📦 Key Dependencies
 
-**Core**: `vaadin-spring-boot-starter` dependency + `vaadin-bom` for version management
-**Maven Plugin**: `vaadin-maven-plugin` handles frontend resources, optimization, TypeScript compilation, API generation (`vaadin:generate` for Hilla)
+**Core**: \`vaadin-spring-boot-starter\` dependency + \`vaadin-bom\` for version management
+**Maven Plugin**: \`vaadin-maven-plugin\` handles frontend resources, optimization, TypeScript compilation, API generation (\`vaadin:generate\` for Hilla)
 
 ## 🌐 Deployment & Production
 
 **Deployment**: Executable JAR (recommended), Docker containers, any Java-compatible cloud platform
 
-**Production Build**: `./mvnw clean package -Pproduction` (creates optimized bundles, minification, production profiles)
+**Production Build**: \`./mvnw clean package -Pproduction\` (creates optimized bundles, minification, production profiles)
 
 ---
 
-**Important**: When working on existing projects, stick to the existing patterns in the project. For new projects or when users ask for architectural guidance, recommend the feature-based package structure described above.
+**Important**: When working on existing projects, stick to the existing patterns in the project. For new projects or when users ask for architectural guidance, recommend the feature-based package structure described above.`;

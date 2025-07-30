@@ -6,7 +6,7 @@
   "type": "module",
 
   "scripts": {
-    "build": "bun run scripts/build.js",
+    "build": "tsc",
 
     "start": "bun run src/index.ts",
     "start:prod": "bun run dist/index.js",
