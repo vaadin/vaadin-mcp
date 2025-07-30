@@ -4,52 +4,26 @@
 
 ## What is Modern Vaadin?
 
-Vaadin is a **full-stack platform** for building business web applications in Java. As of 2025, Vaadin has evolved significantly and offers **two distinct development models**:
+Vaadin is a **full-stack platform** for building business web applications in Java with **two development models**:
 
 ### 🌊 Vaadin Flow (Server-Side UI in Java)
-- Build the **entire user interface in Java** - no HTML, CSS, or JavaScript required
-- Server-side component model with automatic client-server synchronization  
-- Direct access to Java ecosystem and business logic
-- Perfect for Java teams who want to stay in Java for the full stack
+- Entire UI built in Java - server-side component model with automatic client-server sync
+- Choose when: Java-focused teams, traditional business apps, prefer component-based development
 
-### ⚡ Vaadin Hilla (React + TypeScript Frontend)
-- Build the **UI with React and TypeScript**
-- **Type-safe** automatic API generation from Java backend services
-- Full client-side rendering with modern React patterns
-- Perfect for teams with frontend expertise who want type safety
+### ⚡ Vaadin Hilla (React + TypeScript Frontend)  
+- React/TypeScript UI with type-safe automatic API generation from Java backend
+- Choose when: Teams with React expertise, need client-side routing, building public-facing apps
 
-**Key Point**: You can mix Flow and Hilla in the same application, but most projects choose one approach. Always prefer sticking to one development model per project unless there is a definite identified need (for instance, an offline view that needs to work offline). Both development models are equally supported, the decision is primarily driven by developer preferences and team skills. 
+**Key**: Projects typically choose one model. You can mix them, but only when there's a specific need (e.g., offline functionality). 
 
 ## 🚀 Getting Started (The Modern Way)
 
-### 1. Project Creation
-**Use the Walking Skeleton approach** - not empty projects:
+### Project Creation & Setup
+**Use [start.vaadin.com](https://start.vaadin.com)** - generates a "walking skeleton" with production-ready setup including Spring Security, database config, feature-based structure, and working CRUD example.
 
-1. Go to [start.vaadin.com](https://start.vaadin.com)
-2. Choose Flow, Hilla, or both
-3. Download the generated "walking skeleton"
+**Requirements**: Java 17+, Maven (via wrapper), Spring Boot foundation, Node.js (auto-handled)
 
-A **walking skeleton** is a minimal but complete application that includes:
-- ✅ Production-ready Spring Security setup
-- ✅ Database configuration (H2 dev / PostgreSQL prod)
-- ✅ Testcontainers integration
-- ✅ Feature-based package structure
-- ✅ Working example view with CRUD operations
-- ✅ Architecture tests with ArchUnit
-- ✅ Integration tests
-
-### 2. Requirements (2025)
-- **Java 17+** (LTS versions recommended, current LTS is 21)
-- **Maven** (included via Maven Wrapper)
-- **Spring Boot** (foundation of all Vaadin apps)
-- **Node.js** (automatically handled by Vaadin)
-
-### 3. Running the Project
-```bash
-./mvnw  # Linux/Mac
-mvnw    # Windows
-```
-Navigate to http://localhost:8080
+**Run**: `./mvnw` → http://localhost:8080
 
 ## 📁 Modern Project Structure
 
@@ -81,96 +55,48 @@ src/main/frontend/
 └── index.tsx                         # App entry point
 ```
 
-## 🔐 Built-in Security (Since 24.8)
+## 🔐 Built-in Security
 
-**Modern Vaadin includes production-grade security by default:**
+**Spring Security** included by default: development mode (in-memory users), production mode (external identity providers), method-level security, type-safe user IDs. Fully customizable.
 
-- **Spring Security** configuration included
-- **Development mode**: In-memory users with login screen
-- **Production mode**: Compatible with external identity providers
-- **Method-level security** for services
-- **Type-safe user ID** domain primitives
+## 🌐 Creating Views
 
-You can customize or completely replace the security setup.
+### Flow Views (Java)
+Add `@Route("path")` annotation to classes extending Vaadin layouts:
+```java
+@Route("dashboard")
+public class DashboardView extends VerticalLayout {
+    // View implementation
+}
+```
+
+### Hilla Views (React)
+Use **filesystem-based routing** in `src/main/frontend/views/`:
+- `views/dashboard.tsx` → `/dashboard` route
+- `views/@layout.tsx` → shared layout wrapper
+- `views/@index.tsx` → root `/` route
 
 ## 🧩 Component Ecosystem
 
-### Flow Components (Java)
-```java
-// Modern Flow component usage
-@Route("dashboard")
-public class DashboardView extends VerticalLayout {
-    public DashboardView() {
-        add(new H1("Dashboard"));
-        
-        Grid<Person> grid = new Grid<>(Person.class);
-        grid.setColumns("firstName", "lastName", "email");
-        
-        Button addButton = new Button("Add Person", 
-            e -> /* handle click */);
-        
-        add(grid, addButton);
-    }
-}
-```
+**Use Vaadin's comprehensive component library first** before creating custom components. Vaadin includes:
 
-### Hilla Components (React)
-```typescript
-// Modern Hilla view
-export default function TaskListView() {
-    const [tasks, setTasks] = useState<Task[]>([]);
-    
-    useEffect(() => {
-        TaskService.findAll().then(setTasks);
-    }, []);
-    
-    return (
-        <div>
-            <h1>Tasks</h1>
-            <AutoGrid service={TaskService} model={TaskModel} />
-        </div>
-    );
-}
-```
+**Data Display & Entry**: Auto CRUD (Hilla only), Auto Grid (Hilla only), Auto Form (Hilla only), Button, Checkbox, Combo Box, Custom Field, Date Picker, Date Time Picker, Email Field, Multi-Select Combo Box, Number Field, Password Field, Radio Button, Select, Text Area, Text Field, Time Picker
 
-### Available Components (Both Flow & Hilla)
-- **Data Entry**: TextField, ComboBox, DatePicker, Upload, etc.
-- **Layouts**: VerticalLayout, HorizontalLayout, FormLayout, AppLayout
-- **Data Display**: Grid, TreeGrid, Charts, Dashboard
-- **Navigation**: Tabs, MenuBar, SideNav, AppLayout
-- **Advanced**: CRUD, AutoGrid, AutoForm, RichTextEditor
-- **Pro Components**: Charts, Spreadsheet, Board, etc.
+**Layouts**: App Layout, Form Layout, Horizontal Layout, Master-Detail Layout, Scroller, Split Layout, Vertical Layout
+
+**Data Visualization**: Charts (multiple types - search for specific chart components using provided tools), Dashboard, Grid, Grid Pro, Tree Grid, Virtual List
+
+**Navigation & UI**: Accordion, Avatar, Badge, Context Menu, Details, Dialog, Icons, List Box, Menu Bar, Notification, Popover, Side Navigation, Tabs, Tooltip
+
+**Advanced**: Board, Card, Confirm Dialog, Cookie Consent, CRUD, Login, Map, Markdown, Message Input, Message List, Progress Bar, Rich Text Editor, Spreadsheet, Upload
+
+**Approach**: Compose existing components and layouts before building custom ones from scratch.
 
 ## 🏗️ Architecture Principles
 
-### 1. Feature-Based Organization
-```
-taskmanagement/          # One feature = one package
-├── domain/             # Entities, value objects
-├── service/            # Business logic boundary  
-└── ui/                 # UI components (Flow only)
-```
+**Feature-Based Organization**: Each feature in its own package (domain, service, ui). Use `@Service` + `@Transactional` + security annotations for business logic.
 
-### 2. Application Services Pattern
-```java
-@Service
-@Transactional
-@PreAuthorize("hasRole('USER')")
-public class TaskService {
-    public List<Task> findAllForCurrentUser() {
-        // Business logic here
-    }
-    
-    public Task createTask(CreateTaskRequest request) {
-        // Validation, domain logic, persistence
-    }
-}
-```
-
-### 3. Type Safety (Hilla)
-- **Automatic API generation** from Java services annotated with `@BrowserCallable`.  
-- **TypeScript models** generated from Java DTOs
-- **Runtime validation** of API calls
+**Hilla Type Safety**: `@BrowserCallable` services auto-generate TypeScript APIs with runtime validation.
 
 ## 🌐 Hilla @BrowserCallable Endpoints
 
@@ -246,90 +172,17 @@ const createTask = async (request: CreateTaskRequest) => {
 
 **⚠️ Important:** Only `@BrowserCallable` methods are exposed. Security annotations (`@RolesAllowed`, etc.) work on endpoints.
 
-## 🔧 Development Tools & Workflow
+## 📦 Key Dependencies
 
-### Built-in Development Features
-- **Live Reload** - automatic browser refresh on changes
-- **Hot Deploy** - Java changes without restart  
-- **Theme Editor** - visual styling tool
-- **Component Inspector** - debug component tree
-- **Vaadin Copilot** - AI-powered development assistant
-
-### IDE Support
-- **IntelliJ IDEA**: Vaadin plugin available
-- **VS Code**: Vaadin extension + Java Extension Pack
-- **Eclipse**: Use Enterprise Java edition
-
-### Testing
-- **Unit Tests**: Standard JUnit for services
-- **Integration Tests**: Testcontainers included
-- **UI Tests**: Selenium with TestBench (commercial)
-
-## 📦 Key Packages & Dependencies
-
-### Core Vaadin (automatically included)
-```xml
-<!-- Vaadin BOM handles all versions -->
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-bom</artifactId>
-    <version>24.8</version>
-    <type>pom</type>
-    <scope>import</scope>
-</dependency>
-
-<!-- Includes support for both Vaadin Flow and Hilla -->
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-spring-boot-starter</artifactId>
-</dependency>
-```
+**Core**: `vaadin-spring-boot-starter` dependency + `vaadin-bom` for version management
+**Maven Plugin**: `vaadin-maven-plugin` handles frontend resources, optimization, TypeScript compilation, API generation (`vaadin:generate` for Hilla)
 
 ## 🌐 Deployment & Production
 
-### Modern Deployment Options
-- **Recommended**: Executable JAR with embedded Tomcat  
-- **Containers**: Docker images with Spring Boot
-- **Cloud**: Deploy to any cloud platform supporting Java
+**Deployment**: Executable JAR (recommended), Docker containers, any Java-compatible cloud platform
 
-### Production Builds
-```bash
-./mvnw clean package -Pproduction
-```
-
-This creates an optimized build with:
-- Minified frontend bundles
-- Optimized component loading
-- Production Spring profiles
-
-## 🆚 Flow vs Hilla Decision Guide
-
-### Choose Flow When:
-- Team is primarily Java developers
-- Want to minimize frontend complexity
-- Building traditional business applications
-- Need server-side security model
-- Prefer component-based development
-
-### Choose Hilla When:
-- Team has React/TypeScript expertise  
-- Building modern web applications
-- Need client-side routing and state management
-- Want to leverage React ecosystem
-- Building public-facing applications
-
-### You Can Use Both:
-- Different views can use different approaches
-- Flow views for admin, Hilla for user-facing
-- Gradual migration strategies supported
-
-## 🔄 Migration from Older Vaadin
-
-If working with legacy Vaadin code:
-- **Vaadin 8 → 24**: Significant changes, use migration tools
-- **Vaadin 14-23 → 24**: Incremental upgrade path
-- **Focus**: Move to feature-based packages and Spring Boot patterns
+**Production Build**: `./mvnw clean package -Pproduction` (creates optimized bundles, minification, production profiles)
 
 ---
 
-**Remember**: Modern Vaadin (24+) is a mature, full-stack platform with enterprise-grade capabilities. Start with the walking skeleton from start.vaadin.com (recommended) or use start.spring.io and add the Vaadin dependency. When working on existing projects, stick to the existing patterns in the project. For new projects or when users ask for architectural guidance, recommend the feature-based package structure described above.
+**Important**: When working on existing projects, stick to the existing patterns in the project. For new projects or when users ask for architectural guidance, recommend the feature-based package structure described above.
