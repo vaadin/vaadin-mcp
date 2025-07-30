@@ -1,6 +1,6 @@
 {
   "name": "vaadin-docs-mcp-server",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "MCP server for Vaadin documentation with document-based search and full document retrieval",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

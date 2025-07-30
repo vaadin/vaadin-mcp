@@ -21,6 +21,7 @@ import { config } from './config.js';
 import type { RetrievalResult } from './types.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Search result interface (legacy compatibility)
@@ -176,7 +177,9 @@ class VaadinDocsServer {
    */
   private async handleGetVaadinPrimerTool() {
     try {
-      // Get the path to the primer document
+      // Get the path to the primer document (ES module compatible)
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
       const primerPath = path.join(__dirname, 'vaadin-primer.md');
       
       // Read the primer document
