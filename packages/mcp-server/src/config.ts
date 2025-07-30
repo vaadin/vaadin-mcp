@@ -5,9 +5,9 @@
 export const config = {
   // Server settings
   server: {
-    name: 'vaadin-docs-server',
-    version: '0.1.0',
-    httpPort: parseInt(process.env.HTTP_PORT || '3000', 10),
+    name: 'vaadin-docs-mcp-server',
+    version: '0.7.3',
+    httpPort: parseInt(process.env.HTTP_PORT || '8080', 10),
   },
   
   // REST server settings
