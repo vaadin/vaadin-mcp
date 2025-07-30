@@ -1,4 +1,4 @@
-app = "vaadin-docs-mcp-server"
+app = "vaadin-mcp"
 
 [build]
   dockerfile = "Dockerfile"

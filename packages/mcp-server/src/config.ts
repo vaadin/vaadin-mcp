@@ -5,7 +5,7 @@
 export const config = {
   // Server settings
   server: {
-    name: 'vaadin-docs-mcp-server',
+    name: 'vaadin-mcp',
     version: '0.7.3',
     httpPort: parseInt(process.env.HTTP_PORT || '8080', 10),
   },

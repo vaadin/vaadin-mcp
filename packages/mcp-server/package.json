@@ -1,19 +1,13 @@
 {
-  "name": "vaadin-docs-mcp-server",
+  "name": "vaadin-mcp",
   "version": "0.7.3",
   "description": "MCP server for Vaadin documentation with document-based search and full document retrieval",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+
   "type": "module",
-  "files": [
-    "dist",
-    "README.md",
-    "README.npm.md",
-    "LICENSE"
-  ],
+
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "npm run build",
+    "build": "bun run scripts/build.js",
+
     "start": "bun run src/index.ts",
     "start:prod": "bun run dist/index.js",
     "test": "bun run src/test-scenarios.ts --verbose",

@@ -1,19 +1,19 @@
 # Vaadin Documentation MCP Server
 
-This package provides a Model Context Protocol (MCP) server for accessing Vaadin documentation. It supports both local STDIO transport and remote HTTP transport, allowing IDE assistants and developers to search for relevant Vaadin documentation using semantic search.
+This package provides a Model Context Protocol (MCP) server for accessing Vaadin documentation via HTTP transport, allowing IDE assistants and developers to search for relevant Vaadin documentation using semantic search.
 
 ## Remote Access (HTTP Transport)
 
 The MCP server is deployed and available remotely via HTTP transport:
 
-**Production Server**: `https://vaadin-docs-mcp-server.fly.dev/mcp`
+**Production Server**: `https://vaadin-mcp.fly.dev/mcp`
 
 ### Usage with MCP Clients
 
 To connect to the remote MCP server, use the Streamable HTTP transport with the following endpoint:
 
 ```
-https://vaadin-docs-mcp-server.fly.dev/mcp
+https://vaadin-mcp.fly.dev/mcp
 ```
 
 Example client configuration:
@@ -22,7 +22,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 const transport = new StreamableHTTPClientTransport(
-  new URL("https://vaadin-docs-mcp-server.fly.dev/mcp")
+  new URL("https://vaadin-mcp.fly.dev/mcp")
 );
 
 const client = new Client({
@@ -33,60 +33,19 @@ const client = new Client({
 await client.connect(transport);
 ```
 
-## Local Installation (STDIO Transport)
-
-For local development or IDE assistant integration, you can also run the server locally:
-
-### Using npx (Recommended)
-
-```json
-{
-  "mcpServers": {
-    "vaadin": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "vaadin-docs-mcp-server"
-      ]
-    }
-  }
-}
-```
-
-### Optional Configuration
-
-You can optionally override the REST server URL for local development:
-
-```json
-{
-  "mcpServers": {
-    "vaadin": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "vaadin-docs-mcp-server"
-      ],
-      "env": {
-        "REST_SERVER_URL": "http://localhost:3001"
-      }
-    }
-  }
-}
-```
-
 ## Health Check
 
 The HTTP server provides a health check endpoint:
 
 ```
-GET https://vaadin-docs-mcp-server.fly.dev/health
+GET https://vaadin-mcp.fly.dev/health
 ```
 
 Response:
 ```json
 {
   "status": "ok",
-  "server": "vaadin-docs-mcp-server",
+  "server": "vaadin-mcp",
   "version": "0.7.3",
   "transport": "streamable-http"
 }
@@ -136,7 +95,6 @@ To contribute to this package:
 3. Make your changes
 4. Build the package: `bun run build`
 5. Test your changes:
-   - **STDIO mode**: `bun run start` (for local IDE integration)
    - **HTTP mode**: `bun run start:prod` (starts HTTP server on port 8080)
 
 ### Testing the HTTP Server
@@ -172,7 +130,7 @@ The server is configured for deployment on Fly.io with:
 
 ## Architecture
 
-- **Transport**: Supports both STDIO (local) and Streamable HTTP (remote) transports
+- **Transport**: Streamable HTTP transport
 - **State**: Stateless design - each request creates a new server instance for isolation
 - **Backend**: Forwards search requests to the REST server at `https://vaadin-docs-search.fly.dev`
 - **SDK**: Built with MCP TypeScript SDK v1.17.0

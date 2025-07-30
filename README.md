@@ -128,23 +128,15 @@ bun run start
 ```
 
 #### 3. Use MCP Server with IDE Assistant
-```bash
-# Install globally
-npm install -g vaadin-docs-mcp-server
+The MCP server is deployed and available remotely via HTTP transport at:
+**`https://vaadin-mcp.fly.dev/mcp`**
 
-# Or use with npx (recommended)
-# Add to your IDE assistant's MCP configuration:
-```
-
-```json
-{
-  "mcpServers": {
-    "vaadin": {
-      "command": "npx",
-      "args": ["-y", "vaadin-docs-mcp-server"]
-    }
-  }
-}
+Configure your IDE assistant to use the Streamable HTTP transport:
+```javascript
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+const transport = new StreamableHTTPClientTransport(
+  new URL("https://vaadin-mcp.fly.dev/mcp")
+);
 ```
 
 ## 📦 Package Details
@@ -213,7 +205,7 @@ Model Context Protocol server for IDE assistant integration:
 cd packages/mcp-server
 bun run build          # Build for distribution
 bun run test           # Run document-based tests
-npm publish            # Publish to npm (when ready)
+
 ```
 
 **Available Tools:**
@@ -263,13 +255,10 @@ The REST server is deployed to fly.io and available at:
 - **Production**: `https://vaadin-docs-search.fly.dev`
 - **Health Check**: `https://vaadin-docs-search.fly.dev/health`
 
-### MCP Server (npm)
-Published as `vaadin-docs-mcp-server` on npm:
-```bash
-npm install -g vaadin-docs-mcp-server
-# or use with npx (recommended)
-npx vaadin-docs-mcp-server
-```
+### MCP Server (fly.io)
+The MCP server is deployed to fly.io and available at:
+- **Production**: `https://vaadin-mcp.fly.dev/mcp`
+- **Health Check**: `https://vaadin-mcp.fly.dev/health`
 
 ### Documentation Processing
 Automated via GitHub Actions:
@@ -304,7 +293,7 @@ bun run test          # Test all packages
 - **[Project Plan](PROJECT_PLAN.md)**: Complete project breakdown and progress tracking
 - **[Project Brief](project-brief.md)**: Original requirements and problem definition
 - **[Package READMEs](packages/)**: Detailed documentation for each package
-- **[Publishing Guide](packages/mcp-server/PUBLISHING.md)**: npm publishing instructions
+
 
 ## 🏆 Project Success
 
