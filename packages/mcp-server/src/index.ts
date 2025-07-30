@@ -78,7 +78,7 @@ class VaadinDocsServer {
       tools: [
         {
           name: 'get_vaadin_primer',
-          description: '🚨 IMPORTANT: Always use this tool FIRST before working with Vaadin. Returns a comprehensive primer document with current (2024+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Flow vs Hilla, project structure, components, and best practices. Essential reading to avoid outdated assumptions.',
+          description: '🚨 IMPORTANT: Always use this tool FIRST before working with Vaadin Flow or Hilla. Returns a comprehensive primer document with current (2025+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Flow vs Hilla, project structure, components, and best practices. Essential reading to avoid outdated assumptions.',
           inputSchema: {
             type: 'object',
             properties: {},
