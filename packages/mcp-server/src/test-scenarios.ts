@@ -209,7 +209,7 @@ class MockMCPTestClient {
   /**
    * Simulate search_vaadin_docs tool call with mock data
    */
-  async searchVaadinDocs(question: string, framework: string = '', maxResults: number = 5): Promise<RetrievalResult[]> {
+  async searchVaadinDocs(question: string, framework: string = 'common', maxResults: number = 5): Promise<RetrievalResult[]> {
     // Simulate async behavior
     await new Promise(resolve => setTimeout(resolve, 10));
     

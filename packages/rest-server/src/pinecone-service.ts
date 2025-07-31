@@ -62,7 +62,7 @@ export async function searchDocumentation(
   query: string,
   maxResults: number = config.search.defaultMaxResults,
   maxTokens: number = config.search.defaultMaxTokens,
-  framework: string = ''
+  framework: string = 'common'
 ): Promise<SearchResult[]> {
   // Generate embedding for the query
   const queryEmbedding = await generateQueryEmbedding(query);
@@ -75,7 +75,7 @@ export async function searchDocumentation(
     filter = {
       $or: [
         { framework: 'flow' },
-        { framework: '' }
+        { framework: 'common' }
       ]
     };
   } else if (framework === 'hilla') {
@@ -83,7 +83,7 @@ export async function searchDocumentation(
     filter = {
       $or: [
         { framework: 'hilla' },
-        { framework: '' }
+        { framework: 'common' }
       ]
     };
   } else {
@@ -92,7 +92,7 @@ export async function searchDocumentation(
       $or: [
         { framework: 'flow' },
         { framework: 'hilla' },
-        { framework: '' }
+        { framework: 'common' }
       ]
     };
   }
@@ -139,7 +139,7 @@ export async function searchDocumentation(
         source: metadata.source || '',
         url: metadata.url || '',
         heading: metadata.heading || '',
-        framework: metadata.framework || ''
+        framework: metadata.framework || 'common'
       },
       score: match.score || 0,
     });

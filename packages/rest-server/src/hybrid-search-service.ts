@@ -66,7 +66,7 @@ export class HybridSearchService {
     const {
       maxResults = config.search.defaultMaxResults,
       maxTokens = config.search.defaultMaxTokens,
-      framework = ''
+      framework = 'common'
     } = options;
 
     try {

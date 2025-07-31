@@ -239,7 +239,7 @@ export class PineconeSparseProvider {
         $or: [
           { framework: 'flow' },
           { framework: 'common' },
-          { framework: '' }
+          { framework: 'common' }
         ]
       };
     } else if (framework === 'hilla') {
@@ -247,7 +247,7 @@ export class PineconeSparseProvider {
         $or: [
           { framework: 'hilla' },
           { framework: 'common' },
-          { framework: '' }
+          { framework: 'common' }
         ]
       };
     }

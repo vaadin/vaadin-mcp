@@ -54,7 +54,7 @@ export class PineconeSearchProvider implements SearchProvider {
         $or: [
           { framework: 'flow' },
           { framework: 'common' },
-          { framework: '' }
+          { framework: 'common' }
         ]
       };
     } else if (framework === 'hilla') {
@@ -62,7 +62,7 @@ export class PineconeSearchProvider implements SearchProvider {
         $or: [
           { framework: 'hilla' },
           { framework: 'common' },
-          { framework: '' }
+          { framework: 'common' }
         ]
       };
     }
@@ -96,7 +96,7 @@ export class PineconeSearchProvider implements SearchProvider {
         $or: [
           { framework: 'flow' },
           { framework: 'common' },
-          { framework: '' }
+          { framework: 'common' }
         ]
       };
     } else if (framework === 'hilla') {
@@ -104,7 +104,7 @@ export class PineconeSearchProvider implements SearchProvider {
         $or: [
           { framework: 'hilla' },
           { framework: 'common' },
-          { framework: '' }
+          { framework: 'common' }
         ]
       };
     }

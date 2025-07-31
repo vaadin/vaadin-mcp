@@ -52,7 +52,7 @@ const API_TEST_CASES = [
     name: 'Basic search with question parameter',
     request: {
       question: 'How to create a grid',
-      framework: '',
+      framework: 'common',
       max_results: 5
     },
     expectedStatus: 200,
@@ -149,14 +149,14 @@ const HYBRID_SEARCH_TEST_CASES = [
   {
     name: 'Semantic search effectiveness',
     query: 'How to bind form fields to data model',
-    framework: '',
+    framework: 'common',
     expectedKeywords: ['bind', 'form', 'field', 'data', 'model'],
     minResults: 1
   },
   {
     name: 'Keyword search accuracy',
     query: 'Grid column configuration',
-    framework: '',
+    framework: 'common',
     expectedKeywords: ['grid', 'column'],
     minResults: 1
   },
@@ -177,7 +177,7 @@ const HYBRID_SEARCH_TEST_CASES = [
   {
     name: 'RRF result ranking',
     query: 'Grid data binding validation',
-    framework: '',
+    framework: 'common',
     minResults: 3,
     validateRanking: true
   }
@@ -509,7 +509,7 @@ export async function runQuickValidation(): Promise<TestSuiteResult> {
     const testStartTime = Date.now();
     
     // Test with empty framework (should work)
-    await searchService.hybridSearch('test', { framework: '' });
+    await searchService.hybridSearch('test', { framework: 'common' });
     
     // Test with valid frameworks
     await searchService.hybridSearch('test', { framework: 'flow' });

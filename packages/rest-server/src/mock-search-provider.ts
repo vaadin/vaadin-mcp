@@ -124,11 +124,15 @@ export class MockSearchProvider implements SearchProvider {
     let filteredData = MOCK_PINECONE_DATA;
     if (framework === 'flow') {
       filteredData = MOCK_PINECONE_DATA.filter(item => 
-        item.metadata.framework === 'flow' || item.metadata.framework === 'common'
+        item.metadata.framework === 'flow' || 
+        item.metadata.framework === 'common' ||
+        item.metadata.framework === ''
       );
     } else if (framework === 'hilla') {
       filteredData = MOCK_PINECONE_DATA.filter(item => 
-        item.metadata.framework === 'hilla' || item.metadata.framework === 'common'
+        item.metadata.framework === 'hilla' || 
+        item.metadata.framework === 'common' ||
+        item.metadata.framework === ''
       );
     }
     
@@ -184,11 +188,15 @@ export class MockSearchProvider implements SearchProvider {
     let filteredData = MOCK_PINECONE_DATA;
     if (framework === 'flow') {
       filteredData = MOCK_PINECONE_DATA.filter(item => 
-        item.metadata.framework === 'flow' || item.metadata.framework === 'common'
+        item.metadata.framework === 'flow' || 
+        item.metadata.framework === 'common' ||
+        item.metadata.framework === ''
       );
     } else if (framework === 'hilla') {
       filteredData = MOCK_PINECONE_DATA.filter(item => 
-        item.metadata.framework === 'hilla' || item.metadata.framework === 'common'
+        item.metadata.framework === 'hilla' || 
+        item.metadata.framework === 'common' ||
+        item.metadata.framework === ''
       );
     }
     

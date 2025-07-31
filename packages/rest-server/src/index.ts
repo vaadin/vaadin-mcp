@@ -196,9 +196,9 @@ app.post('/search', async (req: Request, res: Response) => {
       ? Math.min(Math.max(100, max_tokens), 10000) 
       : config.search.defaultMaxTokens;
     
-    // Validate framework parameter - support both 'flow'/'hilla' and empty string
-    const validFramework = (framework === 'flow' || framework === 'hilla' || framework === '') 
-      ? framework || ''
+        // Validate framework parameter - support both 'flow'/'hilla' and 'common'
+    const validFramework = (framework === 'flow' || framework === 'hilla' || framework === 'common')
+      ? framework || 'common'
       : '';
     
     // Use hybrid search for enhanced results
@@ -467,8 +467,8 @@ app.post('/ask', async (req: Request, res: Response) => {
     }
 
     // Validate framework parameter
-    const validFramework = (framework === 'flow' || framework === 'hilla' || framework === '') 
-      ? framework || ''
+        const validFramework = (framework === 'flow' || framework === 'hilla' || framework === 'common')
+      ? framework || 'common'
       : '';
 
     // Use hybrid search for better results (fixed at 5 results)

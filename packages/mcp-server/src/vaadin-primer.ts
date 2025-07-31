@@ -9,6 +9,15 @@ export const VAADIN_PRIMER_CONTENT = `# Vaadin Development Primer (2025+)
 
 **⚠️ Important: Read this document before working with Vaadin to ensure you have an accurate, up-to-date understanding of modern Vaadin development.**
 
+## 🔧 Available MCP Documentation Tools
+
+When working with Vaadin, **always use these MCP tools to search the official documentation** instead of relying on potentially outdated information:
+
+### Core Documentation Tools
+- **\`search_vaadin_docs\`** - Search Vaadin documentation for specific topics, components, or patterns. Use this extensively to find current examples and best practices.
+- **\`get_full_document\`** - Retrieve complete documentation pages when you need full context beyond search snippets.
+- **\`get_vaadin_version\`** - Get the latest stable Vaadin version for dependency management.
+
 ## What is Modern Vaadin?
 
 Vaadin is a **full-stack platform** for building business web applications in Java with **two development models**:

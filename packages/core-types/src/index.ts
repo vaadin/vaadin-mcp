@@ -86,7 +86,7 @@ export interface ProcessedMetadata {
  */
 export interface SearchRequest {
   question: string;
-  framework: 'flow' | 'hilla' | '';
+  framework: 'flow' | 'hilla' | 'common';
   stream?: boolean;
 }
 

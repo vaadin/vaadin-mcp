@@ -69,12 +69,12 @@ function setupTools(server: McpServer) {
     "search_vaadin_docs",
     {
       title: "Search Vaadin Documentation",
-      description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. ⚠️ IMPORTANT: Use get_vaadin_primer FIRST to understand modern Vaadin before searching. This tool returns search results that include file_path information for complete document retrieval. When using this tool, try to deduce the correct framework from context: use \"flow\" for Java-based views, \"hilla\" for React-based views, or empty string for both frameworks. Use get_full_document with the file_path from results when you need complete context.",
+      description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. When using this tool, try to deduce the correct framework from context: use \"flow\" for Java-based views, \"hilla\" for React-based views, or \"common\" for both frameworks. Use get_full_document with the file_path from results when you need complete context.",
       inputSchema: {
         question: z.string().describe("The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword)."),
         max_results: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 5)"),
         max_tokens: z.number().min(100).max(5000).optional().describe("Maximum number of tokens to return (default: 1500)"),
-        framework: z.enum(['flow', 'hilla', '']).optional().describe('The Vaadin framework to focus on: "flow" for Java-based views, "hilla" for React-based views, or empty string for both. If not specified, the agent should try to deduce the correct framework from context or asking the user for clarification.')
+        framework: z.enum(['flow', 'hilla', 'common']).optional().describe('The Vaadin framework to focus on: "flow" for Java-based views, "hilla" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct framework from context or asking the user for clarification.')
       }
     },
     async (args) => {
@@ -146,7 +146,7 @@ async function handleSearchTool(args: any) {
         question: args.question, // Use 'question' for the enhanced API
         max_results: args.max_results,
         max_tokens: args.max_tokens,
-        framework: args.framework || ''
+        framework: args.framework || 'common'
       })
     });
 
