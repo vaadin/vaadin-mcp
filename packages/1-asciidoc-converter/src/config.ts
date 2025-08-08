@@ -8,7 +8,7 @@ import type { IngestionConfig } from 'core-types';
 export const config: IngestionConfig = {
   repository: {
     url: 'https://github.com/vaadin/docs.git',
-    branch: 'latest',
+    branch: 'v24',
     localPath: path.join(process.cwd(), 'vaadin-docs')
   },
   processing: {
