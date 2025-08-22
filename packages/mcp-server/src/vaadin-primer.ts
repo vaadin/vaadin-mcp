@@ -35,11 +35,22 @@ Vaadin is a **full-stack platform** for building business web applications in Ja
 ## 🚀 Getting Started (The Modern Way)
 
 ### Project Creation & Setup
-**Use [start.vaadin.com](https://start.vaadin.com)** - generates a "walking skeleton" with production-ready setup including Spring Security, database config, feature-based structure, and working CRUD example.
+**Use [start.spring.io](https://start.spring.io)** to generate a Spring Boot project with:
+- Project: Maven
+- Language: Java
+- Java: 21
+- Dependencies: Vaadin (vaadin-spring-boot-starter)
 
-**Requirements**: Java 17+, Maven (via wrapper), Spring Boot foundation, Node.js (auto-handled)
+Download the ZIP, unzip it, and open the project.
 
-**Run**: \`./mvnw\` → http://localhost:8080
+**Direct download (no browser)**:
+- Example ZIP URL (Maven, Java 21, Vaadin):
+\`https://start.spring.io/starter.zip?type=maven-project&language=java&javaVersion=21&dependencies=vaadin&groupId=com.example&artifactId=vaadin-app&name=vaadin-app&packageName=com.example.vaadinapp\`
+
+
+**Requirements**: Java 21, Maven (via wrapper), Spring Boot foundation, Node.js (auto-handled)
+
+**Run**: \`./mvnw spring-boot:run\` → http://localhost:8080
 
 ## 📁 Modern Project Structure
 

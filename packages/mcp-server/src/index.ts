@@ -69,7 +69,7 @@ function setupTools(server: McpServer) {
     "search_vaadin_docs",
     {
       title: "Search Vaadin Documentation",
-      description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. When using this tool, try to deduce the correct framework from context: use \"flow\" for Java-based views, \"hilla\" for React-based views, or \"common\" for both frameworks. Use get_full_document with the file_path from results when you need complete context.",
+      description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. When using this tool, try to deduce the correct framework from context: use \"flow\" for Java-based views, \"hilla\" for React-based views, or \"common\" for both frameworks. Use get_full_document with file_paths containing the result's file_path when you need complete context.",
       inputSchema: {
         question: z.string().describe("The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword)."),
         max_results: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 5)"),
@@ -87,10 +87,9 @@ function setupTools(server: McpServer) {
     "get_full_document",
     {
       title: "Get Full Document",
-      description: "Retrieves complete documentation pages for one or more file paths. Use this when you need full context beyond what search results provide. ⚠️ IMPORTANT: Use get_vaadin_primer FIRST to understand modern Vaadin fundamentals. After finding relevant chunks via search_vaadin_docs, use this to get complete context, examples, and cross-references. The response includes the complete markdown content with full context. Supports fetching multiple files at once to reduce roundtrips.",
+      description: "Retrieves complete documentation pages for one or more file paths. Use this when you need full context beyond what search results provide. Provide file_paths only (array).",
       inputSchema: {
-        file_path: z.string().optional().describe('A single file path from search results (e.g., "building-apps/forms-data/add-form/fields-and-binding/hilla.md"). Use this for fetching a single document.'),
-        file_paths: z.array(z.string()).optional().describe("An array of file paths from search results. Use this for fetching multiple documents at once to reduce roundtrips.")
+        file_paths: z.array(z.string()).describe("Array of file paths from search results. Use this to fetch one or more documents in a single call.")
       }
     },
     async (args) => {
@@ -188,12 +187,12 @@ async function handleSearchTool(args: any) {
  */
 async function handleGetFullDocumentTool(args: any) {
   // Validate arguments (Zod schema validation handles this automatically)
-  if (!args.file_path && !args.file_paths) {
-    throw new Error('Missing file_path or file_paths parameter');
+  if (!args.file_paths || !Array.isArray(args.file_paths) || args.file_paths.length === 0) {
+    throw new Error('Missing required parameter: file_paths (non-empty array)');
   }
 
   // Determine file paths to fetch
-  const filePaths = args.file_paths || [args.file_path];
+  const filePaths = args.file_paths as string[];
 
   try {
     // Fetch all documents in parallel

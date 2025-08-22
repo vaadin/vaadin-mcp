@@ -242,12 +242,18 @@ class MockMCPTestClient {
   /**
    * Simulate get_full_document tool call with mock data
    */
-  async get_full_document(filePath: string): Promise<any | null> {
+  async get_full_document(filePaths: string[]): Promise<any[]> {
     // Simulate async behavior
     await new Promise(resolve => setTimeout(resolve, 5));
     
-    const document = MOCK_DOCUMENTS[filePath];
-    return document || null;
+    const results: any[] = [];
+    for (const filePath of filePaths) {
+      const document = MOCK_DOCUMENTS[filePath];
+      if (document) {
+        results.push(document);
+      }
+    }
+    return results;
   }
 }
 
@@ -345,7 +351,8 @@ const DOCUMENT_TEST_SCENARIOS = [
         }
 
         // Step 3: Retrieve the complete document
-        const fullDocument = await client.get_full_document(resultWithFile.file_path!);
+        const documents = await client.get_full_document([resultWithFile.file_path!]);
+        const fullDocument = documents[0];
         
         if (!fullDocument) {
           return {
@@ -424,13 +431,13 @@ const DOCUMENT_TEST_SCENARIOS = [
       
       try {
         // Test with invalid file path
-        const invalidDocument = await client.get_full_document('non-existent-file-path.md');
+        const invalidDocuments = await client.get_full_document(['non-existent-file-path.md']);
         
-        if (invalidDocument !== null) {
+        if (invalidDocuments.length !== 0) {
           return {
             name: this.name,
             passed: false,
-            error: 'Expected null for invalid file path',
+            error: 'Expected empty array for invalid file path',
             duration: Date.now() - startTime
           };
         }
@@ -476,7 +483,8 @@ const DOCUMENT_TEST_SCENARIOS = [
         
         for (const result of searchResults) {
           if (result.file_path) {
-            const fullDocument = await client.get_full_document(result.file_path);
+            const documents = await client.get_full_document([result.file_path]);
+            const fullDocument = documents[0];
             if (fullDocument) {
               documentsRetrieved.push({
                 filePath: result.file_path,
