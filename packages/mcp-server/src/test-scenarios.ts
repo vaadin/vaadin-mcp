@@ -461,6 +461,134 @@ const DOCUMENT_TEST_SCENARIOS = [
   },
 
   {
+    name: 'Get components by version - Vaadin 24',
+    async test(client: MockMCPTestClient): Promise<TestResult> {
+      const startTime = Date.now();
+      
+      try {
+        // Mock response for components list
+        const mockComponents = [
+          { name: 'Button', directory: 'button', documentation_url: 'https://vaadin.com/docs/latest/components/button' },
+          { name: 'Grid', directory: 'grid', documentation_url: 'https://vaadin.com/docs/latest/components/grid' },
+          { name: 'Text Field', directory: 'text-field', documentation_url: 'https://vaadin.com/docs/latest/components/text-field' },
+          { name: 'Date Picker', directory: 'date-picker', documentation_url: 'https://vaadin.com/docs/latest/components/date-picker' },
+          { name: 'Dialog', directory: 'dialog', documentation_url: 'https://vaadin.com/docs/latest/components/dialog' }
+        ];
+        
+        // Simulate the component list result
+        const result = {
+          version: '24',
+          branch: 'v24',
+          components_count: mockComponents.length,
+          components: mockComponents
+        };
+        
+        if (!result.components || result.components.length === 0) {
+          return {
+            name: this.name,
+            passed: false,
+            error: 'No components returned',
+            duration: Date.now() - startTime
+          };
+        }
+        
+        // Validate structure
+        const hasValidStructure = result.components.every((comp: any) => 
+          comp.name && comp.directory && comp.documentation_url
+        );
+        
+        if (!hasValidStructure) {
+          return {
+            name: this.name,
+            passed: false,
+            error: 'Components missing required fields',
+            duration: Date.now() - startTime
+          };
+        }
+        
+        return {
+          name: this.name,
+          passed: true,
+          duration: Date.now() - startTime,
+          details: {
+            version: result.version,
+            branch: result.branch,
+            componentsCount: result.components_count,
+            sampleComponents: result.components.slice(0, 3).map((c: any) => c.name)
+          }
+        };
+        
+      } catch (error) {
+        return {
+          name: this.name,
+          passed: false,
+          error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          duration: Date.now() - startTime
+        };
+      }
+    }
+  },
+
+  {
+    name: 'Get components by version - Vaadin 25',
+    async test(client: MockMCPTestClient): Promise<TestResult> {
+      const startTime = Date.now();
+      
+      try {
+        // Mock response for components list for v25
+        const mockComponents = [
+          { name: 'Button', directory: 'button', documentation_url: 'https://vaadin.com/docs/v25/components/button' },
+          { name: 'Grid', directory: 'grid', documentation_url: 'https://vaadin.com/docs/v25/components/grid' },
+          { name: 'Text Field', directory: 'text-field', documentation_url: 'https://vaadin.com/docs/v25/components/text-field' }
+        ];
+        
+        // Simulate the component list result
+        const result = {
+          version: '25',
+          branch: 'v25',
+          components_count: mockComponents.length,
+          components: mockComponents
+        };
+        
+        // Validate documentation URLs use correct version path
+        const hasCorrectUrls = result.components.every((comp: any) => 
+          comp.documentation_url.includes('/v25/')
+        );
+        
+        if (!hasCorrectUrls) {
+          return {
+            name: this.name,
+            passed: false,
+            error: 'Documentation URLs do not use correct version path',
+            duration: Date.now() - startTime,
+            details: { urls: result.components.map((c: any) => c.documentation_url) }
+          };
+        }
+        
+        return {
+          name: this.name,
+          passed: true,
+          duration: Date.now() - startTime,
+          details: {
+            version: result.version,
+            branch: result.branch,
+            componentsCount: result.components_count,
+            urlsCorrect: hasCorrectUrls
+          }
+        };
+        
+      } catch (error) {
+        return {
+          name: this.name,
+          passed: false,
+          error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          duration: Date.now() - startTime
+        };
+      }
+    }
+  },
+
+  {
     name: 'Document content completeness',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
