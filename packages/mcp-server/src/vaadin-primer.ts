@@ -24,7 +24,7 @@ Vaadin is a **full-stack platform** for building business web applications in Ja
 
 ### 🌊 Vaadin Flow (Server-Side UI in Java)
 - Entire UI built in Java - server-side component model with automatic client-server sync
-- Choose when: Java-focused teams, traditional business apps, prefer component-based development
+- Choose when: Java-focused teams, traditional business apps, prefer component-based development and as the default if Hilla is not explicitly requested
 
 ### ⚡ Vaadin Hilla (React + TypeScript Frontend)  
 - React/TypeScript UI with type-safe automatic API generation from Java backend
