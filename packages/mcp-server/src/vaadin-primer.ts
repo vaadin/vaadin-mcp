@@ -20,9 +20,17 @@ When working with Vaadin, **always use these MCP tools to search the official do
 
 ## What is Modern Vaadin?
 
-Vaadin is a **UI framework** for building business web applications in Java:
+Vaadin is a **full-stack platform** for building business web applications in Java with **two development models**:
+
+### 🌊 Vaadin Flow (Server-Side UI in Java)
 - Entire UI built in Java - server-side component model with automatic client-server sync
-- Secure by design
+- Choose when: Java-focused teams, traditional business apps, prefer component-based development
+
+### ⚡ Vaadin Hilla (React + TypeScript Frontend)  
+- React/TypeScript UI with type-safe automatic API generation from Java backend
+- Choose when: Teams with React expertise, need client-side routing, building public-facing apps
+
+**Key**: Projects typically choose one model. You can mix them, but only when there's a specific need (e.g., offline functionality). 
 
 ## 🚀 Getting Started (The Modern Way)
 
