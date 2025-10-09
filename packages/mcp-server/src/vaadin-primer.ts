@@ -20,32 +20,27 @@ When working with Vaadin, **always use these MCP tools to search the official do
 
 ## What is Modern Vaadin?
 
-Vaadin is a **full-stack platform** for building business web applications in Java with **two development models**:
-
-### 🌊 Vaadin Flow (Server-Side UI in Java)
+Vaadin is a **UI framework** for building business web applications in Java:
 - Entire UI built in Java - server-side component model with automatic client-server sync
-- Choose when: Java-focused teams, traditional business apps, prefer component-based development
-
-### ⚡ Vaadin Hilla (React + TypeScript Frontend)  
-- React/TypeScript UI with type-safe automatic API generation from Java backend
-- Choose when: Teams with React expertise, need client-side routing, building public-facing apps
-
-**Key**: Projects typically choose one model. You can mix them, but only when there's a specific need (e.g., offline functionality). 
+- Secure by design
 
 ## 🚀 Getting Started (The Modern Way)
 
+To generate a new Vaadin project with the latest stable version, download the zip from https://start.vaadin.com/skeleton
+
+To get the latest pre-release, use https://start.vaadin.com/skeleton?platformVersion=pre
+
 ### Project Creation & Setup
-**Use [start.spring.io](https://start.spring.io)** to generate a Spring Boot project with:
+**Use [start.vaadin.com](https://start.vaadin.com)** to generate a Spring Boot project with:
 - Project: Maven
 - Language: Java
 - Java: 21
-- Dependencies: Vaadin (vaadin-spring-boot-starter)
 
 Download the ZIP, unzip it, and open the project.
 
 **Direct download (no browser)**:
-- Example ZIP URL (Maven, Java 21, Vaadin):
-\`https://start.spring.io/starter.zip?type=maven-project&language=java&javaVersion=21&dependencies=vaadin&groupId=com.example&artifactId=vaadin-app&name=vaadin-app&packageName=com.example.vaadinapp\`
+- Example ZIP URL (Maven, Java 21, Vaadin): \`https://start.vaadin.com/skeleton\`
+- Example ZIP URL for Vaadin pre-release: \`https://start.vaadin.com/skeleton?platformVersion=pre\`
 
 
 **Requirements**: Java 21, Maven (via wrapper), Spring Boot foundation, Node.js (auto-handled)
