@@ -17,7 +17,7 @@ export const config: IngestionConfig = {
       'components/**/*.{adoc,asciidoc}',
       'designing-apps/**/*.{adoc,asciidoc}',
       'getting-started/**/*.{adoc,asciidoc}',
-      'flow/**/*.{adoc,asciidoc}'.
+      'flow/**/*.{adoc,asciidoc}',
       'styling/**/*.{adoc,asciidoc}'
     ],
     excludePatterns: [
