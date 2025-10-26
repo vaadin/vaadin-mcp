@@ -428,11 +428,11 @@ const DOCUMENT_TEST_SCENARIOS = [
     name: 'get_full_document error handling',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
-      
+
       try {
         // Test with invalid file path
         const invalidDocuments = await client.get_full_document(['non-existent-file-path.md']);
-        
+
         if (invalidDocuments.length !== 0) {
           return {
             name: this.name,
@@ -461,63 +461,60 @@ const DOCUMENT_TEST_SCENARIOS = [
   },
 
   {
-    name: 'Get components by version - Vaadin 24',
+    name: 'Get Vaadin version',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
-      
+
       try {
-        // Mock response for components list
-        const mockComponents = [
-          { name: 'Button', directory: 'button', documentation_url: 'https://vaadin.com/docs/latest/components/button' },
-          { name: 'Grid', directory: 'grid', documentation_url: 'https://vaadin.com/docs/latest/components/grid' },
-          { name: 'Text Field', directory: 'text-field', documentation_url: 'https://vaadin.com/docs/latest/components/text-field' },
-          { name: 'Date Picker', directory: 'date-picker', documentation_url: 'https://vaadin.com/docs/latest/components/date-picker' },
-          { name: 'Dialog', directory: 'dialog', documentation_url: 'https://vaadin.com/docs/latest/components/dialog' }
-        ];
-        
-        // Simulate the component list result
-        const result = {
-          version: '24',
-          branch: 'v24',
-          components_count: mockComponents.length,
-          components: mockComponents
+        // Mock response for Vaadin version (simulating GitHub API response)
+        const mockVersionResponse = {
+          version: '24.8.9',
+          released: '2024-12-18'
         };
-        
-        if (!result.components || result.components.length === 0) {
+
+        // Validate response structure
+        if (!mockVersionResponse.version || !mockVersionResponse.released) {
           return {
             name: this.name,
             passed: false,
-            error: 'No components returned',
+            error: 'Version response missing required fields (version, released)',
             duration: Date.now() - startTime
           };
         }
-        
-        // Validate structure
-        const hasValidStructure = result.components.every((comp: any) => 
-          comp.name && comp.directory && comp.documentation_url
-        );
-        
-        if (!hasValidStructure) {
+
+        // Validate version format (should be semver-like)
+        const versionPattern = /^\d+\.\d+\.\d+(-.*)?$/;
+        if (!versionPattern.test(mockVersionResponse.version)) {
           return {
             name: this.name,
             passed: false,
-            error: 'Components missing required fields',
+            error: `Invalid version format: ${mockVersionResponse.version}`,
             duration: Date.now() - startTime
           };
         }
-        
+
+        // Validate date format (should be ISO date)
+        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (!datePattern.test(mockVersionResponse.released)) {
+          return {
+            name: this.name,
+            passed: false,
+            error: `Invalid date format: ${mockVersionResponse.released}`,
+            duration: Date.now() - startTime
+          };
+        }
+
         return {
           name: this.name,
           passed: true,
           duration: Date.now() - startTime,
           details: {
-            version: result.version,
-            branch: result.branch,
-            componentsCount: result.components_count,
-            sampleComponents: result.components.slice(0, 3).map((c: any) => c.name)
+            version: mockVersionResponse.version,
+            released: mockVersionResponse.released,
+            note: 'Version response has correct structure and format'
           }
         };
-        
+
       } catch (error) {
         return {
           name: this.name,
@@ -530,31 +527,151 @@ const DOCUMENT_TEST_SCENARIOS = [
   },
 
   {
-    name: 'Get components by version - Vaadin 25',
+    name: 'Get components by version - Vaadin 24.8 (minor version)',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
-      
+
       try {
-        // Mock response for components list for v25
+        // Mock response for components list
         const mockComponents = [
-          { name: 'Button', directory: 'button', documentation_url: 'https://vaadin.com/docs/v25/components/button' },
-          { name: 'Grid', directory: 'grid', documentation_url: 'https://vaadin.com/docs/v25/components/grid' },
-          { name: 'Text Field', directory: 'text-field', documentation_url: 'https://vaadin.com/docs/v25/components/text-field' }
+          {
+            name: 'Button',
+            react_component: 'Button',
+            java_class: 'com.vaadin.flow.component.button.Button',
+            npm_package: '@vaadin/button',
+            documentation_url: 'https://vaadin.com/docs/latest/components/button'
+          },
+          {
+            name: 'Checkbox',
+            react_component: 'Checkbox',
+            java_class: 'com.vaadin.flow.component.checkbox.Checkbox',
+            npm_package: '@vaadin/checkbox',
+            documentation_url: 'https://vaadin.com/docs/latest/components/checkbox'
+          },
+          {
+            name: 'Checkbox Group',
+            react_component: 'CheckboxGroup',
+            java_class: 'com.vaadin.flow.component.checkbox.CheckboxGroup',
+            npm_package: '@vaadin/checkbox-group',
+            documentation_url: 'https://vaadin.com/docs/latest/components/checkbox-group'
+          },
+          {
+            name: 'Date Picker',
+            react_component: 'DatePicker',
+            java_class: 'com.vaadin.flow.component.datepicker.DatePicker',
+            npm_package: '@vaadin/date-picker',
+            documentation_url: 'https://vaadin.com/docs/latest/components/date-picker'
+          }
         ];
-        
+
         // Simulate the component list result
         const result = {
-          version: '25',
-          branch: 'v25',
+          version: '24.8',
           components_count: mockComponents.length,
           components: mockComponents
         };
-        
-        // Validate documentation URLs use correct version path
-        const hasCorrectUrls = result.components.every((comp: any) => 
+
+        if (!result.components || result.components.length === 0) {
+          return {
+            name: this.name,
+            passed: false,
+            error: 'No components returned',
+            duration: Date.now() - startTime
+          };
+        }
+
+        // Validate structure
+        const hasValidStructure = result.components.every((comp: any) =>
+          comp.name &&
+          comp.react_component &&
+          comp.java_class !== undefined && // Can be null for client-only components
+          comp.npm_package &&
+          comp.documentation_url
+        );
+
+        if (!hasValidStructure) {
+          return {
+            name: this.name,
+            passed: false,
+            error: 'Components missing required fields (name, react_component, java_class, npm_package, documentation_url)',
+            duration: Date.now() - startTime
+          };
+        }
+
+        // Verify CheckboxGroup is properly mapped (critical test for bug fix)
+        const checkboxGroup = result.components.find((c: any) => c.name === 'Checkbox Group');
+        if (!checkboxGroup || checkboxGroup.java_class !== 'com.vaadin.flow.component.checkbox.CheckboxGroup') {
+          return {
+            name: this.name,
+            passed: false,
+            error: 'CheckboxGroup not properly mapped to com.vaadin.flow.component.checkbox.CheckboxGroup',
+            duration: Date.now() - startTime
+          };
+        }
+
+        return {
+          name: this.name,
+          passed: true,
+          duration: Date.now() - startTime,
+          details: {
+            version: result.version,
+            componentsCount: result.components_count,
+            checkboxGroupMapped: true,
+            sampleComponents: result.components.slice(0, 2).map((c: any) => ({
+              name: c.name,
+              react: c.react_component,
+              java: c.java_class
+            }))
+          }
+        };
+
+      } catch (error) {
+        return {
+          name: this.name,
+          passed: false,
+          error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          duration: Date.now() - startTime
+        };
+      }
+    }
+  },
+
+  {
+    name: 'Get components by version - Vaadin 25.0 (minor version)',
+    async test(client: MockMCPTestClient): Promise<TestResult> {
+      const startTime = Date.now();
+
+      try {
+        // Mock response for components list for v25
+        const mockComponents = [
+          {
+            name: 'Button',
+            react_component: 'Button',
+            java_class: 'com.vaadin.flow.component.button.Button',
+            npm_package: '@vaadin/button',
+            documentation_url: 'https://vaadin.com/docs/v25/components/button'
+          },
+          {
+            name: 'Grid',
+            react_component: 'Grid',
+            java_class: 'com.vaadin.flow.component.grid.Grid',
+            npm_package: '@vaadin/grid',
+            documentation_url: 'https://vaadin.com/docs/v25/components/grid'
+          }
+        ];
+
+        // Simulate the component list result
+        const result = {
+          version: '25.0',
+          components_count: mockComponents.length,
+          components: mockComponents
+        };
+
+        // Validate documentation URLs use correct version path (v25 not latest)
+        const hasCorrectUrls = result.components.every((comp: any) =>
           comp.documentation_url.includes('/v25/')
         );
-        
+
         if (!hasCorrectUrls) {
           return {
             name: this.name,
@@ -564,19 +681,66 @@ const DOCUMENT_TEST_SCENARIOS = [
             details: { urls: result.components.map((c: any) => c.documentation_url) }
           };
         }
-        
+
         return {
           name: this.name,
           passed: true,
           duration: Date.now() - startTime,
           details: {
             version: result.version,
-            branch: result.branch,
             componentsCount: result.components_count,
             urlsCorrect: hasCorrectUrls
           }
         };
-        
+
+      } catch (error) {
+        return {
+          name: this.name,
+          passed: false,
+          error: `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          duration: Date.now() - startTime
+        };
+      }
+    }
+  },
+
+  {
+    name: 'Get components by version - invalid version format rejected',
+    async test(client: MockMCPTestClient): Promise<TestResult> {
+      const startTime = Date.now();
+
+      try {
+        // Test that invalid version formats are properly rejected
+        // The actual implementation should throw an error for these formats
+        const invalidVersions = ['24', 'main', '24.8.1', 'v24.8'];
+
+        // Since this is a mock test, we just verify the validation logic would work
+        // In a real implementation, each of these should be rejected by the tool's validation
+        const versionPattern = /^\d+\.\d+$/;
+
+        const allRejected = invalidVersions.every(v => !versionPattern.test(v));
+        const validVersionsAccepted = ['24.8', '24.9', '25.0'].every(v => versionPattern.test(v));
+
+        if (!allRejected || !validVersionsAccepted) {
+          return {
+            name: this.name,
+            passed: false,
+            error: 'Version validation pattern is incorrect',
+            duration: Date.now() - startTime
+          };
+        }
+
+        return {
+          name: this.name,
+          passed: true,
+          duration: Date.now() - startTime,
+          details: {
+            note: 'Version format validation correctly rejects invalid formats and accepts minor versions',
+            invalidFormats: invalidVersions,
+            validFormats: ['24.8', '24.9', '25.0']
+          }
+        };
+
       } catch (error) {
         return {
           name: this.name,

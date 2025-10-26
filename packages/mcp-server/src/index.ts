@@ -116,9 +116,9 @@ function setupTools(server: McpServer) {
     "get_components_by_version",
     {
       title: "Get Components by Version",
-      description: "Returns a list of components available in a given Vaadin major version (e.g., 24, 25).",
+      description: "Returns a comprehensive list of components available in a specific Vaadin version, including component names, React/Hilla component names, Java class names, and npm packages.",
       inputSchema: {
-        version: z.string().regex(/^\d+$/).describe("The major version of Vaadin (e.g., '24', '25')")
+        version: z.string().describe("The Vaadin version as a minor version (e.g., '24.8', '24.9', '25.0')")
       }
     },
     async (args) => {

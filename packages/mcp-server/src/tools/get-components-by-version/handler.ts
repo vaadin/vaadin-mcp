@@ -2,8 +2,8 @@
  * Handler for get_components_by_version tool
  */
 
-import { toTitleCase } from '../../utils/string-utils.js';
-import type { ComponentVersionData } from './types.js';
+import { getCachedVersion, setCachedVersion, hasCachedVersion } from './cache.js';
+import { buildComponentVersionData } from './builder.js';
 
 /**
  * Handle get_components_by_version tool
@@ -14,66 +14,44 @@ export async function handleGetComponentsByVersionTool(args: any) {
     throw new Error('Missing or invalid version parameter');
   }
 
-  // Parse version to get major version number
-  const versionMatch = args.version.match(/^(\d+)$/);
+  const version = args.version;
+
+  // Validate version format: must be minor version (X.Y)
+  const versionMatch = version.match(/^\d+\.\d+$/);
+
   if (!versionMatch) {
-    throw new Error('Invalid version format. Expected format: "24", "25", etc.');
+    throw new Error('Invalid version format. Expected format: "24.8", "24.9", "25.0", etc.');
   }
 
-  const majorVersion = versionMatch[1];
-
   try {
-    // Fetch component list from GitHub documentation repository
-    // The branch name for version 24 is 'v24', for version 25 is 'v25', etc.
-    const branch = `v${majorVersion}`;
-    const githubApiUrl = `https://api.github.com/repos/vaadin/docs/contents/articles/components?ref=${branch}`;
+    // Check cache first
+    if (hasCachedVersion(version)) {
+      console.log(`✓ Returning cached data for version ${version}`);
+      const cachedData = getCachedVersion(version)!;
 
-    console.log(`Fetching component list for Vaadin ${args.version} from branch ${branch}...`);
-
-    const response = await fetch(githubApiUrl, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'vaadin-docs-mcp-server'
-      }
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error(`Version ${args.version} not found. The documentation branch '${branch}' may not exist.`);
-      }
-      throw new Error(`GitHub API request failed: ${response.status} ${response.statusText}`);
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(cachedData, null, 2)
+          }
+        ]
+      };
     }
 
-    const data = await response.json();
+    // Build component data from sources
+    console.log(`Building component data for version ${version}...`);
+    const componentData = await buildComponentVersionData(version);
 
-    // Determine the documentation URL path based on version
-    // Vaadin 24 uses 'latest', Vaadin 25+ uses 'v{version}'
-    const docsVersionPath = majorVersion === '24' ? 'latest' : `v${majorVersion}`;
-
-    // Filter and process the component directories
-    const components = data
-      .filter((item: any) => item.type === 'dir' && !item.name.startsWith('_'))
-      .map((item: any) => {
-        return {
-          name: toTitleCase(item.name),
-          directory: item.name,
-          documentation_url: `https://vaadin.com/docs/${docsVersionPath}/components/${item.name}`
-        };
-      })
-      .sort((a: any, b: any) => a.name.localeCompare(b.name));
-
-    const result: ComponentVersionData = {
-      version: args.version,
-      branch: branch,
-      components_count: components.length,
-      components: components
-    };
+    // Cache the result
+    setCachedVersion(version, componentData);
+    console.log(`✓ Cached data for version ${version}`);
 
     return {
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify(result, null, 2)
+          text: JSON.stringify(componentData, null, 2)
         }
       ]
     };

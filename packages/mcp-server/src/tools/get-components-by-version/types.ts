@@ -7,7 +7,9 @@
  */
 export interface ComponentData {
   name: string;
-  directory: string;
+  react_component: string;
+  java_class: string | null;
+  npm_package: string;
   documentation_url: string;
 }
 
@@ -16,7 +18,6 @@ export interface ComponentData {
  */
 export interface ComponentVersionData {
   version: string;
-  branch: string;
   components_count: number;
   components: ComponentData[];
 }
