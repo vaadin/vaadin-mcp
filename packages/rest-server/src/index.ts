@@ -87,6 +87,23 @@ function checkEnvironmentVariables() {
 // Check environment variables
 checkEnvironmentVariables();
 
+/**
+ * Normalize component name to match directory structure
+ * Handles: Button, button, vaadin-button -> button
+ * Handles: TextField, text-field, vaadin-text-field -> text-field
+ */
+function normalizeComponentName(componentName: string): string {
+  // Remove 'vaadin-' prefix if present
+  let normalized = componentName.replace(/^vaadin-/i, '');
+
+  // Convert PascalCase to kebab-case
+  normalized = normalized
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .toLowerCase();
+
+  return normalized;
+}
+
 // Create Express app
 const app = express();
 
@@ -340,6 +357,411 @@ app.get('/document/:file_path(*)', async (req: Request, res: Response) => {
     
     res.status(500).json({
       error: `Error fetching document: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
+  }
+});
+
+/**
+ * Get Flow (Java) API documentation for a component
+ */
+app.get('/component/:componentName/flow', async (req: Request, res: Response) => {
+  try {
+    const { componentName } = req.params;
+
+    if (!componentName) {
+      return res.status(400).json({
+        error: 'Missing component name parameter'
+      });
+    }
+
+    // Normalize component name
+    const normalized = normalizeComponentName(componentName);
+
+    // Construct file path
+    const filePath = `components/${normalized}/index-flow.md`;
+
+    // Construct absolute path to markdown file
+    const markdownDir = process.env.NODE_ENV === 'production'
+      ? '/app/packages/1-asciidoc-converter/dist/markdown'
+      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
+
+    const fullPath = path.join(markdownDir, filePath);
+
+    // Security check: ensure the path is within the markdown directory
+    const resolvedPath = path.resolve(fullPath);
+    const resolvedMarkdownDir = path.resolve(markdownDir);
+
+    if (!resolvedPath.startsWith(resolvedMarkdownDir)) {
+      return res.status(403).json({
+        error: 'Access denied: path traversal not allowed'
+      });
+    }
+
+    // Check if file exists
+    if (!fs.existsSync(resolvedPath)) {
+      return res.status(404).json({
+        error: 'Component Flow API documentation not found',
+        component: componentName,
+        normalized_name: normalized
+      });
+    }
+
+    // Read the markdown file
+    const content = fs.readFileSync(resolvedPath, 'utf8');
+
+    // Parse frontmatter and content
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    let metadata: Record<string, string> = {};
+    let markdownContent = content;
+
+    if (frontmatterMatch) {
+      try {
+        // Parse YAML frontmatter
+        const yamlContent = frontmatterMatch[1];
+        const lines = yamlContent.split('\n');
+        for (const line of lines) {
+          const colonIndex = line.indexOf(':');
+          if (colonIndex > 0) {
+            const key = line.substring(0, colonIndex).trim();
+            const value = line.substring(colonIndex + 1).trim().replace(/^["']|["']$/g, '');
+            metadata[key] = value;
+          }
+        }
+        markdownContent = frontmatterMatch[2];
+      } catch (error) {
+        console.warn('Failed to parse frontmatter:', error);
+      }
+    }
+
+    // Return the component Flow API documentation
+    res.json({
+      component: componentName,
+      normalized_name: normalized,
+      framework: 'flow',
+      content: markdownContent,
+      metadata
+    });
+
+  } catch (error) {
+    console.error('Error fetching component Flow API:', error);
+
+    res.status(500).json({
+      error: `Error fetching component Flow API: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
+  }
+});
+
+/**
+ * Get Hilla (React) API documentation for a component
+ */
+app.get('/component/:componentName/hilla', async (req: Request, res: Response) => {
+  try {
+    const { componentName } = req.params;
+
+    if (!componentName) {
+      return res.status(400).json({
+        error: 'Missing component name parameter'
+      });
+    }
+
+    // Normalize component name
+    const normalized = normalizeComponentName(componentName);
+
+    // Construct file path
+    const filePath = `components/${normalized}/index-hilla.md`;
+
+    // Construct absolute path to markdown file
+    const markdownDir = process.env.NODE_ENV === 'production'
+      ? '/app/packages/1-asciidoc-converter/dist/markdown'
+      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
+
+    const fullPath = path.join(markdownDir, filePath);
+
+    // Security check: ensure the path is within the markdown directory
+    const resolvedPath = path.resolve(fullPath);
+    const resolvedMarkdownDir = path.resolve(markdownDir);
+
+    if (!resolvedPath.startsWith(resolvedMarkdownDir)) {
+      return res.status(403).json({
+        error: 'Access denied: path traversal not allowed'
+      });
+    }
+
+    // Check if file exists
+    if (!fs.existsSync(resolvedPath)) {
+      return res.status(404).json({
+        error: 'Component Hilla API documentation not found',
+        component: componentName,
+        normalized_name: normalized
+      });
+    }
+
+    // Read the markdown file
+    const content = fs.readFileSync(resolvedPath, 'utf8');
+
+    // Parse frontmatter and content
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    let metadata: Record<string, string> = {};
+    let markdownContent = content;
+
+    if (frontmatterMatch) {
+      try {
+        // Parse YAML frontmatter
+        const yamlContent = frontmatterMatch[1];
+        const lines = yamlContent.split('\n');
+        for (const line of lines) {
+          const colonIndex = line.indexOf(':');
+          if (colonIndex > 0) {
+            const key = line.substring(0, colonIndex).trim();
+            const value = line.substring(colonIndex + 1).trim().replace(/^["']|["']$/g, '');
+            metadata[key] = value;
+          }
+        }
+        markdownContent = frontmatterMatch[2];
+      } catch (error) {
+        console.warn('Failed to parse frontmatter:', error);
+      }
+    }
+
+    // Return the component Hilla API documentation
+    res.json({
+      component: componentName,
+      normalized_name: normalized,
+      framework: 'hilla',
+      content: markdownContent,
+      metadata
+    });
+
+  } catch (error) {
+    console.error('Error fetching component Hilla API:', error);
+
+    res.status(500).json({
+      error: `Error fetching component Hilla API: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
+  }
+});
+
+/**
+ * Get styling documentation for a component (both Flow and Hilla)
+ */
+app.get('/component/:componentName/styling', async (req: Request, res: Response) => {
+  try {
+    const { componentName } = req.params;
+
+    if (!componentName) {
+      return res.status(400).json({
+        error: 'Missing component name parameter'
+      });
+    }
+
+    // Normalize component name
+    const normalized = normalizeComponentName(componentName);
+
+    // Construct file paths for both Flow and Hilla styling
+    const flowFilePath = `components/${normalized}/styling-flow.md`;
+    const hillaFilePath = `components/${normalized}/styling-hilla.md`;
+
+    // Construct absolute path to markdown directory
+    const markdownDir = process.env.NODE_ENV === 'production'
+      ? '/app/packages/1-asciidoc-converter/dist/markdown'
+      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
+
+    const flowFullPath = path.join(markdownDir, flowFilePath);
+    const hillaFullPath = path.join(markdownDir, hillaFilePath);
+
+    // Security checks
+    const resolvedFlowPath = path.resolve(flowFullPath);
+    const resolvedHillaPath = path.resolve(hillaFullPath);
+    const resolvedMarkdownDir = path.resolve(markdownDir);
+
+    if (!resolvedFlowPath.startsWith(resolvedMarkdownDir) || !resolvedHillaPath.startsWith(resolvedMarkdownDir)) {
+      return res.status(403).json({
+        error: 'Access denied: path traversal not allowed'
+      });
+    }
+
+    // Read both files if they exist
+    const flowExists = fs.existsSync(resolvedFlowPath);
+    const hillaExists = fs.existsSync(resolvedHillaPath);
+
+    if (!flowExists && !hillaExists) {
+      return res.status(404).json({
+        error: 'Component styling documentation not found',
+        component: componentName,
+        normalized_name: normalized
+      });
+    }
+
+    // Helper function to parse file
+    const parseFile = (filePath: string) => {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+      let metadata: Record<string, string> = {};
+      let markdownContent = content;
+
+      if (frontmatterMatch) {
+        try {
+          const yamlContent = frontmatterMatch[1];
+          const lines = yamlContent.split('\n');
+          for (const line of lines) {
+            const colonIndex = line.indexOf(':');
+            if (colonIndex > 0) {
+              const key = line.substring(0, colonIndex).trim();
+              const value = line.substring(colonIndex + 1).trim().replace(/^["']|["']$/g, '');
+              metadata[key] = value;
+            }
+          }
+          markdownContent = frontmatterMatch[2];
+        } catch (error) {
+          console.warn('Failed to parse frontmatter:', error);
+        }
+      }
+
+      return { content: markdownContent, metadata };
+    };
+
+    // Parse available files
+    const result: any = {
+      component: componentName,
+      normalized_name: normalized
+    };
+
+    if (flowExists) {
+      const parsed = parseFile(resolvedFlowPath);
+      result.flow = {
+        content: parsed.content,
+        metadata: parsed.metadata
+      };
+    }
+
+    if (hillaExists) {
+      const parsed = parseFile(resolvedHillaPath);
+      result.hilla = {
+        content: parsed.content,
+        metadata: parsed.metadata
+      };
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('Error fetching component styling:', error);
+
+    res.status(500).json({
+      error: `Error fetching component styling: ${error instanceof Error ? error.message : 'Unknown error'}`
+    });
+  }
+});
+
+/**
+ * Get Web Component (TypeScript) API documentation for a component
+ */
+app.get('/component/:componentName/web-component', async (req: Request, res: Response) => {
+  try {
+    const { componentName } = req.params;
+
+    if (!componentName) {
+      return res.status(400).json({
+        error: 'Missing component name parameter'
+      });
+    }
+
+    // Normalize component name
+    const normalized = normalizeComponentName(componentName);
+
+    // Read the Flow documentation to extract the TypeScript API URL from frontmatter
+    const filePath = `components/${normalized}/index-flow.md`;
+    const markdownDir = process.env.NODE_ENV === 'production'
+      ? '/app/packages/1-asciidoc-converter/dist/markdown'
+      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
+
+    const fullPath = path.join(markdownDir, filePath);
+    const resolvedPath = path.resolve(fullPath);
+    const resolvedMarkdownDir = path.resolve(markdownDir);
+
+    if (!resolvedPath.startsWith(resolvedMarkdownDir)) {
+      return res.status(403).json({
+        error: 'Access denied: path traversal not allowed'
+      });
+    }
+
+    if (!fs.existsSync(resolvedPath)) {
+      return res.status(404).json({
+        error: 'Component documentation not found',
+        component: componentName,
+        normalized_name: normalized
+      });
+    }
+
+    // Read the file to extract the TypeScript API URL
+    const content = fs.readFileSync(resolvedPath, 'utf8');
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/);
+
+    if (!frontmatterMatch) {
+      return res.status(500).json({
+        error: 'Could not parse component documentation frontmatter'
+      });
+    }
+
+    // Extract TypeScript API URL from page-links
+    const pageLinksMatch = frontmatterMatch[1].match(/page-links:\s*\n-\s*'API:\s*([^[]+)\[TypeScript\]/);
+
+    if (!pageLinksMatch || !pageLinksMatch[1]) {
+      return res.status(404).json({
+        error: 'TypeScript API URL not found in component documentation',
+        component: componentName,
+        normalized_name: normalized
+      });
+    }
+
+    let typescriptApiUrl = pageLinksMatch[1].trim();
+
+    // Check if the URL contains template variables that need to be resolved
+    const hasTemplateVars = typescriptApiUrl.includes('{');
+
+    let resolvedUrl = typescriptApiUrl;
+    let apiContent = '';
+    let fetchError = null;
+
+    if (hasTemplateVars) {
+      // Try to resolve template variables with a reasonable default
+      // For example: {moduleNpmVersion:@vaadin/button} -> latest
+      resolvedUrl = typescriptApiUrl.replace(/\{[^}]+\}/g, '24.5.0');
+    }
+
+    try {
+      // Attempt to fetch the TypeScript API documentation
+      const response = await fetch(resolvedUrl, {
+        headers: {
+          'User-Agent': 'vaadin-docs-rest-server'
+        }
+      });
+
+      if (response.ok) {
+        apiContent = await response.text();
+      } else {
+        fetchError = `Failed to fetch TypeScript API: ${response.status} ${response.statusText}`;
+      }
+    } catch (error) {
+      fetchError = `Error fetching TypeScript API: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+
+    // Return the web component API documentation
+    res.json({
+      component: componentName,
+      normalized_name: normalized,
+      framework: 'web-component',
+      typescript_api_url_template: hasTemplateVars ? typescriptApiUrl : undefined,
+      typescript_api_url: resolvedUrl,
+      content: apiContent || `TypeScript API documentation is available at: ${resolvedUrl}${fetchError ? `\n\nNote: ${fetchError}` : ''}`,
+      fetch_error: fetchError
+    });
+
+  } catch (error) {
+    console.error('Error fetching component web component API:', error);
+
+    res.status(500).json({
+      error: `Error fetching component web component API: ${error instanceof Error ? error.message : 'Unknown error'}`
     });
   }
 });

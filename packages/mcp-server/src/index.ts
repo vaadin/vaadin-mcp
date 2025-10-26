@@ -125,6 +125,66 @@ function setupTools(server: McpServer) {
       return await handleGetComponentsByVersionTool(args);
     }
   );
+
+  // Register get_component_java_api tool
+  server.registerTool(
+    "get_component_java_api",
+    {
+      title: "Get Component Java (Flow) API",
+      description: "Returns the Java/Flow API documentation for a specific Vaadin component. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
+      inputSchema: {
+        component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
+      }
+    },
+    async (args) => {
+      return await handleGetComponentJavaApiTool(args);
+    }
+  );
+
+  // Register get_component_react_api tool
+  server.registerTool(
+    "get_component_react_api",
+    {
+      title: "Get Component React (Hilla) API",
+      description: "Returns the React/Hilla API documentation for a specific Vaadin component. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
+      inputSchema: {
+        component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
+      }
+    },
+    async (args) => {
+      return await handleGetComponentReactApiTool(args);
+    }
+  );
+
+  // Register get_component_web_component_api tool
+  server.registerTool(
+    "get_component_web_component_api",
+    {
+      title: "Get Component Web Component (TypeScript) API",
+      description: "Returns the Web Component/TypeScript API documentation for a specific Vaadin component by fetching from external TypeScript API docs. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
+      inputSchema: {
+        component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
+      }
+    },
+    async (args) => {
+      return await handleGetComponentWebComponentApiTool(args);
+    }
+  );
+
+  // Register get_component_styling tool
+  server.registerTool(
+    "get_component_styling",
+    {
+      title: "Get Component Styling",
+      description: "Returns the styling/theming documentation for a specific Vaadin component. Returns both Flow and Hilla styling documentation when available. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
+      inputSchema: {
+        component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
+      }
+    },
+    async (args) => {
+      return await handleGetComponentStylingTool(args);
+    }
+  );
 }
 
 /**
@@ -303,6 +363,298 @@ async function handleGetVaadinVersionTool() {
           type: 'text' as const,
           text: JSON.stringify({
             error: `Failed to fetch Vaadin version: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }, null, 2)
+        }
+      ],
+      isError: true
+    };
+  }
+}
+
+/**
+ * Handle get_component_java_api tool
+ */
+async function handleGetComponentJavaApiTool(args: any) {
+  // Validate arguments
+  if (!args.component_name || typeof args.component_name !== 'string') {
+    throw new Error('Missing or invalid component_name parameter');
+  }
+
+  try {
+    // Forward request to REST server
+    const response = await fetch(`${config.restServer.url}/component/${encodeURIComponent(args.component_name)}/flow`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        const errorData = await response.json();
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: `Component Flow (Java) API documentation not found for: ${args.component_name}`,
+                details: errorData
+              }, null, 2)
+            }
+          ],
+          isError: true
+        };
+      }
+
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Format the response
+    let output = `# ${data.metadata?.title || args.component_name} - Java (Flow) API\n\n`;
+    output += `**Component:** ${data.component}\n`;
+    output += `**Framework:** Flow (Java)\n`;
+    if (data.metadata?.source_url) {
+      output += `**Documentation URL:** ${data.metadata.source_url}\n`;
+    }
+    output += `\n---\n\n${data.content}`;
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: output
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching component Java API:', error);
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: `Failed to fetch component Java API: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }, null, 2)
+        }
+      ],
+      isError: true
+    };
+  }
+}
+
+/**
+ * Handle get_component_react_api tool
+ */
+async function handleGetComponentReactApiTool(args: any) {
+  // Validate arguments
+  if (!args.component_name || typeof args.component_name !== 'string') {
+    throw new Error('Missing or invalid component_name parameter');
+  }
+
+  try {
+    // Forward request to REST server
+    const response = await fetch(`${config.restServer.url}/component/${encodeURIComponent(args.component_name)}/hilla`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        const errorData = await response.json();
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: `Component Hilla (React) API documentation not found for: ${args.component_name}`,
+                details: errorData
+              }, null, 2)
+            }
+          ],
+          isError: true
+        };
+      }
+
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Format the response
+    let output = `# ${data.metadata?.title || args.component_name} - React (Hilla) API\n\n`;
+    output += `**Component:** ${data.component}\n`;
+    output += `**Framework:** Hilla (React)\n`;
+    if (data.metadata?.source_url) {
+      output += `**Documentation URL:** ${data.metadata.source_url}\n`;
+    }
+    output += `\n---\n\n${data.content}`;
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: output
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching component React API:', error);
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: `Failed to fetch component React API: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }, null, 2)
+        }
+      ],
+      isError: true
+    };
+  }
+}
+
+/**
+ * Handle get_component_web_component_api tool
+ */
+async function handleGetComponentWebComponentApiTool(args: any) {
+  // Validate arguments
+  if (!args.component_name || typeof args.component_name !== 'string') {
+    throw new Error('Missing or invalid component_name parameter');
+  }
+
+  try {
+    // Forward request to REST server
+    const response = await fetch(`${config.restServer.url}/component/${encodeURIComponent(args.component_name)}/web-component`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        const errorData = await response.json();
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: `Component Web Component (TypeScript) API documentation not found for: ${args.component_name}`,
+                details: errorData
+              }, null, 2)
+            }
+          ],
+          isError: true
+        };
+      }
+
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Format the response
+    let output = `# ${args.component_name} - Web Component (TypeScript) API\n\n`;
+    output += `**Component:** ${data.component}\n`;
+    output += `**Framework:** Web Component (TypeScript)\n`;
+    output += `**TypeScript API URL:** ${data.typescript_api_url}\n`;
+    output += `\n---\n\n${data.content}`;
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: output
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching component web component API:', error);
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: `Failed to fetch component web component API: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }, null, 2)
+        }
+      ],
+      isError: true
+    };
+  }
+}
+
+/**
+ * Handle get_component_styling tool
+ */
+async function handleGetComponentStylingTool(args: any) {
+  // Validate arguments
+  if (!args.component_name || typeof args.component_name !== 'string') {
+    throw new Error('Missing or invalid component_name parameter');
+  }
+
+  try {
+    // Forward request to REST server
+    const response = await fetch(`${config.restServer.url}/component/${encodeURIComponent(args.component_name)}/styling`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        const errorData = await response.json();
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: `Component styling documentation not found for: ${args.component_name}`,
+                details: errorData
+              }, null, 2)
+            }
+          ],
+          isError: true
+        };
+      }
+
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Format the response
+    let output = `# ${args.component_name} - Styling Documentation\n\n`;
+    output += `**Component:** ${data.component}\n\n`;
+
+    // Add Flow styling if available
+    if (data.flow) {
+      output += `## Flow (Java) Styling\n\n`;
+      if (data.flow.metadata?.source_url) {
+        output += `**Documentation URL:** ${data.flow.metadata.source_url}\n\n`;
+      }
+      output += `${data.flow.content}\n\n`;
+      output += `---\n\n`;
+    }
+
+    // Add Hilla styling if available
+    if (data.hilla) {
+      output += `## Hilla (React) Styling\n\n`;
+      if (data.hilla.metadata?.source_url) {
+        output += `**Documentation URL:** ${data.hilla.metadata.source_url}\n\n`;
+      }
+      output += `${data.hilla.content}\n\n`;
+    }
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: output
+        }
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching component styling:', error);
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: `Failed to fetch component styling: ${error instanceof Error ? error.message : 'Unknown error'}`
           }, null, 2)
         }
       ],
