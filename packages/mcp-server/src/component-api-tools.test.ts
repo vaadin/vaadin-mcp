@@ -151,19 +151,17 @@ async function testReadActualComponentDocs() {
   const buttonPath = 'components/button/index-flow.md';
   const buttonFile = findComponentFile(buttonPath);
 
-  if (buttonFile) {
-    const content = fs.readFileSync(buttonFile.fullPath, 'utf8');
-    const { metadata, content: markdownContent } = parseFrontmatter(content);
+  assertTrue(buttonFile !== null, 'Button component Flow documentation should exist');
 
-    // Verify structure
-    assertTrue(content.length > 0, 'Content should not be empty');
-    assertEqual(metadata.framework, 'flow', 'Button framework should be flow');
-    assertTrue(metadata.source_url !== undefined, 'Button should have source_url in metadata');
-    assertTrue(markdownContent.length > 0, 'Markdown content should not be empty');
-    assertTrue(markdownContent.includes('Button') || markdownContent.includes('button'), 'Content should mention button');
-  } else {
-    console.warn('    ⚠️  Button component not found, skipping actual doc test');
-  }
+  const content = fs.readFileSync(buttonFile!.fullPath, 'utf8');
+  const { metadata, content: markdownContent } = parseFrontmatter(content);
+
+  // Verify structure
+  assertTrue(content.length > 0, 'Content should not be empty');
+  assertEqual(metadata.framework, 'flow', 'Button framework should be flow');
+  assertTrue(metadata.source_url !== undefined, 'Button should have source_url in metadata');
+  assertTrue(markdownContent.length > 0, 'Markdown content should not be empty');
+  assertTrue(markdownContent.includes('Button') || markdownContent.includes('button'), 'Content should mention button');
 }
 
 /**
@@ -178,27 +176,25 @@ async function testReadStylingDocs() {
   const hillaFile = findComponentFile(hillaStylingPath);
 
   // At least one styling file should exist for button
-  if (flowFile || hillaFile) {
-    if (flowFile) {
-      const content = fs.readFileSync(flowFile.fullPath, 'utf8');
-      const { metadata, content: markdownContent } = parseFrontmatter(content);
+  assertTrue(flowFile !== null || hillaFile !== null, 'Button component should have at least one styling documentation file (Flow or Hilla)');
 
-      assertTrue(content.length > 0, 'Flow styling content should not be empty');
-      assertTrue(
-        markdownContent.includes('theme') ||
-        markdownContent.includes('style') ||
-        markdownContent.includes('CSS') ||
-        markdownContent.includes('Lumo'),
-        'Flow styling should mention theming or styling'
-      );
-    }
+  if (flowFile) {
+    const content = fs.readFileSync(flowFile.fullPath, 'utf8');
+    const { metadata, content: markdownContent } = parseFrontmatter(content);
 
-    if (hillaFile) {
-      const content = fs.readFileSync(hillaFile.fullPath, 'utf8');
-      assertTrue(content.length > 0, 'Hilla styling content should not be empty');
-    }
-  } else {
-    console.warn('    ⚠️  Button styling documentation not found, skipping styling test');
+    assertTrue(content.length > 0, 'Flow styling content should not be empty');
+    assertTrue(
+      markdownContent.includes('theme') ||
+      markdownContent.includes('style') ||
+      markdownContent.includes('CSS') ||
+      markdownContent.includes('Lumo'),
+      'Flow styling should mention theming or styling'
+    );
+  }
+
+  if (hillaFile) {
+    const content = fs.readFileSync(hillaFile.fullPath, 'utf8');
+    assertTrue(content.length > 0, 'Hilla styling content should not be empty');
   }
 }
 
