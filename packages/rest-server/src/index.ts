@@ -102,10 +102,21 @@ app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
-  res.json({ 
-    status: 'ok', 
-    server: config.server.name, 
-    version: config.server.version 
+  res.json({
+    status: 'ok',
+    server: config.server.name,
+    version: config.server.version
+  });
+});
+
+// Legacy MCP docs endpoint - inform about new URL
+app.get('/mcp/docs', (req: Request, res: Response) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: 'The MCP server documentation has moved. The new URL for the MCP server is /mcp',
+    oldUrl: '/mcp/docs',
+    newUrl: '/mcp',
+    timestamp: new Date().toISOString()
   });
 });
 
