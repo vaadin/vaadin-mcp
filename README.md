@@ -129,13 +129,13 @@ bun run start
 
 #### 3. Use MCP Server with IDE Assistant
 The MCP server is deployed and available remotely via HTTP transport at:
-**`https://vaadin-mcp.fly.dev/mcp`**
+**`https://mcp.vaadin.com/`**
 
 Configure your IDE assistant to use the Streamable HTTP transport:
 ```javascript
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 const transport = new StreamableHTTPClientTransport(
-  new URL("https://vaadin-mcp.fly.dev/mcp")
+  new URL("https://mcp.vaadin.com/")
 );
 ```
 
@@ -250,15 +250,15 @@ cd packages/rest-server && bun run test:server
 
 ## 🌐 Deployment
 
-### REST Server (fly.io)
-The REST server is deployed to fly.io and available at:
+### REST Server
+The REST server is available at:
 - **Production**: `https://vaadin-docs-search.fly.dev`
 - **Health Check**: `https://vaadin-docs-search.fly.dev/health`
 
-### MCP Server (fly.io)
-The MCP server is deployed to fly.io and available at:
-- **Production**: `https://vaadin-mcp.fly.dev/mcp`
-- **Health Check**: `https://vaadin-mcp.fly.dev/health`
+### MCP Server
+The MCP server is available at:
+- **Production**: `https://mcp.vaadin.com/`
+- **Health Check**: `https://mcp.vaadin.com/health`
 
 ### Documentation Processing
 Automated via GitHub Actions:
