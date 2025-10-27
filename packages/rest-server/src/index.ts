@@ -203,6 +203,7 @@ app.get('/', (req: Request, res: Response) => {
       <pre>{
   "mcpServers": {
     "vaadin": {
+      "type": "http",
       "url": "https://mcp.vaadin.com/docs"
     }
   }
@@ -211,8 +212,7 @@ app.get('/', (req: Request, res: Response) => {
 
     <div class="config-box">
       <strong>For Junie or other MCP clients:</strong>
-      <pre>Server URL: https://mcp.vaadin.com/docs
-Protocol: SSE (Server-Sent Events)</pre>
+      <pre>Server URL: https://mcp.vaadin.com/docs</pre>
     </div>
 
     <h2>✨ What's Included</h2>
