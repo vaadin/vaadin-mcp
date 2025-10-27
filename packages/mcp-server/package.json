@@ -10,9 +10,11 @@
 
     "start": "bun run src/index.ts",
     "start:prod": "bun run dist/index.js",
-    "test": "bun run src/test-scenarios.ts --verbose",
-    "test:hierarchical": "bun run src/test-scenarios.ts --verbose",
-    "test:server": "bun run src/test-scenarios.ts --server=http://localhost:3001 --verbose"
+    "test": "bun run src/test-scenarios.test.ts --verbose",
+    "test:hierarchical": "bun run src/test-scenarios.test.ts --verbose",
+    "test:server": "bun run src/test-scenarios.test.ts --server=http://localhost:3001 --verbose",
+    "test:component-api": "bun run src/component-api-tools.test.ts",
+    "test:all": "bun run src/component-api-tools.test.ts && bun run src/test-scenarios.test.ts --verbose"
   },
   "keywords": [
     "vaadin",

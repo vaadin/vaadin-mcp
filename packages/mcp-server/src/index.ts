@@ -17,6 +17,9 @@ import type { RetrievalResult } from './types.js';
 import { VAADIN_PRIMER_CONTENT } from './vaadin-primer.js';
 import { z } from 'zod';
 import { handleGetComponentsByVersionTool } from './tools/get-components-by-version/index.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import { normalizeComponentName, findComponentFile, parseFrontmatter } from './component-api-helpers.js';
 
 /**
  * Search result interface (legacy compatibility)
@@ -381,40 +384,44 @@ async function handleGetComponentJavaApiTool(args: any) {
   }
 
   try {
-    // Forward request to REST server
-    const response = await fetch(`${config.restServer.url}/component/${encodeURIComponent(args.component_name)}/flow`);
+    // Normalize component name
+    const normalized = normalizeComponentName(args.component_name);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        const errorData = await response.json();
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: JSON.stringify({
-                error: `Component Flow (Java) API documentation not found for: ${args.component_name}`,
-                details: errorData
-              }, null, 2)
-            }
-          ],
-          isError: true
-        };
-      }
+    // Construct file path
+    const filePath = `components/${normalized}/index-flow.md`;
 
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    // Find component file
+    const fileLocation = findComponentFile(filePath);
+
+    if (!fileLocation) {
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              error: `Component Flow (Java) API documentation not found for: ${args.component_name}`,
+              normalized_name: normalized
+            }, null, 2)
+          }
+        ],
+        isError: true
+      };
     }
 
-    const data = await response.json();
+    // Read the markdown file
+    const content = fs.readFileSync(fileLocation.fullPath, 'utf8');
+
+    // Parse frontmatter and content
+    const { metadata, content: markdownContent } = parseFrontmatter(content);
 
     // Format the response
-    let output = `# ${data.metadata?.title || args.component_name} - Java (Flow) API\n\n`;
-    output += `**Component:** ${data.component}\n`;
+    let output = `# ${metadata?.title || args.component_name} - Java (Flow) API\n\n`;
+    output += `**Component:** ${args.component_name}\n`;
     output += `**Framework:** Flow (Java)\n`;
-    if (data.metadata?.source_url) {
-      output += `**Documentation URL:** ${data.metadata.source_url}\n`;
+    if (metadata?.source_url) {
+      output += `**Documentation URL:** ${metadata.source_url}\n`;
     }
-    output += `\n---\n\n${data.content}`;
+    output += `\n---\n\n${markdownContent}`;
 
     return {
       content: [
@@ -451,40 +458,44 @@ async function handleGetComponentReactApiTool(args: any) {
   }
 
   try {
-    // Forward request to REST server
-    const response = await fetch(`${config.restServer.url}/component/${encodeURIComponent(args.component_name)}/hilla`);
+    // Normalize component name
+    const normalized = normalizeComponentName(args.component_name);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        const errorData = await response.json();
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: JSON.stringify({
-                error: `Component Hilla (React) API documentation not found for: ${args.component_name}`,
-                details: errorData
-              }, null, 2)
-            }
-          ],
-          isError: true
-        };
-      }
+    // Construct file path
+    const filePath = `components/${normalized}/index-hilla.md`;
 
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    // Find component file
+    const fileLocation = findComponentFile(filePath);
+
+    if (!fileLocation) {
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              error: `Component Hilla (React) API documentation not found for: ${args.component_name}`,
+              normalized_name: normalized
+            }, null, 2)
+          }
+        ],
+        isError: true
+      };
     }
 
-    const data = await response.json();
+    // Read the markdown file
+    const content = fs.readFileSync(fileLocation.fullPath, 'utf8');
+
+    // Parse frontmatter and content
+    const { metadata, content: markdownContent } = parseFrontmatter(content);
 
     // Format the response
-    let output = `# ${data.metadata?.title || args.component_name} - React (Hilla) API\n\n`;
-    output += `**Component:** ${data.component}\n`;
+    let output = `# ${metadata?.title || args.component_name} - React (Hilla) API\n\n`;
+    output += `**Component:** ${args.component_name}\n`;
     output += `**Framework:** Hilla (React)\n`;
-    if (data.metadata?.source_url) {
-      output += `**Documentation URL:** ${data.metadata.source_url}\n`;
+    if (metadata?.source_url) {
+      output += `**Documentation URL:** ${metadata.source_url}\n`;
     }
-    output += `\n---\n\n${data.content}`;
+    output += `\n---\n\n${markdownContent}`;
 
     return {
       content: [
@@ -521,38 +532,93 @@ async function handleGetComponentWebComponentApiTool(args: any) {
   }
 
   try {
-    // Forward request to REST server
-    const response = await fetch(`${config.restServer.url}/component/${encodeURIComponent(args.component_name)}/web-component`);
+    // Normalize component name
+    const normalized = normalizeComponentName(args.component_name);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        const errorData = await response.json();
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: JSON.stringify({
-                error: `Component Web Component (TypeScript) API documentation not found for: ${args.component_name}`,
-                details: errorData
-              }, null, 2)
-            }
-          ],
-          isError: true
-        };
-      }
+    // Read the Flow documentation to extract the TypeScript API URL from frontmatter
+    const filePath = `components/${normalized}/index-flow.md`;
+    const fileLocation = findComponentFile(filePath);
 
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    if (!fileLocation) {
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              error: `Component documentation not found for: ${args.component_name}`,
+              normalized_name: normalized
+            }, null, 2)
+          }
+        ],
+        isError: true
+      };
     }
 
-    const data = await response.json();
+    // Read the file to extract the TypeScript API URL
+    const content = fs.readFileSync(fileLocation.fullPath, 'utf8');
+    const { metadata } = parseFrontmatter(content);
+
+    // Extract TypeScript API URL from page-links in metadata
+    const pageLinks = metadata['page-links'] || '';
+    const pageLinksMatch = pageLinks.match(/API:\s*([^[]+)\[TypeScript\]/);
+
+    if (!pageLinksMatch || !pageLinksMatch[1]) {
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              error: `TypeScript API URL not found in component documentation for: ${args.component_name}`,
+              normalized_name: normalized
+            }, null, 2)
+          }
+        ],
+        isError: true
+      };
+    }
+
+    let typescriptApiUrl = pageLinksMatch[1].trim();
+
+    // Check if the URL contains template variables that need to be resolved
+    const hasTemplateVars = typescriptApiUrl.includes('{');
+
+    let resolvedUrl = typescriptApiUrl;
+    let apiContent = '';
+    let fetchError = null;
+
+    if (hasTemplateVars) {
+      // Try to resolve template variables with a reasonable default
+      // For example: {moduleNpmVersion:@vaadin/button} -> 24.5.0
+      resolvedUrl = typescriptApiUrl.replace(/\{[^}]+\}/g, '24.5.0');
+    }
+
+    try {
+      // Attempt to fetch the TypeScript API documentation
+      const response = await fetch(resolvedUrl, {
+        headers: {
+          'User-Agent': 'vaadin-mcp-server'
+        }
+      });
+
+      if (response.ok) {
+        apiContent = await response.text();
+      } else {
+        fetchError = `Failed to fetch TypeScript API: ${response.status} ${response.statusText}`;
+      }
+    } catch (error) {
+      fetchError = `Error fetching TypeScript API: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
 
     // Format the response
     let output = `# ${args.component_name} - Web Component (TypeScript) API\n\n`;
-    output += `**Component:** ${data.component}\n`;
+    output += `**Component:** ${args.component_name}\n`;
     output += `**Framework:** Web Component (TypeScript)\n`;
-    output += `**TypeScript API URL:** ${data.typescript_api_url}\n`;
-    output += `\n---\n\n${data.content}`;
+    output += `**TypeScript API URL:** ${resolvedUrl}\n`;
+    if (hasTemplateVars) {
+      output += `**Original URL Template:** ${typescriptApiUrl}\n`;
+    }
+    output += `\n---\n\n`;
+    output += apiContent || `TypeScript API documentation is available at: ${resolvedUrl}${fetchError ? `\n\nNote: ${fetchError}` : ''}`;
 
     return {
       content: [
@@ -589,53 +655,58 @@ async function handleGetComponentStylingTool(args: any) {
   }
 
   try {
-    // Forward request to REST server
-    const response = await fetch(`${config.restServer.url}/component/${encodeURIComponent(args.component_name)}/styling`);
+    // Normalize component name
+    const normalized = normalizeComponentName(args.component_name);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        const errorData = await response.json();
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: JSON.stringify({
-                error: `Component styling documentation not found for: ${args.component_name}`,
-                details: errorData
-              }, null, 2)
-            }
-          ],
-          isError: true
-        };
-      }
+    // Try to find both Flow and Hilla styling files
+    const flowFilePath = `components/${normalized}/styling-flow.md`;
+    const hillaFilePath = `components/${normalized}/styling-hilla.md`;
 
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    const flowFileLocation = findComponentFile(flowFilePath);
+    const hillaFileLocation = findComponentFile(hillaFilePath);
+
+    if (!flowFileLocation && !hillaFileLocation) {
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              error: `Component styling documentation not found for: ${args.component_name}`,
+              normalized_name: normalized
+            }, null, 2)
+          }
+        ],
+        isError: true
+      };
     }
-
-    const data = await response.json();
 
     // Format the response
     let output = `# ${args.component_name} - Styling Documentation\n\n`;
-    output += `**Component:** ${data.component}\n\n`;
+    output += `**Component:** ${args.component_name}\n\n`;
 
     // Add Flow styling if available
-    if (data.flow) {
+    if (flowFileLocation) {
+      const content = fs.readFileSync(flowFileLocation.fullPath, 'utf8');
+      const { metadata, content: markdownContent } = parseFrontmatter(content);
+
       output += `## Flow (Java) Styling\n\n`;
-      if (data.flow.metadata?.source_url) {
-        output += `**Documentation URL:** ${data.flow.metadata.source_url}\n\n`;
+      if (metadata?.source_url) {
+        output += `**Documentation URL:** ${metadata.source_url}\n\n`;
       }
-      output += `${data.flow.content}\n\n`;
+      output += `${markdownContent}\n\n`;
       output += `---\n\n`;
     }
 
     // Add Hilla styling if available
-    if (data.hilla) {
+    if (hillaFileLocation) {
+      const content = fs.readFileSync(hillaFileLocation.fullPath, 'utf8');
+      const { metadata, content: markdownContent } = parseFrontmatter(content);
+
       output += `## Hilla (React) Styling\n\n`;
-      if (data.hilla.metadata?.source_url) {
-        output += `**Documentation URL:** ${data.hilla.metadata.source_url}\n\n`;
+      if (metadata?.source_url) {
+        output += `**Documentation URL:** ${metadata.source_url}\n\n`;
       }
-      output += `${data.hilla.content}\n\n`;
+      output += `${markdownContent}\n\n`;
     }
 
     return {
