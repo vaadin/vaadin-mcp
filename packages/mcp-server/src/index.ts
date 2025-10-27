@@ -678,6 +678,17 @@ async function startServer() {
     res.send(html);
   });
 
+  // Legacy MCP endpoint - inform about new URL
+  app.get('/mcp', (req: Request, res: Response) => {
+    res.status(404).json({
+      error: 'Not Found',
+      message: 'The MCP server has moved. The new URL is https://mcp.vaadin.com/docs',
+      oldUrl: 'https://mcp.vaadin.com/docs/mcp',
+      newUrl: 'https://mcp.vaadin.com/docs',
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Session termination not needed in stateless mode
   app.delete('/', async (req: Request, res: Response) => {
     console.log('Received DELETE MCP request');
