@@ -555,64 +555,87 @@ async function startServer() {
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       line-height: 1.6;
-      color: #333;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #eaf0f8;
+      background: linear-gradient(135deg, #1a81fa 0%, #8854fc 100%);
       min-height: 100vh;
       padding: 20px;
     }
     .container {
       max-width: 800px;
       margin: 0 auto;
-      background: white;
+      background: #161B21;
       border-radius: 12px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
       padding: 40px;
+      border: 1px solid #232e3c;
     }
     h1 {
-      color: #667eea;
+      color: #eaf0f8;
       margin-bottom: 20px;
       font-size: 2.5em;
+      font-weight: 600;
     }
     h2 {
-      color: #764ba2;
+      color: #1a81fa;
       margin-top: 30px;
       margin-bottom: 15px;
       font-size: 1.5em;
+      font-weight: 600;
     }
     p {
       margin-bottom: 15px;
+      color: #eaf0f8;
     }
     .config-box {
-      background: #f8f9fa;
-      border-left: 4px solid #667eea;
+      background: #0F0F0F;
+      border-left: 4px solid #1a81fa;
       padding: 20px;
       margin: 20px 0;
       border-radius: 4px;
       font-family: "Courier New", monospace;
       overflow-x: auto;
+      border: 1px solid #232e3c;
+    }
+    .config-box strong {
+      color: #1a81fa;
+      display: block;
+      margin-bottom: 10px;
     }
     .config-box pre {
       margin: 0;
       white-space: pre-wrap;
       word-wrap: break-word;
+      color: #eaf0f8;
     }
     .link-box {
-      background: #e3f2fd;
-      border-left: 4px solid #2196f3;
+      background: #0F0F0F;
+      border-left: 4px solid #8854fc;
       padding: 15px;
       margin: 20px 0;
       border-radius: 4px;
+      border: 1px solid #232e3c;
+    }
+    .link-box p {
+      color: #eaf0f8;
+    }
+    ul {
+      color: #eaf0f8;
+    }
+    li {
+      margin-bottom: 8px;
     }
     a {
-      color: #667eea;
+      color: #1a81fa;
       text-decoration: none;
       font-weight: 500;
     }
     a:hover {
+      color: #8854fc;
       text-decoration: underline;
     }
     code {
-      background: #f1f3f4;
+      background: #232e3c;
+      color: #1a81fa;
       padding: 2px 6px;
       border-radius: 3px;
       font-family: "Courier New", monospace;
