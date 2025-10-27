@@ -506,7 +506,7 @@ async function startServer() {
   });
 
   // Stateless MCP endpoint
-  app.post('/mcp', async (req: Request, res: Response) => {
+  app.post('/', async (req: Request, res: Response) => {
     try {
       // Create new server and transport instances for each request (stateless)
       const server = createMcpServer();
@@ -542,7 +542,7 @@ async function startServer() {
   });
 
   // SSE notifications not supported in stateless mode
-  app.get('/mcp', async (req: Request, res: Response) => {
+  app.get('/', async (req: Request, res: Response) => {
     console.log('Received GET MCP request');
     res.writeHead(405).end(JSON.stringify({
       jsonrpc: "2.0",
@@ -555,7 +555,7 @@ async function startServer() {
   });
 
   // Session termination not needed in stateless mode
-  app.delete('/mcp', async (req: Request, res: Response) => {
+  app.delete('/', async (req: Request, res: Response) => {
     console.log('Received DELETE MCP request');
     res.writeHead(405).end(JSON.stringify({
       jsonrpc: "2.0",
@@ -571,7 +571,7 @@ async function startServer() {
   const port = config.server.httpPort;
   app.listen(port, () => {
     console.log(`🚀 Vaadin Documentation MCP Server (HTTP) listening on port ${port}`);
-    console.log(`📍 MCP endpoint: http://localhost:${port}/mcp`);
+    console.log(`📍 MCP endpoint: http://localhost:${port}/`);
     console.log(`🏥 Health check: http://localhost:${port}/health`);
     console.log(`🔧 Transport: Streamable HTTP (stateless mode)`);
     console.log(`🔗 REST Server: ${config.restServer.url}`);
