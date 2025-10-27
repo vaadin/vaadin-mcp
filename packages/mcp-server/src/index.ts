@@ -543,15 +543,139 @@ async function startServer() {
 
   // SSE notifications not supported in stateless mode
   app.get('/', async (req: Request, res: Response) => {
-    console.log('Received GET MCP request');
-    res.writeHead(405).end(JSON.stringify({
-      jsonrpc: "2.0",
-      error: {
-        code: -32000,
-        message: "Method not allowed. This server operates in stateless mode."
-      },
-      id: null
-    }));
+    console.log('Received GET MCP request - returning setup page');
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vaadin MCP Server</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+    }
+    h1 {
+      color: #667eea;
+      margin-bottom: 20px;
+      font-size: 2.5em;
+    }
+    h2 {
+      color: #764ba2;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      font-size: 1.5em;
+    }
+    p {
+      margin-bottom: 15px;
+    }
+    .config-box {
+      background: #f8f9fa;
+      border-left: 4px solid #667eea;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+      font-family: "Courier New", monospace;
+      overflow-x: auto;
+    }
+    .config-box pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .link-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    code {
+      background: #f1f3f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: "Courier New", monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Vaadin MCP Server</h1>
+
+    <p>
+      The Vaadin Model Context Protocol (MCP) server provides AI tools like Claude Code and Junie
+      with direct access to comprehensive Vaadin documentation, enabling intelligent code assistance
+      for Vaadin Java and React applications.
+    </p>
+
+    <h2>📋 Configuration</h2>
+    <p>To enable the Vaadin MCP server in your AI tool, add the following configuration:</p>
+
+    <div class="config-box">
+      <strong>For Claude Code:</strong>
+      <pre>{
+  "mcpServers": {
+    "vaadin": {
+      "type": "http",
+      "url": "https://mcp.vaadin.com/docs"
+    }
+  }
+}</pre>
+    </div>
+
+    <div class="config-box">
+      <strong>For Junie or other MCP clients:</strong>
+      <pre>Server URL: https://mcp.vaadin.com/docs</pre>
+    </div>
+
+    <h2>✨ What's Included</h2>
+    <ul style="margin-left: 20px; margin-bottom: 15px;">
+      <li>Semantic search across Vaadin documentation</li>
+      <li>Full document retrieval for complete context</li>
+      <li>Component version information and API references</li>
+      <li>Support for both Java and React applications</li>
+      <li>Current Vaadin version information</li>
+    </ul>
+
+    <h2>🔗 Resources</h2>
+    <div class="link-box">
+      <p><strong>GitHub Repository:</strong></p>
+      <p><a href="https://github.com/vaadin/vaadin-mcp" target="_blank">https://github.com/vaadin/vaadin-mcp</a></p>
+      <p style="margin-top: 10px;">View source code, report issues, and contribute to the project.</p>
+    </div>
+
+    <div class="link-box">
+      <p><strong>Vaadin Documentation:</strong></p>
+      <p><a href="https://vaadin.com/docs" target="_blank">https://vaadin.com/docs</a></p>
+      <p style="margin-top: 10px;">Browse the full Vaadin documentation.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
   });
 
   // Session termination not needed in stateless mode
