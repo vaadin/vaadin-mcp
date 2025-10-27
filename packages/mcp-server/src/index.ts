@@ -119,7 +119,7 @@ function setupTools(server: McpServer) {
     "get_components_by_version",
     {
       title: "Get Components by Version",
-      description: "Returns a comprehensive list of components available in a specific Vaadin version, including component names, React/Hilla component names, Java class names, and npm packages.",
+      description: "Returns a comprehensive list of components available in a specific Vaadin version, including component names, React component names, Java class names, and npm packages.",
       inputSchema: {
         version: z.string().describe("The Vaadin version as a minor version (e.g., '24.8', '24.9', '25.0')")
       }
@@ -133,8 +133,8 @@ function setupTools(server: McpServer) {
   server.registerTool(
     "get_component_java_api",
     {
-      title: "Get Component Java (Flow) API",
-      description: "Returns the Java/Flow API documentation for a specific Vaadin component. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
+      title: "Get Component Java API",
+      description: "Returns the Java API documentation for a specific Vaadin component. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
       inputSchema: {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
       }
@@ -148,8 +148,8 @@ function setupTools(server: McpServer) {
   server.registerTool(
     "get_component_react_api",
     {
-      title: "Get Component React (Hilla) API",
-      description: "Returns the React/Hilla API documentation for a specific Vaadin component. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
+      title: "Get Component React API",
+      description: "Returns the React API documentation for a specific Vaadin component. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
       inputSchema: {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
       }
@@ -179,7 +179,7 @@ function setupTools(server: McpServer) {
     "get_component_styling",
     {
       title: "Get Component Styling",
-      description: "Returns the styling/theming documentation for a specific Vaadin component. Returns both Flow and Hilla styling documentation when available. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
+      description: "Returns the styling/theming documentation for a specific Vaadin component. Returns both Java and React styling documentation when available. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
       inputSchema: {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
       }
@@ -399,7 +399,7 @@ async function handleGetComponentJavaApiTool(args: any) {
           {
             type: 'text' as const,
             text: JSON.stringify({
-              error: `Component Flow (Java) API documentation not found for: ${args.component_name}`,
+              error: `Component Java API documentation not found for: ${args.component_name}`,
               normalized_name: normalized
             }, null, 2)
           }
@@ -415,9 +415,9 @@ async function handleGetComponentJavaApiTool(args: any) {
     const { metadata, content: markdownContent } = parseFrontmatter(content);
 
     // Format the response
-    let output = `# ${metadata?.title || args.component_name} - Java (Flow) API\n\n`;
+    let output = `# ${metadata?.title || args.component_name} - Java API\n\n`;
     output += `**Component:** ${args.component_name}\n`;
-    output += `**Framework:** Flow (Java)\n`;
+    output += `**Framework:** Java\n`;
     if (metadata?.source_url) {
       output += `**Documentation URL:** ${metadata.source_url}\n`;
     }
@@ -473,7 +473,7 @@ async function handleGetComponentReactApiTool(args: any) {
           {
             type: 'text' as const,
             text: JSON.stringify({
-              error: `Component Hilla (React) API documentation not found for: ${args.component_name}`,
+              error: `Component React API documentation not found for: ${args.component_name}`,
               normalized_name: normalized
             }, null, 2)
           }
@@ -489,9 +489,9 @@ async function handleGetComponentReactApiTool(args: any) {
     const { metadata, content: markdownContent } = parseFrontmatter(content);
 
     // Format the response
-    let output = `# ${metadata?.title || args.component_name} - React (Hilla) API\n\n`;
+    let output = `# ${metadata?.title || args.component_name} - React API\n\n`;
     output += `**Component:** ${args.component_name}\n`;
-    output += `**Framework:** Hilla (React)\n`;
+    output += `**Framework:** React\n`;
     if (metadata?.source_url) {
       output += `**Documentation URL:** ${metadata.source_url}\n`;
     }
@@ -535,7 +535,7 @@ async function handleGetComponentWebComponentApiTool(args: any) {
     // Normalize component name
     const normalized = normalizeComponentName(args.component_name);
 
-    // Read the Flow documentation to extract the TypeScript API URL from frontmatter
+    // Read the Java documentation to extract the TypeScript API URL from frontmatter
     const filePath = `components/${normalized}/index-flow.md`;
     const fileLocation = findComponentFile(filePath);
 
@@ -658,7 +658,7 @@ async function handleGetComponentStylingTool(args: any) {
     // Normalize component name
     const normalized = normalizeComponentName(args.component_name);
 
-    // Try to find both Flow and Hilla styling files
+    // Try to find both Java and React styling files
     const flowFilePath = `components/${normalized}/styling-flow.md`;
     const hillaFilePath = `components/${normalized}/styling-hilla.md`;
 
@@ -684,12 +684,12 @@ async function handleGetComponentStylingTool(args: any) {
     let output = `# ${args.component_name} - Styling Documentation\n\n`;
     output += `**Component:** ${args.component_name}\n\n`;
 
-    // Add Flow styling if available
+    // Add Java styling if available
     if (flowFileLocation) {
       const content = fs.readFileSync(flowFileLocation.fullPath, 'utf8');
       const { metadata, content: markdownContent } = parseFrontmatter(content);
 
-      output += `## Flow (Java) Styling\n\n`;
+      output += `## Java Styling\n\n`;
       if (metadata?.source_url) {
         output += `**Documentation URL:** ${metadata.source_url}\n\n`;
       }
@@ -697,12 +697,12 @@ async function handleGetComponentStylingTool(args: any) {
       output += `---\n\n`;
     }
 
-    // Add Hilla styling if available
+    // Add React styling if available
     if (hillaFileLocation) {
       const content = fs.readFileSync(hillaFileLocation.fullPath, 'utf8');
       const { metadata, content: markdownContent } = parseFrontmatter(content);
 
-      output += `## Hilla (React) Styling\n\n`;
+      output += `## React Styling\n\n`;
       if (metadata?.source_url) {
         output += `**Documentation URL:** ${metadata.source_url}\n\n`;
       }

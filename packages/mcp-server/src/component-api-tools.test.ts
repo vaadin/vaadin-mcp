@@ -147,11 +147,11 @@ async function testFindComponentFile() {
  * Test reading actual component documentation files
  */
 async function testReadActualComponentDocs() {
-  // Try to find and read button component Flow documentation
+  // Try to find and read button component Java documentation
   const buttonPath = 'components/button/index-flow.md';
   const buttonFile = findComponentFile(buttonPath);
 
-  assertTrue(buttonFile !== null, 'Button component Flow documentation should exist');
+  assertTrue(buttonFile !== null, 'Button component Java documentation should exist');
 
   const content = fs.readFileSync(buttonFile!.fullPath, 'utf8');
   const { metadata, content: markdownContent } = parseFrontmatter(content);
@@ -176,25 +176,25 @@ async function testReadStylingDocs() {
   const hillaFile = findComponentFile(hillaStylingPath);
 
   // At least one styling file should exist for button
-  assertTrue(flowFile !== null || hillaFile !== null, 'Button component should have at least one styling documentation file (Flow or Hilla)');
+  assertTrue(flowFile !== null || hillaFile !== null, 'Button component should have at least one styling documentation file (Java or React)');
 
   if (flowFile) {
     const content = fs.readFileSync(flowFile.fullPath, 'utf8');
     const { metadata, content: markdownContent } = parseFrontmatter(content);
 
-    assertTrue(content.length > 0, 'Flow styling content should not be empty');
+    assertTrue(content.length > 0, 'Java styling content should not be empty');
     assertTrue(
       markdownContent.includes('theme') ||
       markdownContent.includes('style') ||
       markdownContent.includes('CSS') ||
       markdownContent.includes('Lumo'),
-      'Flow styling should mention theming or styling'
+      'Java styling should mention theming or styling'
     );
   }
 
   if (hillaFile) {
     const content = fs.readFileSync(hillaFile.fullPath, 'utf8');
-    assertTrue(content.length > 0, 'Hilla styling content should not be empty');
+    assertTrue(content.length > 0, 'React styling content should not be empty');
   }
 }
 
