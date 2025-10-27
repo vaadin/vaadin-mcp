@@ -281,7 +281,7 @@ export async function runComponentApiHelperTests(): Promise<{ passed: number; fa
 /**
  * CLI interface for running tests
  */
-if (import.meta.main) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   runComponentApiHelperTests().then(result => {
     process.exit(result.failed > 0 ? 1 : 0);
   });
