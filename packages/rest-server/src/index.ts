@@ -169,14 +169,6 @@ app.get('/', (req: Request, res: Response) => {
     a:hover {
       text-decoration: underline;
     }
-    .footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-      text-align: center;
-      color: #666;
-      font-size: 0.9em;
-    }
     code {
       background: #f1f3f4;
       padding: 2px 6px;
@@ -192,7 +184,7 @@ app.get('/', (req: Request, res: Response) => {
     <p>
       The Vaadin Model Context Protocol (MCP) server provides AI tools like Claude Code and Junie
       with direct access to comprehensive Vaadin documentation, enabling intelligent code assistance
-      for Vaadin Flow and Hilla applications.
+      for Vaadin Java and React applications.
     </p>
 
     <h2>📋 Configuration</h2>
@@ -220,7 +212,7 @@ app.get('/', (req: Request, res: Response) => {
       <li>Semantic search across Vaadin documentation</li>
       <li>Full document retrieval for complete context</li>
       <li>Component version information and API references</li>
-      <li>Support for both Flow (Java) and Hilla (React) frameworks</li>
+      <li>Support for both Java and React applications</li>
       <li>Current Vaadin version information</li>
     </ul>
 
@@ -235,11 +227,6 @@ app.get('/', (req: Request, res: Response) => {
       <p><strong>Vaadin Documentation:</strong></p>
       <p><a href="https://vaadin.com/docs" target="_blank">https://vaadin.com/docs</a></p>
       <p style="margin-top: 10px;">Browse the full Vaadin documentation.</p>
-    </div>
-
-    <div class="footer">
-      <p>Vaadin MCP Server v${config.server.version}</p>
-      <p>Powered by <a href="https://vaadin.com" target="_blank">Vaadin</a></p>
     </div>
   </div>
 </body>
