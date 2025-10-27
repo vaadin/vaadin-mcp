@@ -6,14 +6,14 @@ This package provides a Model Context Protocol (MCP) server for accessing Vaadin
 
 The MCP server is deployed and available remotely via HTTP transport:
 
-**Production Server**: `https://vaadin-mcp.fly.dev/mcp`
+**Production Server**: `https://mcp.vaadin.com/`
 
 ### Usage with MCP Clients
 
 To connect to the remote MCP server, use the Streamable HTTP transport with the following endpoint:
 
 ```
-https://vaadin-mcp.fly.dev/mcp
+https://mcp.vaadin.com/
 ```
 
 Example client configuration:
@@ -22,7 +22,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 const transport = new StreamableHTTPClientTransport(
-  new URL("https://vaadin-mcp.fly.dev/mcp")
+  new URL("https://mcp.vaadin.com/")
 );
 
 const client = new Client({
@@ -38,7 +38,7 @@ await client.connect(transport);
 The HTTP server provides a health check endpoint:
 
 ```
-GET https://vaadin-mcp.fly.dev/health
+GET https://mcp.vaadin.com/health
 ```
 
 Response:
@@ -106,7 +106,7 @@ The HTTP server runs on port 8080 by default. You can test it with:
 curl http://localhost:8080/health
 
 # MCP initialization
-curl -X POST http://localhost:8080/mcp \
+curl -X POST http://localhost:8080/ \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{
