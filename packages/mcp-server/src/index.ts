@@ -13,7 +13,6 @@ import cors from 'cors';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { config } from './config.js';
-import { VAADIN_PRIMER_CONTENT } from './vaadin-primer.js';
 import { z } from 'zod';
 import { handleGetComponentsByVersionTool } from './tools/get-components-by-version/index.js';
 import {
@@ -24,6 +23,7 @@ import {
 } from './tools/component-api/index.js';
 import { handleSearchTool, handleGetFullDocumentTool } from './tools/search-and-docs/index.js';
 import { handleGetVaadinVersionTool } from './tools/vaadin-version/index.js';
+import { handleGetVaadinPrimerTool } from './tools/vaadin-primer/index.js';
 
 /**
  * Search result interface (legacy compatibility)
@@ -192,20 +192,6 @@ function setupTools(server: McpServer) {
       return await handleGetComponentStylingTool(args);
     }
   );
-}
-
-/**
- * Handle get_vaadin_primer tool
- */
-async function handleGetVaadinPrimerTool() {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: VAADIN_PRIMER_CONTENT
-      }
-    ]
-  };
 }
 
 /**

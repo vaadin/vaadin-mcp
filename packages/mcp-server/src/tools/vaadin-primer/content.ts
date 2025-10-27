@@ -1,7 +1,7 @@
 /**
  * Vaadin Development Primer Content
- * 
- * This file exports the primer content as a TypeScript constant to avoid 
+ *
+ * This file exports the primer content as a TypeScript constant to avoid
  * the need for file system operations and custom build scripts.
  */
 
@@ -26,11 +26,11 @@ Vaadin is a **full-stack platform** for building business web applications in Ja
 - Entire UI built in Java - server-side component model with automatic client-server sync
 - Choose when: Java-focused teams, traditional business apps, prefer component-based development and as the default if Hilla is not explicitly requested
 
-### ⚡ Vaadin Hilla (React + TypeScript Frontend)  
+### ⚡ Vaadin Hilla (React + TypeScript Frontend)
 - React/TypeScript UI with type-safe automatic API generation from Java backend
 - Choose when: Teams with React expertise, need client-side routing, building public-facing apps
 
-**Key**: Projects typically choose one model. You can mix them, but only when there's a specific need (e.g., offline functionality). 
+**Key**: Projects typically choose one model. You can mix them, but only when there's a specific need (e.g., offline functionality).
 
 ## 🚀 Getting Started (The Modern Way)
 
@@ -138,14 +138,14 @@ Hilla's key feature is **type-safe communication** between React frontend and Ja
 @BrowserCallable
 @Service
 public class TaskEndpoint {
-    
+
     private final TaskService taskService;
-    
+
     // Simple method with validation
     public Task createTask(@Valid CreateTaskRequest request) {
         return taskService.createTask(request);
     }
-    
+
     // Method that can throw exceptions
     public void deleteTask(UUID taskId) throws TaskNotFoundException {
         taskService.deleteTask(taskId);
