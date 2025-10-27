@@ -68,6 +68,114 @@ function assertContains(haystack: string, needle: string, message?: string) {
 }
 
 /**
+ * Setup test fixtures for component API tests
+ */
+function setupTestFixtures() {
+  const testDir = path.join(process.cwd(), 'test-fixtures', 'components', 'button');
+
+  // Create test directory
+  if (!fs.existsSync(testDir)) {
+    fs.mkdirSync(testDir, { recursive: true });
+  }
+
+  // Create button/index-flow.md
+  const flowContent = `---
+framework: flow
+source_url: https://vaadin.com/docs/components/button
+title: Button
+page-links:
+- 'API: https://cdn.vaadin.com/vaadin-web-components/24.5.0/#/elements/vaadin-button[TypeScript] / https://vaadin.com/api/platform/24.5.0/com/vaadin/flow/component/button/Button.html[Java]'
+---
+
+# Button
+
+A Button allows users to trigger actions.
+
+\`\`\`java
+Button button = new Button("Click me");
+button.addClickListener(e -> Notification.show("Clicked!"));
+\`\`\`
+`;
+
+  fs.writeFileSync(path.join(testDir, 'index-flow.md'), flowContent);
+
+  // Create button/index-hilla.md
+  const hillaContent = `---
+framework: hilla
+source_url: https://vaadin.com/docs/components/button
+title: Button
+---
+
+# Button
+
+A Button component for React applications.
+
+\`\`\`tsx
+import { Button } from '@vaadin/react-components';
+
+<Button onClick={() => alert('Clicked!')}>Click me</Button>
+\`\`\`
+`;
+
+  fs.writeFileSync(path.join(testDir, 'index-hilla.md'), hillaContent);
+
+  // Create button/styling-flow.md
+  const flowStylingContent = `---
+framework: flow
+source_url: https://vaadin.com/docs/components/button/styling
+title: Button Styling
+---
+
+# Button Styling
+
+## Theme Variants
+
+\`\`\`java
+Button primary = new Button("Primary");
+primary.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+\`\`\`
+
+Use Lumo theme variants to style buttons.
+`;
+
+  fs.writeFileSync(path.join(testDir, 'styling-flow.md'), flowStylingContent);
+
+  // Create button/styling-hilla.md
+  const hillaStylingContent = `---
+framework: hilla
+source_url: https://vaadin.com/docs/components/button/styling
+title: Button Styling
+---
+
+# Button Styling
+
+## Theme Variants
+
+\`\`\`tsx
+<Button theme="primary">Primary</Button>
+\`\`\`
+
+Apply theme attributes for styling.
+`;
+
+  fs.writeFileSync(path.join(testDir, 'styling-hilla.md'), hillaStylingContent);
+
+  // Enable test mode
+  process.env.TEST_MODE = 'true';
+}
+
+/**
+ * Cleanup test fixtures
+ */
+function cleanupTestFixtures() {
+  const testDir = path.join(process.cwd(), 'test-fixtures');
+  if (fs.existsSync(testDir)) {
+    fs.rmSync(testDir, { recursive: true, force: true });
+  }
+  delete process.env.TEST_MODE;
+}
+
+/**
  * Test normalizeComponentName function
  */
 async function testNormalizeComponentName() {
@@ -123,78 +231,97 @@ This is the content.`;
 }
 
 /**
- * Test findComponentFile function with real component files
+ * Test findComponentFile function with component files
  */
 async function testFindComponentFile() {
-  // Try to find a real component (button is very likely to exist)
-  const buttonFlowPath = 'components/button/index-flow.md';
-  const buttonFile = findComponentFile(buttonFlowPath);
+  // Set up test fixtures
+  setupTestFixtures();
 
-  // If button exists, test it
-  if (buttonFile) {
-    assertTrue(fs.existsSync(buttonFile.fullPath), 'Found file should exist');
-    assertTrue(buttonFile.fullPath.includes('button'), 'Path should contain button');
-    assertTrue(buttonFile.fullPath.endsWith('index-flow.md'), 'Path should end with index-flow.md');
+  try {
+    // Try to find button component
+    const buttonFlowPath = 'components/button/index-flow.md';
+    const buttonFile = findComponentFile(buttonFlowPath);
+
+    assertTrue(buttonFile !== null, 'Button component file should be found');
+    assertTrue(fs.existsSync(buttonFile!.fullPath), 'Found file should exist');
+    assertTrue(buttonFile!.fullPath.includes('button'), 'Path should contain button');
+    assertTrue(buttonFile!.fullPath.endsWith('index-flow.md'), 'Path should end with index-flow.md');
+
+    // Test non-existent component
+    const nonExistentPath = 'components/non-existent-component-xyz/index-flow.md';
+    const nonExistentFile = findComponentFile(nonExistentPath);
+    assertEqual(nonExistentFile, null, 'Non-existent component should return null');
+  } finally {
+    cleanupTestFixtures();
   }
-
-  // Test non-existent component
-  const nonExistentPath = 'components/non-existent-component-xyz/index-flow.md';
-  const nonExistentFile = findComponentFile(nonExistentPath);
-  assertEqual(nonExistentFile, null, 'Non-existent component should return null');
 }
 
 /**
  * Test reading actual component documentation files
  */
 async function testReadActualComponentDocs() {
-  // Try to find and read button component Java documentation
-  const buttonPath = 'components/button/index-flow.md';
-  const buttonFile = findComponentFile(buttonPath);
+  // Set up test fixtures
+  setupTestFixtures();
 
-  assertTrue(buttonFile !== null, 'Button component Java documentation should exist');
+  try {
+    // Try to find and read button component Java documentation
+    const buttonPath = 'components/button/index-flow.md';
+    const buttonFile = findComponentFile(buttonPath);
 
-  const content = fs.readFileSync(buttonFile!.fullPath, 'utf8');
-  const { metadata, content: markdownContent } = parseFrontmatter(content);
+    assertTrue(buttonFile !== null, 'Button component Java documentation should exist');
 
-  // Verify structure
-  assertTrue(content.length > 0, 'Content should not be empty');
-  assertEqual(metadata.framework, 'flow', 'Button framework should be flow');
-  assertTrue(metadata.source_url !== undefined, 'Button should have source_url in metadata');
-  assertTrue(markdownContent.length > 0, 'Markdown content should not be empty');
-  assertTrue(markdownContent.includes('Button') || markdownContent.includes('button'), 'Content should mention button');
+    const content = fs.readFileSync(buttonFile!.fullPath, 'utf8');
+    const { metadata, content: markdownContent } = parseFrontmatter(content);
+
+    // Verify structure
+    assertTrue(content.length > 0, 'Content should not be empty');
+    assertEqual(metadata.framework, 'flow', 'Button framework should be flow');
+    assertTrue(metadata.source_url !== undefined, 'Button should have source_url in metadata');
+    assertTrue(markdownContent.length > 0, 'Markdown content should not be empty');
+    assertTrue(markdownContent.includes('Button') || markdownContent.includes('button'), 'Content should mention button');
+  } finally {
+    cleanupTestFixtures();
+  }
 }
 
 /**
  * Test reading styling documentation
  */
 async function testReadStylingDocs() {
-  // Try to find button styling documentation
-  const flowStylingPath = 'components/button/styling-flow.md';
-  const hillaStylingPath = 'components/button/styling-hilla.md';
+  // Set up test fixtures
+  setupTestFixtures();
 
-  const flowFile = findComponentFile(flowStylingPath);
-  const hillaFile = findComponentFile(hillaStylingPath);
+  try {
+    // Try to find button styling documentation
+    const flowStylingPath = 'components/button/styling-flow.md';
+    const hillaStylingPath = 'components/button/styling-hilla.md';
 
-  // At least one styling file should exist for button
-  assertTrue(flowFile !== null || hillaFile !== null, 'Button component should have at least one styling documentation file (Java or React)');
+    const flowFile = findComponentFile(flowStylingPath);
+    const hillaFile = findComponentFile(hillaStylingPath);
 
-  if (flowFile) {
-    const content = fs.readFileSync(flowFile.fullPath, 'utf8');
-    const { metadata, content: markdownContent } = parseFrontmatter(content);
+    // At least one styling file should exist for button
+    assertTrue(flowFile !== null || hillaFile !== null, 'Button component should have at least one styling documentation file (Java or React)');
 
-    assertTrue(content.length > 0, 'Java styling content should not be empty');
-    assertTrue(
-      markdownContent.includes('theme') ||
-      markdownContent.includes('style') ||
-      markdownContent.includes('CSS') ||
-      markdownContent.includes('Lumo'),
-      'Java styling should mention theming or styling'
-    );
-  }
+    if (flowFile) {
+      const content = fs.readFileSync(flowFile.fullPath, 'utf8');
+      const { metadata, content: markdownContent } = parseFrontmatter(content);
 
-  if (hillaFile) {
-    const content = fs.readFileSync(hillaFile.fullPath, 'utf8');
-    assertTrue(content.length > 0, 'React styling content should not be empty');
+      assertTrue(content.length > 0, 'Java styling content should not be empty');
+      assertTrue(
+        markdownContent.includes('theme') ||
+        markdownContent.includes('style') ||
+        markdownContent.includes('CSS') ||
+        markdownContent.includes('Lumo'),
+        'Java styling should mention theming or styling'
+      );
+    }
+
+    if (hillaFile) {
+      const content = fs.readFileSync(hillaFile.fullPath, 'utf8');
+      assertTrue(content.length > 0, 'React styling content should not be empty');
+    }
+  } finally {
+    cleanupTestFixtures();
   }
 }
 
