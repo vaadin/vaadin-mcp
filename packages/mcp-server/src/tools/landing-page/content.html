@@ -450,14 +450,16 @@
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>GitHub Copilot in VS Code supports MCP servers through Agent mode. Requires VS Code 1.99 or later.</p>
+          <p><strong>⚠️ Important:</strong> MCP servers only work when GitHub Copilot is used in <strong>Agent mode</strong>. Regular Copilot Chat does not support MCP.</p>
+
+          <p>Requires VS Code 1.99 or later.</p>
 
           <ol class="steps">
             <li>Create <code>.vscode/mcp.json</code> in your project root</li>
             <li>Add the configuration below</li>
             <li>Click the "Start" button that appears at the top of the MCP servers list</li>
-            <li>Open Copilot Chat → Select "Agent" mode from the popup menu</li>
-            <li>Click the tools icon to view available MCP servers</li>
+            <li><strong>Switch to Agent mode:</strong> Open Copilot Chat → Click the mode selector → Select "Agent"</li>
+            <li>Click the tools icon in Agent mode to view available MCP servers</li>
           </ol>
 
           <div class="config-box">
@@ -496,13 +498,16 @@
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>GitHub Copilot in JetBrains IDEs supports MCP servers through Agent mode (now in public preview as of May 2025).</p>
+          <p><strong>⚠️ Important:</strong> MCP servers only work when GitHub Copilot is used in <strong>Agent mode</strong>. Regular Copilot Chat does not support MCP.</p>
+
+          <p>Agent mode with MCP support is now in public preview for JetBrains IDEs (as of May 2025).</p>
 
           <ol class="steps">
             <li>Create <code>.vscode/mcp.json</code> in your project root (IntelliJ respects the same format as VS Code)</li>
             <li>Add the configuration below</li>
-            <li>Click the GitHub Copilot icon → Edit settings → find MCP Servers section</li>
-            <li>Or: Change to Agent mode → Click Tools icon → Add More Tools</li>
+            <li><strong>Switch to Agent mode:</strong> Click the GitHub Copilot icon → Change to Agent mode</li>
+            <li>Configure MCP servers: Click Tools icon → Add More Tools → Edit mcp.json</li>
+            <li>Or: Click GitHub Copilot icon → Edit settings → find MCP Servers section</li>
           </ol>
 
           <div class="config-box">
