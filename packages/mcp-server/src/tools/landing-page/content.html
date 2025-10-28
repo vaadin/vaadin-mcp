@@ -596,6 +596,49 @@ url = "https://mcp.vaadin.com/docs"</pre>
         </div>
       </details>
 
+      <!-- Gemini CLI -->
+      <details class="app-item">
+        <summary>
+          <div class="app-title">
+            <h3>Gemini CLI (Google)</h3>
+            <span class="badge badge-http">HTTP</span>
+          </div>
+          <span class="app-status">Native HTTP support</span>
+          <span class="app-chevron">›</span>
+        </summary>
+        <div class="app-content">
+          <p>Add the Vaadin MCP server to your Gemini CLI configuration. Access tools using <code>@vaadin</code> in your prompts.</p>
+
+          <ol class="steps">
+            <li>Open or create <code>~/.gemini/settings.json</code></li>
+            <li>Add the server configuration below</li>
+            <li>Restart Gemini CLI to load the new MCP server</li>
+          </ol>
+
+          <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'gemini-config')">Copy</button>
+            <strong>Configuration (~/.gemini/settings.json):</strong>
+            <pre id="gemini-config">{
+  "mcpServers": {
+    "vaadin": {
+      "httpUrl": "https://mcp.vaadin.com/docs"
+    }
+  }
+}</pre>
+          </div>
+
+          <div class="note">
+            <p><strong>Note:</strong> After configuration, you can access Vaadin documentation tools by using <code>@vaadin</code> in your prompts to Gemini CLI.</p>
+          </div>
+
+          <p><strong>Learn more:</strong></p>
+          <ul>
+            <li><a href="https://github.com/google-gemini/gemini-cli" target="_blank">Gemini CLI GitHub Repository</a></li>
+            <li><a href="https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md" target="_blank">Gemini CLI MCP Documentation</a></li>
+          </ul>
+        </div>
+      </details>
+
       <!-- Other Tools -->
       <details class="app-item">
         <summary>
