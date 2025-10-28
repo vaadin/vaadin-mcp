@@ -439,6 +439,100 @@
         </div>
       </details>
 
+      <!-- GitHub Copilot (VS Code) -->
+      <details class="app-item">
+        <summary>
+          <div class="app-title">
+            <h3>GitHub Copilot (VS Code)</h3>
+            <span class="badge badge-http">HTTP</span>
+          </div>
+          <span class="app-status">Agent mode required (VS Code 1.99+)</span>
+          <span class="app-chevron">›</span>
+        </summary>
+        <div class="app-content">
+          <p>GitHub Copilot in VS Code supports MCP servers through Agent mode. Requires VS Code 1.99 or later.</p>
+
+          <ol class="steps">
+            <li>Create <code>.vscode/mcp.json</code> in your project root</li>
+            <li>Add the configuration below</li>
+            <li>Click the "Start" button that appears at the top of the MCP servers list</li>
+            <li>Open Copilot Chat → Select "Agent" mode from the popup menu</li>
+            <li>Click the tools icon to view available MCP servers</li>
+          </ol>
+
+          <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'copilot-vscode')">Copy</button>
+            <strong>Configuration (.vscode/mcp.json):</strong>
+            <pre id="copilot-vscode">{
+  "servers": {
+    "vaadin": {
+      "type": "http",
+      "url": "https://mcp.vaadin.com/docs"
+    }
+  }
+}</pre>
+          </div>
+
+          <div class="note">
+            <p><strong>Note:</strong> If you're part of an organization with Copilot Business or Enterprise, the organization must enable the "MCP servers in Copilot" policy (disabled by default).</p>
+          </div>
+
+          <p><strong>Learn more:</strong></p>
+          <ul>
+            <li><a href="https://code.visualstudio.com/docs/copilot/chat/mcp-servers" target="_blank">VS Code MCP Documentation</a></li>
+            <li><a href="https://docs.github.com/en/copilot/customizing-copilot/extending-copilot-chat-with-mcp" target="_blank">GitHub Copilot MCP Guide</a></li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- GitHub Copilot (IntelliJ) -->
+      <details class="app-item">
+        <summary>
+          <div class="app-title">
+            <h3>GitHub Copilot (IntelliJ IDEA / JetBrains)</h3>
+            <span class="badge badge-http">HTTP</span>
+          </div>
+          <span class="app-status">Agent mode with MCP (Public Preview)</span>
+          <span class="app-chevron">›</span>
+        </summary>
+        <div class="app-content">
+          <p>GitHub Copilot in JetBrains IDEs supports MCP servers through Agent mode (now in public preview as of May 2025).</p>
+
+          <ol class="steps">
+            <li>Create <code>.vscode/mcp.json</code> in your project root (IntelliJ respects the same format as VS Code)</li>
+            <li>Add the configuration below</li>
+            <li>Click the GitHub Copilot icon → Edit settings → find MCP Servers section</li>
+            <li>Or: Change to Agent mode → Click Tools icon → Add More Tools</li>
+          </ol>
+
+          <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'copilot-intellij')">Copy</button>
+            <strong>Configuration (.vscode/mcp.json):</strong>
+            <pre id="copilot-intellij">{
+  "servers": {
+    "vaadin": {
+      "url": "https://mcp.vaadin.com/docs"
+    }
+  }
+}</pre>
+          </div>
+
+          <div class="note">
+            <p><strong>Known Issue:</strong> Some users report that tools may not appear if you configure MCP servers after IntelliJ has already started. For best results, create the <code>mcp.json</code> file before starting IntelliJ.</p>
+          </div>
+
+          <div class="note">
+            <p><strong>Note:</strong> If you're part of an organization with Copilot Business or Enterprise, the organization must enable the "MCP servers in Copilot" policy (disabled by default).</p>
+          </div>
+
+          <p><strong>Learn more:</strong></p>
+          <ul>
+            <li><a href="https://docs.github.com/en/copilot/customizing-copilot/extending-copilot-chat-with-mcp" target="_blank">GitHub Copilot MCP Guide</a></li>
+            <li><a href="https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/" target="_blank">JetBrains MCP Announcement</a></li>
+          </ul>
+        </div>
+      </details>
+
       <!-- Other Tools -->
       <details class="app-item">
         <summary>
