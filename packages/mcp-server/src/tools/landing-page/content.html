@@ -314,10 +314,12 @@
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>Add to your project's <code>.mcp.json</code> file or <code>~/.claude.json</code> for global access:</p>
+          <p>Add the Vaadin MCP server to your project or global configuration.</p>
+
           <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'claude-code-config')">Copy</button>
             <strong>Configuration:</strong>
-            <pre>{
+            <pre id="claude-code-config">{
   "mcpServers": {
     "vaadin": {
       "type": "http",
@@ -326,12 +328,16 @@
   }
 }</pre>
           </div>
+
           <p><strong>File locations:</strong></p>
           <ul>
-            <li>Project-scoped: <code>.mcp.json</code> (in project root, can be version-controlled)</li>
-            <li>User-scoped: <code>~/.claude.json</code> (global for all projects)</li>
+            <li>Project-scoped: <code>.mcp.json</code> (in project root)</li>
+            <li>Global: <code>~/.claude.json</code></li>
           </ul>
-          <p>💡 Restart Claude Code after making changes.</p>
+
+          <div class="note">
+            <p><strong>Note:</strong> Restart Claude Code after making configuration changes.</p>
+          </div>
         </div>
       </details>
 
@@ -346,10 +352,12 @@
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>Configure MCP servers for your project or globally:</p>
+          <p>Add the Vaadin MCP server to your project or global configuration.</p>
+
           <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'cursor-config')">Copy</button>
             <strong>Configuration:</strong>
-            <pre>{
+            <pre id="cursor-config">{
   "mcpServers": {
     "vaadin": {
       "type": "http",
@@ -358,12 +366,16 @@
   }
 }</pre>
           </div>
+
           <p><strong>File locations:</strong></p>
           <ul>
-            <li>Project-specific: <code>.cursor/mcp.json</code></li>
+            <li>Project-scoped: <code>.cursor/mcp.json</code></li>
             <li>Global: <code>~/.cursor/mcp.json</code></li>
           </ul>
-          <p>💡 Close and reopen Cursor to load the new configuration.</p>
+
+          <div class="note">
+            <p><strong>Note:</strong> Restart Cursor after making configuration changes.</p>
+          </div>
         </div>
       </details>
 
@@ -378,10 +390,12 @@
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>Access MCP settings through Windsurf Settings (bottom right) or <code>Cmd+Shift+P</code> → "Open Windsurf Settings":</p>
+          <p>Add the Vaadin MCP server through Windsurf Settings (bottom right) or <code>Cmd+Shift+P</code> → "Open Windsurf Settings".</p>
+
           <div class="config-box">
-            <strong>File: ~/.codeium/windsurf/mcp_config.json</strong>
-            <pre>{
+            <button class="copy-button" onclick="copyConfig(this, 'windsurf-config')">Copy</button>
+            <strong>Configuration (~/.codeium/windsurf/mcp_config.json):</strong>
+            <pre id="windsurf-config">{
   "mcpServers": {
     "vaadin": {
       "type": "http",
@@ -390,32 +404,36 @@
   }
 }</pre>
           </div>
-          <p>💡 Click the Hammer Icon on the Cascade toolbar to view connected MCP tools.</p>
+
+          <div class="note">
+            <p><strong>Note:</strong> Click the Hammer icon on the Cascade toolbar to view connected MCP tools.</p>
+          </div>
         </div>
       </details>
 
-      <!-- Junie/JetBrains -->
+      <!-- Junie (JetBrains IDEs) -->
       <details class="app-item">
         <summary>
           <div class="app-title">
             <h3>Junie (JetBrains IDEs)</h3>
             <span class="badge badge-http">via proxy</span>
           </div>
-          <span class="app-status">Requires HTTP shim</span>
+          <span class="app-status">Requires HTTP adapter</span>
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>Junie only supports stdio-based MCP servers. Use <a href="https://github.com/pyroprompts/mcp-stdio-to-streamable-http-adapter" target="_blank">@pyroprompts/mcp-stdio-to-streamable-http-adapter</a> to bridge stdio to the HTTP-based Vaadin MCP server:</p>
+          <p>Junie only supports stdio-based MCP servers. Use <a href="https://github.com/pyroprompts/mcp-stdio-to-streamable-http-adapter" target="_blank">@pyroprompts/mcp-stdio-to-streamable-http-adapter</a> to bridge stdio to the HTTP-based Vaadin MCP server.</p>
 
           <ol class="steps">
-            <li>Open IDE settings with <code>Ctrl+Alt+S</code> (Windows/Linux) or <code>Cmd+,</code> (macOS)</li>
+            <li>Open IDE settings: <code>Ctrl+Alt+S</code> (Windows/Linux) or <code>Cmd+,</code> (macOS)</li>
             <li>Navigate to Tools → Junie → MCP Settings</li>
             <li>Click the Add button and add the configuration below</li>
           </ol>
 
           <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'junie-config')">Copy</button>
             <strong>Configuration:</strong>
-            <pre>{
+            <pre id="junie-config">{
   "mcpServers": {
     "vaadin": {
       "command": "npx",
@@ -429,12 +447,65 @@
 }</pre>
           </div>
 
-          <p><strong>Note:</strong> The adapter uses environment variables to configure the connection. <code>URI</code> points to the Vaadin MCP server endpoint, and <code>MCP_NAME</code> is an identifier for the server.</p>
+          <div class="note">
+            <p><strong>Note:</strong> The adapter uses environment variables to configure the connection. <code>URI</code> points to the Vaadin MCP server endpoint, and <code>MCP_NAME</code> is an identifier for the server.</p>
+          </div>
 
           <p><strong>File locations:</strong></p>
           <ul>
+            <li>Project-scoped: <code>.junie/mcp/mcp.json</code></li>
             <li>Global: <code>~/.junie/mcp.json</code></li>
-            <li>Project-level: <code>.junie/mcp/mcp.json</code></li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- GitHub Copilot (JetBrains IDEs) -->
+      <details class="app-item">
+        <summary>
+          <div class="app-title">
+            <h3>GitHub Copilot (JetBrains IDEs)</h3>
+            <span class="badge badge-http">HTTP</span>
+          </div>
+          <span class="app-status">Agent mode required (Public Preview)</span>
+          <span class="app-chevron">›</span>
+        </summary>
+        <div class="app-content">
+          <p><strong>⚠️ Important:</strong> MCP servers only work when GitHub Copilot is used in <strong>Agent mode</strong>. Regular Copilot Chat does not support MCP.</p>
+
+          <p>Agent mode with MCP support is now in public preview for JetBrains IDEs (as of May 2025).</p>
+
+          <ol class="steps">
+            <li>Create <code>.vscode/mcp.json</code> in your project root (JetBrains IDEs use the same format as VS Code)</li>
+            <li>Add the configuration below</li>
+            <li><strong>Switch to Agent mode:</strong> Click the GitHub Copilot icon → Change to Agent mode</li>
+            <li>Configure MCP servers: Click Tools icon → Add More Tools → Edit mcp.json</li>
+            <li>Alternative: Click GitHub Copilot icon → Edit settings → MCP Servers section</li>
+          </ol>
+
+          <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'copilot-intellij')">Copy</button>
+            <strong>Configuration (.vscode/mcp.json):</strong>
+            <pre id="copilot-intellij">{
+  "servers": {
+    "vaadin": {
+      "url": "https://mcp.vaadin.com/docs"
+    }
+  }
+}</pre>
+          </div>
+
+          <div class="note">
+            <p><strong>Known Issue:</strong> Some users report that tools may not appear if MCP servers are configured after the IDE has started. For best results, create the <code>mcp.json</code> file before starting your IDE.</p>
+          </div>
+
+          <div class="note">
+            <p><strong>Enterprise Note:</strong> Organizations with Copilot Business or Enterprise must enable the "MCP servers in Copilot" policy (disabled by default).</p>
+          </div>
+
+          <p><strong>Learn more:</strong></p>
+          <ul>
+            <li><a href="https://docs.github.com/en/copilot/customizing-copilot/extending-copilot-chat-with-mcp" target="_blank">GitHub Copilot MCP Guide</a></li>
+            <li><a href="https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/" target="_blank">JetBrains MCP Announcement</a></li>
           </ul>
         </div>
       </details>
@@ -457,8 +528,8 @@
           <ol class="steps">
             <li>Create <code>.vscode/mcp.json</code> in your project root</li>
             <li>Add the configuration below</li>
-            <li>Click the "Start" button that appears at the top of the MCP servers list</li>
-            <li><strong>Switch to Agent mode:</strong> Open Copilot Chat → Click the mode selector → Select "Agent"</li>
+            <li>Click the Start button that appears at the top of the MCP servers list</li>
+            <li><strong>Switch to Agent mode:</strong> Open Copilot Chat → Click mode selector → Select "Agent"</li>
             <li>Click the tools icon in Agent mode to view available MCP servers</li>
           </ol>
 
@@ -476,64 +547,13 @@
           </div>
 
           <div class="note">
-            <p><strong>Note:</strong> If you're part of an organization with Copilot Business or Enterprise, the organization must enable the "MCP servers in Copilot" policy (disabled by default).</p>
+            <p><strong>Enterprise Note:</strong> Organizations with Copilot Business or Enterprise must enable the "MCP servers in Copilot" policy (disabled by default).</p>
           </div>
 
           <p><strong>Learn more:</strong></p>
           <ul>
             <li><a href="https://code.visualstudio.com/docs/copilot/chat/mcp-servers" target="_blank">VS Code MCP Documentation</a></li>
             <li><a href="https://docs.github.com/en/copilot/customizing-copilot/extending-copilot-chat-with-mcp" target="_blank">GitHub Copilot MCP Guide</a></li>
-          </ul>
-        </div>
-      </details>
-
-      <!-- GitHub Copilot (IntelliJ) -->
-      <details class="app-item">
-        <summary>
-          <div class="app-title">
-            <h3>GitHub Copilot (IntelliJ IDEA / JetBrains)</h3>
-            <span class="badge badge-http">HTTP</span>
-          </div>
-          <span class="app-status">Agent mode with MCP (Public Preview)</span>
-          <span class="app-chevron">›</span>
-        </summary>
-        <div class="app-content">
-          <p><strong>⚠️ Important:</strong> MCP servers only work when GitHub Copilot is used in <strong>Agent mode</strong>. Regular Copilot Chat does not support MCP.</p>
-
-          <p>Agent mode with MCP support is now in public preview for JetBrains IDEs (as of May 2025).</p>
-
-          <ol class="steps">
-            <li>Create <code>.vscode/mcp.json</code> in your project root (IntelliJ respects the same format as VS Code)</li>
-            <li>Add the configuration below</li>
-            <li><strong>Switch to Agent mode:</strong> Click the GitHub Copilot icon → Change to Agent mode</li>
-            <li>Configure MCP servers: Click Tools icon → Add More Tools → Edit mcp.json</li>
-            <li>Or: Click GitHub Copilot icon → Edit settings → find MCP Servers section</li>
-          </ol>
-
-          <div class="config-box">
-            <button class="copy-button" onclick="copyConfig(this, 'copilot-intellij')">Copy</button>
-            <strong>Configuration (.vscode/mcp.json):</strong>
-            <pre id="copilot-intellij">{
-  "servers": {
-    "vaadin": {
-      "url": "https://mcp.vaadin.com/docs"
-    }
-  }
-}</pre>
-          </div>
-
-          <div class="note">
-            <p><strong>Known Issue:</strong> Some users report that tools may not appear if you configure MCP servers after IntelliJ has already started. For best results, create the <code>mcp.json</code> file before starting IntelliJ.</p>
-          </div>
-
-          <div class="note">
-            <p><strong>Note:</strong> If you're part of an organization with Copilot Business or Enterprise, the organization must enable the "MCP servers in Copilot" policy (disabled by default).</p>
-          </div>
-
-          <p><strong>Learn more:</strong></p>
-          <ul>
-            <li><a href="https://docs.github.com/en/copilot/customizing-copilot/extending-copilot-chat-with-mcp" target="_blank">GitHub Copilot MCP Guide</a></li>
-            <li><a href="https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/" target="_blank">JetBrains MCP Announcement</a></li>
           </ul>
         </div>
       </details>
