@@ -7,9 +7,9 @@
 
 export const VAADIN_PRIMER_CONTENT = `# Vaadin Development Primer (2025+)
 
-**⚠️ Important: Read this document before working with Vaadin to ensure you have an accurate, up-to-date understanding of modern Vaadin development.**
+** Important: Read this document before working with Vaadin to ensure you have an accurate, up-to-date understanding of modern Vaadin development.**
 
-## 🔧 Available MCP Documentation Tools
+## Available MCP Documentation Tools
 
 When working with Vaadin, **always use these MCP tools to search the official documentation** instead of relying on potentially outdated information:
 
@@ -18,7 +18,7 @@ When working with Vaadin, **always use these MCP tools to search the official do
 - **\`get_full_document\`** - Retrieve complete documentation pages when you need full context beyond search snippets.
 - **\`get_vaadin_version\`** - Get the latest stable Vaadin version for dependency management.
 
-## 📚 When to Search Vaadin Documentation
+## When to Search Vaadin Documentation
 
 **ALWAYS search Vaadin documentation when asked about:**
 
@@ -61,17 +61,17 @@ When working with Vaadin, **always use these MCP tools to search the official do
 
 Vaadin is a **full-stack platform** for building business web applications in Java with **two development models**:
 
-### 🌊 Vaadin Flow (Server-Side UI in Java)
+### Server-Side UI in Java
 - Entire UI built in Java - server-side component model with automatic client-server sync
-- Choose when: Java-focused teams, traditional business apps, prefer component-based development and as the default if Hilla is not explicitly requested
+- Choose when: Java-focused teams, traditional business apps, prefer component-based development and as the default if React is not explicitly requested
 
-### ⚡ Vaadin Hilla (React + TypeScript Frontend)
+### ⚡ Client-Side UI in React, endpoints in Java
 - React/TypeScript UI with type-safe automatic API generation from Java backend
 - Choose when: Teams with React expertise, need client-side routing, building public-facing apps
 
 **Key**: Projects typically choose one model. You can mix them, but only when there's a specific need (e.g., offline functionality).
 
-## 🚀 Getting Started (The Modern Way)
+## Getting Started (The Modern Way)
 
 To generate a new Vaadin project with the latest stable version, download the zip from https://start.vaadin.com/skeleton
 
@@ -104,15 +104,15 @@ src/main/java/
 │   ├── Application.java              # Spring Boot main class
 │   ├── base/                         # Shared/reusable code
 │   │   ├── domain/
-│   │   └── ui/ (Flow only)
+│   │   └── ui/ (Java views only)
 │   ├── security/                     # Complete security setup
 │   └── taskmanagement/               # Example feature package
 │       ├── domain/                   # Entities, repositories
 │       ├── service/                  # Business logic
-│       └── ui/view/ (Flow only)      # UI components
+│       └── ui/view/ (Java views only) # UI components
 \`\`\`
 
-### Frontend Structure (Hilla only)
+### Frontend Structure (React only)
 \`\`\`
 src/main/frontend/
 ├── components/                       # Reusable React components
@@ -124,13 +124,13 @@ src/main/frontend/
 └── index.tsx                         # App entry point
 \`\`\`
 
-## 🔐 Built-in Security
+## Built-in Security
 
 **Spring Security** included by default: development mode (in-memory users), production mode (external identity providers), method-level security, type-safe user IDs. Fully customizable.
 
-## 🌐 Creating Views
+## Creating Views
 
-### Flow Views (Java)
+### Sever-Side Java Views
 Add \`@Route("path")\` annotation to classes extending Vaadin layouts:
 \`\`\`java
 @Route("dashboard")
@@ -139,17 +139,17 @@ public class DashboardView extends VerticalLayout {
 }
 \`\`\`
 
-### Hilla Views (React)
+### Client-Side React Views
 Use **filesystem-based routing** in \`src/main/frontend/views/\`:
 - \`views/dashboard.tsx\` → \`/dashboard\` route
 - \`views/@layout.tsx\` → shared layout wrapper
 - \`views/@index.tsx\` → root \`/\` route
 
-## 🧩 Component Ecosystem
+## Component Ecosystem
 
 **Use Vaadin's comprehensive component library first** before creating custom components. Vaadin includes:
 
-**Data Display & Entry**: Auto CRUD (Hilla only), Auto Grid (Hilla only), Auto Form (Hilla only), Button, Checkbox, Combo Box, Custom Field, Date Picker, Date Time Picker, Email Field, Multi-Select Combo Box, Number Field, Password Field, Radio Button, Select, Text Area, Text Field, Time Picker
+**Data Display & Entry**: Auto CRUD (React only), Auto Grid (React only), Auto Form (React only), Button, Checkbox, Combo Box, Custom Field, Date Picker, Date Time Picker, Email Field, Multi-Select Combo Box, Number Field, Password Field, Radio Button, Select, Text Area, Text Field, Time Picker
 
 **Layouts**: App Layout, Form Layout, Horizontal Layout, Master-Detail Layout, Scroller, Split Layout, Vertical Layout
 
@@ -161,15 +161,17 @@ Use **filesystem-based routing** in \`src/main/frontend/views/\`:
 
 **Approach**: Compose existing components and layouts before building custom ones from scratch.
 
-## 🏗️ Architecture Principles
+Note, newer Vaadin versions contain more components. Check for those using the dedicated tool when needed.
+
+## Architecture Principles
 
 **Feature-Based Organization**: Each feature in its own package (domain, service, ui). Use \`@Service\` + \`@Transactional\` + security annotations for business logic.
 
-**Hilla Type Safety**: \`@BrowserCallable\` services auto-generate TypeScript APIs with runtime validation.
+**React Type Safety**: \`@BrowserCallable\` services auto-generate TypeScript APIs with runtime validation.
 
-## 🌐 Hilla @BrowserCallable Endpoints
+## React @BrowserCallable Endpoints
 
-Hilla's key feature is **type-safe communication** between React frontend and Java backend through \`@BrowserCallable\` endpoints.
+React projects use **type-safe communication** between React frontend and Java backend through \`@BrowserCallable\` endpoints.
 
 ### Defining Endpoints in Java
 
@@ -231,22 +233,22 @@ const createTask = async (request: CreateTaskRequest) => {
 
 ### Key Benefits & Best Practices
 
-**✅ Full Stack Type Safety:** Java DTOs automatically become TypeScript interfaces with preserved method signatures and validation.
+** Full Stack Type Safety:** Java DTOs automatically become TypeScript interfaces with preserved method signatures and validation.
 
-**🎯 Best Practices:**
+** Best Practices:**
 - Use **record classes** for DTOs and **Bean Validation** annotations
 - Add \`@NonNullApi\` to \`package-info.java\` to avoid repetitive \`@NotNull\`
 - Keep endpoints **stateless** - delegate to injected services
 - Generate API after changes: \`./mvnw compile vaadin:generate\`
 
-**⚠️ Important:** Only \`@BrowserCallable\` methods are exposed. Security annotations (\`@RolesAllowed\`, etc.) work on endpoints.
+** Important:** Only \`@BrowserCallable\` methods are exposed. Security annotations (\`@RolesAllowed\`, etc.) work on endpoints.
 
-## 📦 Key Dependencies
+## Key Dependencies
 
 **Core**: \`vaadin-spring-boot-starter\` dependency + \`vaadin-bom\` for version management
-**Maven Plugin**: \`vaadin-maven-plugin\` handles frontend resources, optimization, TypeScript compilation, API generation (\`vaadin:generate\` for Hilla)
+**Maven Plugin**: \`vaadin-maven-plugin\` handles frontend resources, optimization, TypeScript compilation, API generation (\`vaadin:generate\` for React projects)
 
-## 🌐 Deployment & Production
+## Deployment & Production
 
 **Deployment**: Executable JAR (recommended), Docker containers, any Java-compatible cloud platform
 

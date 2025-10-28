@@ -65,7 +65,7 @@ function setupTools(server: McpServer) {
     "get_vaadin_primer",
     {
       title: "Vaadin Primer",
-      description: "🚨 IMPORTANT: Always use this tool FIRST before working with Vaadin Flow or Hilla. Returns a comprehensive primer document with current (2025+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Flow vs Hilla, project structure, components, and best practices. Essential reading to avoid outdated assumptions.",
+      description: "IMPORTANT: Always use this tool FIRST before working with Vaadin. Returns a comprehensive primer document with current (2025+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Java vs React development models, project structure, components, and best practices. Essential reading to avoid outdated assumptions.",
       inputSchema: {}
     },
     async () => {
@@ -78,16 +78,27 @@ function setupTools(server: McpServer) {
     "search_vaadin_docs",
     {
       title: "Search Vaadin Documentation",
-      description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. When using this tool, try to deduce the correct framework from context: use \"flow\" for Java-based views, \"hilla\" for React-based views, or \"common\" for both frameworks. Use get_full_document with file_paths containing the result's file_path when you need complete context.",
+      description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. When using this tool, try to deduce the correct development model from context: use \"java\" for Java-based views, \"react\" for React-based views, or \"common\" for both. Use get_full_document with file_paths containing the result's file_path when you need complete context.",
       inputSchema: {
         question: z.string().describe("The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword)."),
         max_results: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 5)"),
         max_tokens: z.number().min(100).max(5000).optional().describe("Maximum number of tokens to return (default: 1500)"),
-        framework: z.enum(['flow', 'hilla', 'common']).optional().describe('The Vaadin framework to focus on: "flow" for Java-based views, "hilla" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct framework from context or asking the user for clarification.')
+        ui_language: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.')
       }
     },
     async (args) => {
-      return await handleSearchTool(args);
+      // Convert ui_language parameter from java/react to flow/hilla for internal docs lookup
+      const convertedArgs = { ...args } as any;
+      if (args.ui_language === 'java') {
+        convertedArgs.framework = 'flow';
+      } else if (args.ui_language === 'react') {
+        convertedArgs.framework = 'hilla';
+      } else if (args.ui_language === 'common') {
+        convertedArgs.framework = 'common';
+      }
+      // Remove ui_language from converted args since REST API expects framework
+      delete convertedArgs.ui_language;
+      return await handleSearchTool(convertedArgs);
     }
   );
 
