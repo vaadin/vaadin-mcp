@@ -6,7 +6,7 @@
   "type": "module",
 
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/tools/landing-page/content.html dist/tools/landing-page/",
 
     "start": "bun run src/index.ts",
     "start:prod": "bun run dist/index.js",
