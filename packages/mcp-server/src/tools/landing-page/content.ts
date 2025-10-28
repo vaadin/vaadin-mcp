@@ -409,7 +409,7 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>Junie only supports stdio-based MCP servers. Use <a href="https://github.com/tollbit/mcp-streamable-http-shim" target="_blank">@tollbit/mcp-streamable-http-shim</a> to bridge stdio to the HTTP-based Vaadin MCP server:</p>
+          <p>Junie only supports stdio-based MCP servers. Use <a href="https://github.com/pyroprompts/mcp-stdio-to-streamable-http-adapter" target="_blank">@pyroprompts/mcp-stdio-to-streamable-http-adapter</a> to bridge stdio to the HTTP-based Vaadin MCP server:</p>
 
           <ol class="steps">
             <li>Open IDE settings with <code>Ctrl+Alt+S</code> (Windows/Linux) or <code>Cmd+,</code> (macOS)</li>
@@ -423,13 +423,17 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
   "mcpServers": {
     "vaadin": {
       "command": "npx",
-      "args": ["-y", "@tollbit/mcp-streamable-http-shim", "--url", "https://mcp.vaadin.com/docs"]
+      "args": ["@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
+      "env": {
+        "URI": "https://mcp.vaadin.com/docs",
+        "MCP_NAME": "vaadin"
+      }
     }
   }
 }</pre>
           </div>
 
-          <p><strong>Note:</strong> Using <code>npx -y</code> automatically downloads and runs the shim without prompts. The shim acts as a bridge, allowing Junie's stdio-based client to communicate with the remote HTTP MCP server.</p>
+          <p><strong>Note:</strong> The adapter uses environment variables to configure the connection. <code>URI</code> points to the Vaadin MCP server endpoint, and <code>MCP_NAME</code> is an identifier for the server.</p>
 
           <p><strong>File locations:</strong></p>
           <ul>
@@ -461,26 +465,30 @@ export const LANDING_PAGE_HTML = `<!DOCTYPE html>
           <p>The exact configuration format depends on your specific tool. Look for settings like "MCP Server URL", "HTTP transport", or "Streamable HTTP" in your tool's documentation.</p>
 
           <h3>If your tool only supports stdio:</h3>
-          <p>Use the HTTP shim to bridge stdio to HTTP. This works with any stdio-based MCP client:</p>
+          <p>Use an HTTP adapter to bridge stdio to HTTP. This works with any stdio-based MCP client:</p>
           <div class="config-box">
             <strong>Generic stdio configuration:</strong>
             <pre>{
   "mcpServers": {
     "vaadin": {
       "command": "npx",
-      "args": ["-y", "@tollbit/mcp-streamable-http-shim", "--url", "https://mcp.vaadin.com/docs"]
+      "args": ["@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
+      "env": {
+        "URI": "https://mcp.vaadin.com/docs",
+        "MCP_NAME": "vaadin"
+      }
     }
   }
 }</pre>
           </div>
-          <p>Adapt the JSON structure to match your tool's configuration format. The key parts are using <code>npx</code> to run <code>@tollbit/mcp-streamable-http-shim</code> with the <code>--url</code> parameter pointing to our server.</p>
+          <p>Adapt the JSON structure to match your tool's configuration format. The adapter uses environment variables: <code>URI</code> for the server endpoint and <code>MCP_NAME</code> as an identifier.</p>
         </div>
       </details>
     </div>
 
     <h2>🔧 Transport Types</h2>
     <div class="note">
-      <p><strong>Important:</strong> The Vaadin MCP server uses <strong>HTTP transport (streamable-http)</strong>. This is natively supported by Claude Code, Cursor, and Windsurf. For stdio-only tools like Junie, you can use <a href="https://github.com/tollbit/mcp-streamable-http-shim" target="_blank">@tollbit/mcp-streamable-http-shim</a> as a bridge between the two transport types.</p>
+      <p><strong>Important:</strong> The Vaadin MCP server uses <strong>HTTP transport (streamable-http)</strong>. This is natively supported by Claude Code, Cursor, and Windsurf. For stdio-only tools like Junie, you can use <a href="https://github.com/pyroprompts/mcp-stdio-to-streamable-http-adapter" target="_blank">@pyroprompts/mcp-stdio-to-streamable-http-adapter</a> as a bridge between the two transport types.</p>
     </div>
 
     <h2>✨ What's Included</h2>
