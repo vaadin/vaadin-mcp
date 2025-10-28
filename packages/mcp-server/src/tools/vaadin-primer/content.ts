@@ -18,6 +18,45 @@ When working with Vaadin, **always use these MCP tools to search the official do
 - **\`get_full_document\`** - Retrieve complete documentation pages when you need full context beyond search snippets.
 - **\`get_vaadin_version\`** - Get the latest stable Vaadin version for dependency management.
 
+## 📚 When to Search Vaadin Documentation
+
+**ALWAYS search Vaadin documentation when asked about:**
+
+### Testing & Quality Assurance
+- **TestBench** - UI testing framework (search: "TestBench", "UI unit tests", "browser testing")
+- **Unit testing** - Testing views and components (search: "unit testing", "testing views", "MockVaadin")
+- **Integration testing** - Testing with Spring (search: "integration testing", "Spring testing")
+- **End-to-end testing** - Complete application testing (search: "e2e testing", "TestBench")
+
+### Components & UI
+- Any **Vaadin component** (Button, Grid, Dialog, etc.) - Always search for component-specific documentation
+- **Component styling** (search: "styling", "theming", "CSS", "Lumo")
+- **Custom components** (search: "custom component", "web component", "LitElement")
+- **Layouts** (search: "layout", "responsive", "VerticalLayout", "HorizontalLayout")
+
+### Data Binding & Forms
+- **Binder** - Form data binding (search: "Binder", "form validation", "data binding")
+- **Data providers** - Grid and list data (search: "DataProvider", "lazy loading", "filtering")
+- **Validation** - Form validation (search: "validation", "Bean Validation", "validators")
+
+### Backend & Architecture
+- **@BrowserCallable** - Hilla endpoints (search: "BrowserCallable", "endpoints", "Hilla backend")
+- **Security** - Authentication, authorization (search: "security", "authentication", "Spring Security")
+- **State management** - Session state, broadcasting (search: "state", "session", "UI.access", "broadcast")
+- **Database access** - JPA, Spring Data (search: "database", "JPA", "repository")
+
+### Deployment & Production
+- **Production builds** (search: "production build", "production mode", "optimization")
+- **Docker** (search: "Docker", "containerization")
+- **Cloud deployment** (search: "cloud", "AWS", "Azure", "deployment")
+- **Performance** (search: "performance", "optimization", "caching")
+
+### Advanced Topics
+- **Push** - Server-to-client updates (search: "Push", "WebSocket", "server push")
+- **Collaboration Engine** - Real-time collaboration (search: "Collaboration Engine", "collaborative editing")
+- **Progressive Web Apps** (search: "PWA", "offline", "service worker")
+- **Custom themes** (search: "theme", "custom theme", "Lumo customization")
+
 ## What is Modern Vaadin?
 
 Vaadin is a **full-stack platform** for building business web applications in Java with **two development models**:
