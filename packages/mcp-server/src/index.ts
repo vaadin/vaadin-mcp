@@ -78,7 +78,7 @@ function setupTools(server: McpServer) {
     "search_vaadin_docs",
     {
       title: "Search Vaadin Documentation",
-      description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. When using this tool, try to deduce the correct development model from context: use \"java\" for Java-based views, \"react\" for React-based views, or \"common\" for both. Use get_full_document with file_paths containing the result's file_path when you need complete context.",
+      description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. USE THIS TOOL for questions about: Vaadin components (Button, Grid, Dialog, etc.), TestBench, UI testing, unit testing, integration testing, @BrowserCallable, Binder, DataProvider, validation, styling, theming, security, Push, Collaboration Engine, PWA, production builds, Docker, deployment, performance, and any Vaadin-specific topics. When using this tool, try to deduce the correct development model from context: use \"java\" for Java-based views, \"react\" for React-based views, or \"common\" for both. Use get_full_document with file_paths containing the result's file_path when you need complete context.",
       inputSchema: {
         question: z.string().describe("The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword)."),
         max_results: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 5)"),
