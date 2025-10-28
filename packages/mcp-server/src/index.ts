@@ -83,17 +83,21 @@ function setupTools(server: McpServer) {
         question: z.string().describe("The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword)."),
         max_results: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 5)"),
         max_tokens: z.number().min(100).max(5000).optional().describe("Maximum number of tokens to return (default: 1500)"),
-        framework: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.')
+        ui_language: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.')
       }
     },
     async (args) => {
-      // Convert framework parameter from java/react to flow/hilla for internal docs lookup
+      // Convert ui_language parameter from java/react to flow/hilla for internal docs lookup
       const convertedArgs = { ...args } as any;
-      if (args.framework === 'java') {
+      if (args.ui_language === 'java') {
         convertedArgs.framework = 'flow';
-      } else if (args.framework === 'react') {
+      } else if (args.ui_language === 'react') {
         convertedArgs.framework = 'hilla';
+      } else if (args.ui_language === 'common') {
+        convertedArgs.framework = 'common';
       }
+      // Remove ui_language from converted args since REST API expects framework
+      delete convertedArgs.ui_language;
       return await handleSearchTool(convertedArgs);
     }
   );
