@@ -558,6 +558,44 @@
         </div>
       </details>
 
+      <!-- Codex -->
+      <details class="app-item">
+        <summary>
+          <div class="app-title">
+            <h3>Codex (OpenAI)</h3>
+            <span class="badge badge-http">HTTP</span>
+          </div>
+          <span class="app-status">Native HTTP support</span>
+          <span class="app-chevron">›</span>
+        </summary>
+        <div class="app-content">
+          <p>Add the Vaadin MCP server to your Codex configuration. Works with both Codex CLI and IDE extension.</p>
+
+          <ol class="steps">
+            <li>Open or create <code>~/.codex/config.toml</code></li>
+            <li>Add the server configuration below</li>
+            <li>Restart Codex to load the new MCP server</li>
+          </ol>
+
+          <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'codex-config')">Copy</button>
+            <strong>Configuration (~/.codex/config.toml):</strong>
+            <pre id="codex-config">[mcp_servers.vaadin]
+url = "https://mcp.vaadin.com/docs"</pre>
+          </div>
+
+          <div class="note">
+            <p><strong>Note:</strong> Configuration is shared between Codex CLI and IDE extension. Both will have access to the Vaadin MCP server once configured.</p>
+          </div>
+
+          <p><strong>Learn more:</strong></p>
+          <ul>
+            <li><a href="https://developers.openai.com/codex/mcp/" target="_blank">Codex MCP Documentation</a></li>
+            <li><a href="https://github.com/openai/codex" target="_blank">Codex GitHub Repository</a></li>
+          </ul>
+        </div>
+      </details>
+
       <!-- Other Tools -->
       <details class="app-item">
         <summary>
