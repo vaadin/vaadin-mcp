@@ -569,23 +569,34 @@
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
+          <p><strong>⚠️ Requirements:</strong> HTTP-based MCP servers require Codex CLI version 0.43 or later. Upgrade with:</p>
+
+          <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'codex-upgrade')">Copy</button>
+            <strong>Upgrade Codex:</strong>
+            <pre id="codex-upgrade">npm install -g @openai/codex@latest</pre>
+          </div>
+
           <p>Add the Vaadin MCP server to your Codex configuration. Works with both Codex CLI and IDE extension.</p>
 
           <ol class="steps">
+            <li>Ensure you have Codex 0.43+ installed</li>
             <li>Open or create <code>~/.codex/config.toml</code></li>
-            <li>Add the server configuration below</li>
+            <li>Add the server configuration below (note: <code>experimental_use_rmcp_client</code> must be at the top level)</li>
             <li>Restart Codex to load the new MCP server</li>
           </ol>
 
           <div class="config-box">
             <button class="copy-button" onclick="copyConfig(this, 'codex-config')">Copy</button>
             <strong>Configuration (~/.codex/config.toml):</strong>
-            <pre id="codex-config">[mcp_servers.vaadin]
+            <pre id="codex-config">experimental_use_rmcp_client = true
+
+[mcp_servers.vaadin]
 url = "https://mcp.vaadin.com/docs"</pre>
           </div>
 
           <div class="note">
-            <p><strong>Note:</strong> Configuration is shared between Codex CLI and IDE extension. Both will have access to the Vaadin MCP server once configured.</p>
+            <p><strong>Important:</strong> Older versions of Codex (before 0.43) do not support HTTP-based MCP servers and will show "missing field command" errors. Upgrade to the latest version to use HTTP servers.</p>
           </div>
 
           <p><strong>Learn more:</strong></p>
