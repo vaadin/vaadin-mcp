@@ -1,5 +1,5 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "com.vaadin/docs-mcp",
   "description": "Provides Vaadin Documentation and help with development tasks",
   "status": "active",
@@ -7,7 +7,7 @@
     "url": "https://github.com/vaadin/vaadin-documentation-services",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "remotes": [
     {
       "type": "streamable-http",
