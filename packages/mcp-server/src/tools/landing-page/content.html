@@ -467,7 +467,7 @@
           <p>Agent mode with MCP support is now in public preview for JetBrains IDEs (as of May 2025).</p>
 
           <ol class="steps">
-            <li>Create <code>.vscode/mcp.json</code> in your project root (JetBrains IDEs use the same format as VS Code)</li>
+            <li>Create <code>.github/mcp-config.json</code> in your project root (JetBrains IDEs use the same format as VS Code)</li>
             <li>Add the configuration below</li>
             <li><strong>Switch to Agent mode:</strong> Click the GitHub Copilot icon → Change to Agent mode</li>
             <li>Configure MCP servers: Click Tools icon → Add More Tools → Edit mcp.json</li>
@@ -476,7 +476,7 @@
 
           <div class="config-box">
             <button class="copy-button" onclick="copyConfig(this, 'copilot-intellij')">Copy</button>
-            <strong>Configuration (.vscode/mcp.json):</strong>
+            <strong>Configuration (.github/mcp-config.json):</strong>
             <pre id="copilot-intellij">{
   "servers": {
     "vaadin": {
