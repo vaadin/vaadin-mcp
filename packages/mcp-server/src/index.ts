@@ -25,6 +25,7 @@ import { handleSearchTool, handleGetFullDocumentTool } from './tools/search-and-
 import { handleGetVaadinVersionTool } from './tools/vaadin-version/index.js';
 import { handleGetVaadinPrimerTool } from './tools/vaadin-primer/index.js';
 import { LANDING_PAGE_HTML } from './tools/landing-page/index.js';
+import { initializeAnalytics, withAnalytics } from './analytics/index.js';
 
 /**
  * Search result interface (legacy compatibility)
@@ -68,9 +69,9 @@ function setupTools(server: McpServer) {
       description: "IMPORTANT: Always use this tool FIRST before working with Vaadin. Returns a comprehensive primer document with current (2025+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Java vs React development models, project structure, components, and best practices. Essential reading to avoid outdated assumptions.",
       inputSchema: {}
     },
-    async () => {
+    withAnalytics("get_vaadin_primer", async () => {
       return await handleGetVaadinPrimerTool();
-    }
+    })
   );
 
   // Register search_vaadin_docs tool
@@ -86,7 +87,7 @@ function setupTools(server: McpServer) {
         ui_language: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.')
       }
     },
-    async (args) => {
+    withAnalytics("search_vaadin_docs", async (args) => {
       // Convert ui_language parameter from java/react to flow/hilla for internal docs lookup
       const convertedArgs = { ...args } as any;
       if (args.ui_language === 'java') {
@@ -99,7 +100,7 @@ function setupTools(server: McpServer) {
       // Remove ui_language from converted args since REST API expects framework
       delete convertedArgs.ui_language;
       return await handleSearchTool(convertedArgs);
-    }
+    })
   );
 
   // Register get_full_document tool
@@ -112,9 +113,9 @@ function setupTools(server: McpServer) {
         file_paths: z.array(z.string()).describe("Array of file paths from search results. Use this to fetch one or more documents in a single call.")
       }
     },
-    async (args) => {
+    withAnalytics("get_full_document", async (args) => {
       return await handleGetFullDocumentTool(args);
-    }
+    })
   );
 
   // Register get_vaadin_version tool
@@ -125,9 +126,9 @@ function setupTools(server: McpServer) {
       description: "Returns the latest stable version of Vaadin Core as a simple JSON object. This is useful when setting up new projects, checking for updates, or when helping with dependency management. Returns: {version, released}.",
       inputSchema: {}
     },
-    async () => {
+    withAnalytics("get_vaadin_version", async () => {
       return await handleGetVaadinVersionTool();
-    }
+    })
   );
 
   // Register get_components_by_version tool
@@ -140,9 +141,9 @@ function setupTools(server: McpServer) {
         version: z.string().describe("The Vaadin version as a minor version (e.g., '24.8', '24.9', '25.0')")
       }
     },
-    async (args) => {
+    withAnalytics("get_components_by_version", async (args) => {
       return await handleGetComponentsByVersionTool(args);
-    }
+    })
   );
 
   // Register get_component_java_api tool
@@ -155,9 +156,9 @@ function setupTools(server: McpServer) {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
       }
     },
-    async (args) => {
+    withAnalytics("get_component_java_api", async (args) => {
       return await handleGetComponentJavaApiTool(args);
-    }
+    })
   );
 
   // Register get_component_react_api tool
@@ -170,9 +171,9 @@ function setupTools(server: McpServer) {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
       }
     },
-    async (args) => {
+    withAnalytics("get_component_react_api", async (args) => {
       return await handleGetComponentReactApiTool(args);
-    }
+    })
   );
 
   // Register get_component_web_component_api tool
@@ -185,9 +186,9 @@ function setupTools(server: McpServer) {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
       }
     },
-    async (args) => {
+    withAnalytics("get_component_web_component_api", async (args) => {
       return await handleGetComponentWebComponentApiTool(args);
-    }
+    })
   );
 
   // Register get_component_styling tool
@@ -200,9 +201,9 @@ function setupTools(server: McpServer) {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')")
       }
     },
-    async (args) => {
+    withAnalytics("get_component_styling", async (args) => {
       return await handleGetComponentStylingTool(args);
-    }
+    })
   );
 }
 
@@ -210,6 +211,9 @@ function setupTools(server: McpServer) {
  * Main function to start the MCP HTTP server
  */
 async function startServer() {
+  // Initialize analytics
+  initializeAnalytics(config.analytics.amplitudeApiKey);
+
   const app = express();
   
   // Configure CORS to support browser-based MCP clients
