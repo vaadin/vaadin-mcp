@@ -12,13 +12,13 @@ export interface SearchProvider {
   /**
    * Perform semantic search
    */
-  semanticSearch(query: string, k: number, framework: string): Promise<SemanticResult[]>;
-  
+  semanticSearch(query: string, k: number, framework: string, vaadinVersion?: string): Promise<SemanticResult[]>;
+
   /**
    * Perform keyword search
    */
-  keywordSearch(query: string, k: number, framework: string): Promise<KeywordResult[]>;
-  
+  keywordSearch(query: string, k: number, framework: string, vaadinVersion?: string): Promise<KeywordResult[]>;
+
   /**
    * Get a document chunk by ID
    */

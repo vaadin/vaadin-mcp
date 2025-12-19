@@ -104,7 +104,8 @@ export class PineconeSparseProvider {
   async keywordSearch(
     query: string,
     k: number,
-    framework: string
+    framework: string,
+    vaadinVersion?: string
   ): Promise<KeywordResult[]> {
     try {
       // Extract meaningful keywords from query
@@ -116,8 +117,8 @@ export class PineconeSparseProvider {
 
       console.log(`🔍 Keyword search for: [${keywords.join(', ')}]`);
 
-      // Build framework filter
-      const filter = this.buildFrameworkFilter(framework);
+      // Build framework and version filter
+      const filter = this.buildFrameworkFilter(framework, vaadinVersion);
 
       // Search using keyword-focused query
       const keywordQuery = keywords.join(' ');
@@ -231,29 +232,31 @@ export class PineconeSparseProvider {
   }
 
   /**
-   * Build framework filter for Pinecone query
+   * Build framework and version filter for Pinecone query
    */
-  private buildFrameworkFilter(framework: string): any {
+  private buildFrameworkFilter(framework: string, vaadinVersion?: string): any {
+    const conditions = [];
+
+    // Framework filter
     if (framework === 'flow') {
-      return {
-        $or: [
-          { framework: 'flow' },
-          { framework: 'common' },
-          { framework: 'common' }
-        ]
-      };
+      conditions.push({
+        $or: [{ framework: 'flow' }, { framework: 'common' }]
+      });
     } else if (framework === 'hilla') {
-      return {
-        $or: [
-          { framework: 'hilla' },
-          { framework: 'common' },
-          { framework: 'common' }
-        ]
-      };
+      conditions.push({
+        $or: [{ framework: 'hilla' }, { framework: 'common' }]
+      });
     }
-    
-    // Return undefined for no filter (search all)
-    return undefined;
+
+    // Version filter
+    if (vaadinVersion) {
+      conditions.push({ vaadin_version: vaadinVersion });
+    }
+
+    // Combine with $and
+    if (conditions.length === 0) return undefined;
+    if (conditions.length === 1) return conditions[0];
+    return { $and: conditions };
   }
 
   /**

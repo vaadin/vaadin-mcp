@@ -43,6 +43,30 @@ export interface SearchResult {
 }
 
 /**
+ * Normalize version parameter to major version for filtering
+ *
+ * Expected input: Minor version format (e.g., "24.8", "25.0")
+ * Also accepts: Major version format (e.g., "24", "25") for convenience
+ *
+ * Returns: Major version string (e.g., "24" or "25")
+ */
+function normalizeVersion(version: string): string | null {
+  // Match minor version format (24.8, 25.0) - extract major version
+  const minorMatch = version.match(/^(\d+)\.\d+$/);
+  if (minorMatch) {
+    return minorMatch[1];
+  }
+
+  // Match major version format (24, 25) - accepted for convenience
+  const majorMatch = version.match(/^(\d+)$/);
+  if (majorMatch) {
+    return majorMatch[1];
+  }
+
+  return null; // Invalid format
+}
+
+/**
  * Create and configure MCP server instance
  */
 function createMcpServer(): McpServer {
@@ -84,7 +108,8 @@ function setupTools(server: McpServer) {
         question: z.string().describe("The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword)."),
         max_results: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 5)"),
         max_tokens: z.number().min(100).max(5000).optional().describe("Maximum number of tokens to return (default: 1500)"),
-        ui_language: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.')
+        ui_language: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.'),
+        version: z.string().optional().describe('Vaadin version to search in minor version format (e.g., "24.8", "25.0"). Defaults to "25.0" if not specified.')
       }
     },
     withAnalytics("search_vaadin_docs", async (args) => {
@@ -99,6 +124,21 @@ function setupTools(server: McpServer) {
       }
       // Remove ui_language from converted args since REST API expects framework
       delete convertedArgs.ui_language;
+
+      // Validate and normalize version parameter
+      let vaadinVersion: string | undefined = undefined;
+      if (args.version) {
+        const normalizedVersion = normalizeVersion(args.version);
+        if (!normalizedVersion) {
+          throw new Error(`Invalid version format: ${args.version}. Expected minor version format like "24.8" or "25.0".`);
+        }
+        vaadinVersion = normalizedVersion;
+      } else {
+        vaadinVersion = '25'; // DEFAULT to v25
+      }
+      convertedArgs.vaadin_version = vaadinVersion;
+      delete convertedArgs.version;
+
       return await handleSearchTool(convertedArgs);
     })
   );

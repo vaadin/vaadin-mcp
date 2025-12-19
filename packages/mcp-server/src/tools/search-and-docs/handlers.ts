@@ -25,7 +25,8 @@ export async function handleSearchTool(args: any) {
         question: args.question, // Use 'question' for the enhanced API
         max_results: args.max_results,
         max_tokens: args.max_tokens,
-        framework: args.framework || 'common'
+        framework: args.framework || 'common',
+        vaadin_version: args.vaadin_version
       })
     });
 

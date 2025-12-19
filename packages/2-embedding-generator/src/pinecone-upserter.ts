@@ -261,6 +261,11 @@ export class PineconeUpserter {
       content: chunk.content,
     };
 
+    // Add vaadin_version if present
+    if (chunk.vaadin_version) {
+      metadata.vaadin_version = chunk.vaadin_version;
+    }
+
     // Add optional metadata fields
     if (chunk.metadata?.title) {
       metadata.title = chunk.metadata.title;

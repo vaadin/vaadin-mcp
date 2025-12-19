@@ -44,29 +44,35 @@ export class PineconeSearchProvider implements SearchProvider {
   async semanticSearch(
     query: string,
     k: number,
-    framework: string
+    framework: string,
+    vaadinVersion?: string
   ): Promise<SemanticResult[]> {
-    // Build filter for framework - use undefined if no specific framework filter needed
+    // Build filter for framework and version
     let filter: any = undefined;
-    
+
+    const frameworkConditions = [];
     if (framework === 'flow') {
-      filter = {
-        $or: [
-          { framework: 'flow' },
-          { framework: 'common' },
-          { framework: 'common' }
-        ]
-      };
+      frameworkConditions.push({ framework: 'flow' });
+      frameworkConditions.push({ framework: 'common' });
     } else if (framework === 'hilla') {
+      frameworkConditions.push({ framework: 'hilla' });
+      frameworkConditions.push({ framework: 'common' });
+    }
+
+    // Combine framework and version filters using $and
+    if (frameworkConditions.length > 0 && vaadinVersion) {
       filter = {
-        $or: [
-          { framework: 'hilla' },
-          { framework: 'common' },
-          { framework: 'common' }
+        $and: [
+          { $or: frameworkConditions },
+          { vaadin_version: vaadinVersion }
         ]
       };
+    } else if (frameworkConditions.length > 0) {
+      filter = { $or: frameworkConditions };
+    } else if (vaadinVersion) {
+      filter = { vaadin_version: vaadinVersion };
     }
-    // For any other framework value (including empty string), search all documents
+    // For any other case, search all documents
 
     // Perform similarity search with LangChain
     const results = await this.vectorStore.similaritySearchWithScore(query, k, filter);
@@ -86,27 +92,33 @@ export class PineconeSearchProvider implements SearchProvider {
   async keywordSearch(
     query: string,
     k: number,
-    framework: string
+    framework: string,
+    vaadinVersion?: string
   ): Promise<KeywordResult[]> {
-    // Build filter for framework
-    let filter = {};
-    
+    // Build filter for framework and version
+    let filter: any = undefined;
+
+    const frameworkConditions = [];
     if (framework === 'flow') {
-      filter = {
-        $or: [
-          { framework: 'flow' },
-          { framework: 'common' },
-          { framework: 'common' }
-        ]
-      };
+      frameworkConditions.push({ framework: 'flow' });
+      frameworkConditions.push({ framework: 'common' });
     } else if (framework === 'hilla') {
+      frameworkConditions.push({ framework: 'hilla' });
+      frameworkConditions.push({ framework: 'common' });
+    }
+
+    // Combine framework and version filters using $and
+    if (frameworkConditions.length > 0 && vaadinVersion) {
       filter = {
-        $or: [
-          { framework: 'hilla' },
-          { framework: 'common' },
-          { framework: 'common' }
+        $and: [
+          { $or: frameworkConditions },
+          { vaadin_version: vaadinVersion }
         ]
       };
+    } else if (frameworkConditions.length > 0) {
+      filter = { $or: frameworkConditions };
+    } else if (vaadinVersion) {
+      filter = { vaadin_version: vaadinVersion };
     }
 
     const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 2);

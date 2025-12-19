@@ -14,6 +14,7 @@ interface SearchOptions {
   maxResults?: number;
   maxTokens?: number;
   framework?: string;
+  vaadinVersion?: string;
 }
 
 interface ProcessedQuery {
@@ -66,7 +67,8 @@ export class HybridSearchService {
     const {
       maxResults = config.search.defaultMaxResults,
       maxTokens = config.search.defaultMaxTokens,
-      framework = 'common'
+      framework = 'common',
+      vaadinVersion = '25'
     } = options;
 
     try {
@@ -80,8 +82,8 @@ export class HybridSearchService {
       console.log(`🔍 Searching: "${processedQuery.cleaned}" (${framework || 'all frameworks'})`);
       
       const [semanticResults, keywordResults] = await Promise.all([
-        this.denseProvider.semanticSearch(processedQuery.cleaned, candidateCount, framework),
-        this.sparseProvider.keywordSearch(processedQuery.cleaned, candidateCount, framework)
+        this.denseProvider.semanticSearch(processedQuery.cleaned, candidateCount, framework, vaadinVersion),
+        this.sparseProvider.keywordSearch(processedQuery.cleaned, candidateCount, framework, vaadinVersion)
       ]);
 
       console.log(`📊 Results: ${semanticResults.length} semantic, ${keywordResults.length} keyword`);
@@ -106,7 +108,7 @@ export class HybridSearchService {
       console.error('Error in hybrid search:', error);
       // Graceful fallback to semantic search only
       console.log('🔄 Falling back to semantic search only');
-      const semanticResults = await this.denseProvider.semanticSearch(query, maxResults, framework);
+      const semanticResults = await this.denseProvider.semanticSearch(query, maxResults, framework, vaadinVersion);
       return semanticResults.map(this.convertSemanticToRetrievalResult.bind(this));
     }
   }

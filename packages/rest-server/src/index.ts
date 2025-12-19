@@ -177,35 +177,39 @@ app.post('/search', async (req: Request, res: Response) => {
       });
     }
     
-    const { question, max_results, max_tokens, framework, stream } = req.body;
-    
+    const { question, max_results, max_tokens, framework, vaadin_version, stream } = req.body;
+
     // Validate search query
     if (!question || typeof question !== 'string') {
-      return res.status(400).json({ 
-        error: 'Missing or invalid "question" parameter in request body' 
+      return res.status(400).json({
+        error: 'Missing or invalid "question" parameter in request body'
       });
     }
-    
+
     // Parse and validate max_results
-    const maxResults = max_results && !isNaN(max_results) 
-      ? Math.min(Math.max(1, max_results), 20) 
+    const maxResults = max_results && !isNaN(max_results)
+      ? Math.min(Math.max(1, max_results), 20)
       : config.search.defaultMaxResults;
-      
+
     // Parse and validate max_tokens
-    const maxTokens = max_tokens && !isNaN(max_tokens) 
-      ? Math.min(Math.max(100, max_tokens), 10000) 
+    const maxTokens = max_tokens && !isNaN(max_tokens)
+      ? Math.min(Math.max(100, max_tokens), 10000)
       : config.search.defaultMaxTokens;
-    
+
         // Validate framework parameter - support both 'flow'/'hilla' and 'common'
     const validFramework = (framework === 'flow' || framework === 'hilla' || framework === 'common')
       ? framework || 'common'
       : '';
-    
+
+    // Validate and default version parameter
+    const validatedVersion = vaadin_version || '25';
+
     // Use hybrid search for enhanced results
     const results = await searchService.hybridSearch(question, {
       maxResults,
       maxTokens,
       framework: validFramework,
+      vaadinVersion: validatedVersion,
     });
     
     // Return results in the expected format
