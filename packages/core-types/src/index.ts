@@ -64,6 +64,11 @@ export interface IngestionConfig {
     url: string;
     branch: string;
     localPath: string;
+    /**
+     * Explicit Vaadin version (e.g., "24", "25").
+     * Used for metadata instead of extracting from branch name.
+     */
+    vaadinVersion?: string;
   };
   processing: {
     includePatterns: string[];

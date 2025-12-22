@@ -145,6 +145,7 @@ export class ResultFormatter {
         metadata: {
           title: result.metadata.title || 'Untitled',
           heading: result.metadata.heading || '',
+          vaadin_version: result.metadata.vaadin_version || null,
         },
         relevance_score: result.score,
       });

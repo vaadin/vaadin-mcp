@@ -13,8 +13,11 @@ RUN bun install
 # Copy rest-server source code
 COPY packages/rest-server/ packages/rest-server/
 
-# Copy converted markdown files for document endpoint
+# Copy converted markdown files for document endpoint (includes v24/ and v25/ subdirs)
 COPY packages/1-asciidoc-converter/dist/markdown/ packages/1-asciidoc-converter/dist/markdown/
+
+# Verify markdown structure
+RUN echo "Markdown directory structure:" && ls -la packages/1-asciidoc-converter/dist/markdown/ || echo "Warning: markdown dir may be empty"
 
 # Build the application
 WORKDIR /app/packages/rest-server

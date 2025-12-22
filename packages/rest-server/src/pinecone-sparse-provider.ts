@@ -248,9 +248,10 @@ export class PineconeSparseProvider {
       });
     }
 
-    // Version filter
+    // Version filter (convert to number as Pinecone stores it as number)
     if (vaadinVersion) {
-      conditions.push({ vaadin_version: vaadinVersion });
+      const versionFilter = parseInt(String(vaadinVersion), 10);
+      conditions.push({ vaadin_version: versionFilter });
     }
 
     // Combine with $and

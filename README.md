@@ -23,6 +23,10 @@ vaadin-documentation-services/
 │   ├── 2-embedding-generator/   # Markdown → Vector database with hierarchical chunking
 │   ├── rest-server/             # Enhanced REST API with hybrid search + reranking
 │   └── mcp-server/              # MCP server with hierarchical navigation
+├── scripts/
+│   └── ingest.sh                # Local/CI ingestion pipeline script
+├── .github/workflows/
+│   └── docs-ingestion.yml       # Automated daily docs processing
 ├── package.json                 # Bun workspace configuration
 └── PROJECT_PLAN.md             # Complete project documentation
 ```
@@ -94,31 +98,74 @@ flowchart TD
 ### Installation
 ```bash
 # Clone and install dependencies
-git clone https://github.com/vaadin/vaadin-documentation-services
-cd vaadin-documentation-services
+git clone https://github.com/vaadin/vaadin-mcp
+cd vaadin-mcp
 bun install
 ```
 
 ### Environment Setup
 ```bash
-# Create .env file with your API keys
-echo "OPENAI_API_KEY=your_openai_api_key" > .env
-echo "PINECONE_API_KEY=your_pinecone_api_key" >> .env
-echo "PINECONE_INDEX=your_pinecone_index" >> .env
+# Create .env file with your API keys (used by embedding generator)
+cat > .env << EOF
+OPENAI_API_KEY=your_openai_api_key
+PINECONE_API_KEY=your_pinecone_api_key
+PINECONE_INDEX=vaadin-docs
+EOF
+
+# Or export directly for command-line use
+export OPENAI_API_KEY="your_openai_api_key"
+export PINECONE_API_KEY="your_pinecone_api_key"
+export PINECONE_INDEX="vaadin-docs"
 ```
+
+**Required for embedding generation:**
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | Yes | OpenAI API key for generating embeddings |
+| `PINECONE_API_KEY` | Yes | Pinecone API key for vector storage |
+| `PINECONE_INDEX` | No | Pinecone index name (defaults to `vaadin-docs`) |
 
 ### Running the System
 
-#### 1. Process Documentation (One-time setup)
+#### 1. Process Documentation
+
+**Using the Ingestion Script (Recommended)**
+
+The easiest way to process documentation is using the ingestion script:
+
 ```bash
-# Convert AsciiDoc to Markdown with metadata
+# Process both v24 and v25 documentation
+./scripts/ingest.sh
+
+# Process only a specific version
+./scripts/ingest.sh --version 24
+./scripts/ingest.sh --version 25
+
+# Clear index and reprocess (full rebuild)
+./scripts/ingest.sh --clear
+```
+
+**Manual Processing**
+
+You can also run the pipeline steps manually:
+
+```bash
+# Convert AsciiDoc to Markdown for a specific version
 cd packages/1-asciidoc-converter
-bun run convert
+bun run convert --version 24    # Uses v24 branch
+bun run convert --version 25    # Uses main branch
 
 # Generate embeddings and populate vector database
 cd ../2-embedding-generator
-bun run generate
+bun run generate                # Process converted markdown
+bun run generate --clear        # Clear index first
 ```
+
+**Version to Branch Mapping:**
+| Version | Git Branch | Description |
+|---------|------------|-------------|
+| 24 | v24 | Vaadin 24 stable docs |
+| 25 | main | Vaadin 25 latest docs |
 
 #### 2. Start REST API Server
 ```bash
@@ -149,16 +196,22 @@ Shared TypeScript interfaces used across all packages:
 
 ### AsciiDoc Converter (`packages/1-asciidoc-converter/`)
 Converts Vaadin AsciiDoc documentation to Markdown with metadata:
+- **Version-Based Processing**: Explicit version parameter maps to correct git branch
 - **Framework Detection**: Automatically detects Flow/Hilla/common content
 - **URL Generation**: Creates proper Vaadin.com documentation links
 - **Include Processing**: Handles AsciiDoc include directives
-- **Metadata Extraction**: Preserves semantic information in frontmatter
+- **Metadata Extraction**: Preserves semantic information in frontmatter (including `vaadin_version`)
 
 ```bash
 cd packages/1-asciidoc-converter
-bun run convert          # Convert all documentation
-bun run test            # Run framework detection tests
+bun run convert --version 24     # Convert v24 docs (uses v24 branch)
+bun run convert --version 25     # Convert v25 docs (uses main branch)
+bun run convert --help           # Show all CLI options
+bun run test                     # Run framework detection tests
 ```
+
+**Environment Variables:**
+- `VAADIN_VERSION`: Fallback if `--version` not specified
 
 ### Embedding Generator (`packages/2-embedding-generator/`)
 Creates vector embeddings with hierarchical relationships:
@@ -250,21 +303,31 @@ cd packages/rest-server && bun run test:server
 
 ## 🌐 Deployment
 
-### REST Server
-The REST server is available at:
-- **Production**: `https://vaadin-docs-search.fly.dev`
-- **Health Check**: `https://vaadin-docs-search.fly.dev/health`
-
 ### MCP Server
 The MCP server is available at:
 - **Production**: `https://mcp.vaadin.com/`
 - **Health Check**: `https://mcp.vaadin.com/health`
 
 ### Documentation Processing
-Automated via GitHub Actions:
-- **Daily Updates**: Documentation re-processed automatically
-- **Manual Triggers**: Can be triggered via GitHub Actions UI
-- **Error Notifications**: Automated alerts for processing failures
+
+**Automated via GitHub Actions:**
+- **Daily Updates**: Both v24 and v25 documentation re-processed automatically at 2 AM UTC
+- **Manual Triggers**: Can be triggered via GitHub Actions UI with optional index clearing
+- **Error Notifications**: Automated GitHub issue creation for processing failures
+
+**Local Development:**
+```bash
+# Set required environment variables
+export OPENAI_API_KEY="your-api-key"
+export PINECONE_API_KEY="your-api-key"
+export PINECONE_INDEX="vaadin-docs"  # optional, defaults to 'vaadin-docs'
+
+# Run the full ingestion pipeline locally
+./scripts/ingest.sh                    # Process v24 and v25
+./scripts/ingest.sh --version 24       # Process only v24
+./scripts/ingest.sh --clear            # Clear index first
+./scripts/ingest.sh --help             # Show all options
+```
 
 ## 🔧 Development
 
@@ -274,6 +337,11 @@ This project uses Bun workspaces for package management:
 bun install           # Install all dependencies
 bun run build         # Build all packages
 bun run test          # Test all packages
+
+# Full ingestion pipeline (requires API keys)
+./scripts/ingest.sh              # Process v24 and v25 docs
+./scripts/ingest.sh --version 24 # Process single version
+./scripts/ingest.sh --clear      # Clear index and rebuild
 ```
 
 ### Adding New Features

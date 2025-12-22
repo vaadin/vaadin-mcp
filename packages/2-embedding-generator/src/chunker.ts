@@ -63,7 +63,8 @@ export class MarkdownChunker {
    */
   async chunkDocument(document: Document): Promise<BasicChunk[]> {
     const filePath = document.metadata.file_path || '';
-    const baseId = this.generateBaseId(filePath);
+    const vaadinVersion = document.metadata.vaadin_version;
+    const baseId = this.generateBaseId(filePath, vaadinVersion);
     
     // First, split using markdown splitter
     const chunks = await this.markdownSplitter.splitDocuments([document]);
@@ -117,6 +118,7 @@ export class MarkdownChunker {
       framework: basicChunk.metadata.framework,
       content: basicChunk.content,
       source_url: basicChunk.metadata.source_url,
+      vaadin_version: basicChunk.metadata.vaadin_version, // Include version at top level
       metadata: {
         ...basicChunk.metadata,
         title: basicChunk.metadata.title,
@@ -142,13 +144,17 @@ export class MarkdownChunker {
   }
 
   /**
-   * Generates a base ID for chunks from a file path
+   * Generates a base ID for chunks from a file path and version
+   * Includes vaadin_version to ensure unique IDs across different documentation versions
    */
-  private generateBaseId(filePath: string): string {
-    return filePath
+  private generateBaseId(filePath: string, vaadinVersion?: string | number): string {
+    const pathPart = filePath
       .replace(/\.md$/, '')
       .replace(/[^a-zA-Z0-9]/g, '-')
       .toLowerCase();
+    
+    // Include version in ID to prevent overwrites between v24 and v25
+    return vaadinVersion ? `v${vaadinVersion}-${pathPart}` : pathPart;
   }
 
   /**

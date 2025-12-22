@@ -74,11 +74,13 @@ export async function handleGetFullDocumentTool(args: any) {
 
   // Determine file paths to fetch
   const filePaths = args.file_paths as string[];
+  const vaadinVersion = args.vaadin_version || '25';
 
   try {
     // Fetch all documents in parallel
     const fetchPromises = filePaths.map(async (filePath: string) => {
-      const response = await fetch(`${config.restServer.url}/document/${encodeURIComponent(filePath)}`);
+      const url = `${config.restServer.url}/document/${encodeURIComponent(filePath)}?vaadin_version=${vaadinVersion}`;
+      const response = await fetch(url);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -149,10 +151,11 @@ function formatSearchResults(results: RetrievalResult[]): string {
     output += `----\n`;
     output += `Source: ${result.source_url}\n`;
     output += `Framework: ${result.framework}\n`;
+    output += `Vaadin Version: ${result.metadata?.vaadin_version || 'unknown'}\n`;
     output += `Chunk ID: ${result.chunk_id}\n`;
 
     if (result.file_path) {
-      output += `Document Path: ${result.file_path} (use get_full_document to get complete context)\n`;
+      output += `Document Path: ${result.file_path} (use get_full_document with vaadin_version to get complete context)\n`;
     }
 
     output += `Relevance Score: ${result.relevance_score.toFixed(3)}\n`;
@@ -192,6 +195,7 @@ function formatFullDocuments(results: Array<{ document?: any; filePath: string; 
       output += `----\n`;
       output += `File Path: ${result.filePath}\n`;
       output += `Framework: ${result.document.metadata?.framework || 'unknown'}\n`;
+      output += `Vaadin Version: ${result.document.metadata?.vaadin_version || 'unknown'}\n`;
       output += `Source URL: ${result.document.metadata?.source_url || 'N/A'}\n`;
       output += `----\n\n`;
       output += `### Complete Documentation\n\n${result.document.content}\n\n`;

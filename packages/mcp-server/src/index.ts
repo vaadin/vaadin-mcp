@@ -112,7 +112,8 @@ function setupTools(server: McpServer) {
         version: z.string().optional().describe('Vaadin version to search in minor version format (e.g., "24.8", "25.0"). Defaults to "25.0" if not specified.')
       }
     },
-    withAnalytics("search_vaadin_docs", async (args) => {
+    // @ts-expect-error - Type instantiation too deep due to complex Zod schema inference
+    withAnalytics("search_vaadin_docs", async (args: any) => {
       // Convert ui_language parameter from java/react to flow/hilla for internal docs lookup
       const convertedArgs = { ...args } as any;
       if (args.ui_language === 'java') {
@@ -150,7 +151,8 @@ function setupTools(server: McpServer) {
       title: "Get Full Document",
       description: "Retrieves complete documentation pages for one or more file paths. Use this when you need full context beyond what search results provide. Provide file_paths only (array).",
       inputSchema: {
-        file_paths: z.array(z.string()).describe("Array of file paths from search results. Use this to fetch one or more documents in a single call.")
+        file_paths: z.array(z.string()).describe("Array of file paths from search results. Use this to fetch one or more documents in a single call."),
+        vaadin_version: z.string().optional().describe('Vaadin major version (e.g., "24", "25"). Defaults to "25" if not specified.')
       }
     },
     withAnalytics("get_full_document", async (args) => {

@@ -60,17 +60,20 @@ export class PineconeSearchProvider implements SearchProvider {
     }
 
     // Combine framework and version filters using $and
-    if (frameworkConditions.length > 0 && vaadinVersion) {
+    // Note: vaadin_version is stored as a number in Pinecone, so convert string to number
+    const versionFilter = vaadinVersion ? parseInt(String(vaadinVersion), 10) : undefined;
+    
+    if (frameworkConditions.length > 0 && versionFilter) {
       filter = {
         $and: [
           { $or: frameworkConditions },
-          { vaadin_version: vaadinVersion }
+          { vaadin_version: versionFilter }
         ]
       };
     } else if (frameworkConditions.length > 0) {
       filter = { $or: frameworkConditions };
-    } else if (vaadinVersion) {
-      filter = { vaadin_version: vaadinVersion };
+    } else if (versionFilter) {
+      filter = { vaadin_version: versionFilter };
     }
     // For any other case, search all documents
 
@@ -108,17 +111,20 @@ export class PineconeSearchProvider implements SearchProvider {
     }
 
     // Combine framework and version filters using $and
-    if (frameworkConditions.length > 0 && vaadinVersion) {
+    // Note: vaadin_version is stored as a number in Pinecone, so convert string to number
+    const versionFilter = vaadinVersion ? parseInt(String(vaadinVersion), 10) : undefined;
+    
+    if (frameworkConditions.length > 0 && versionFilter) {
       filter = {
         $and: [
           { $or: frameworkConditions },
-          { vaadin_version: vaadinVersion }
+          { vaadin_version: versionFilter }
         ]
       };
     } else if (frameworkConditions.length > 0) {
       filter = { $or: frameworkConditions };
-    } else if (vaadinVersion) {
-      filter = { vaadin_version: vaadinVersion };
+    } else if (versionFilter) {
+      filter = { vaadin_version: versionFilter };
     }
 
     const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 2);

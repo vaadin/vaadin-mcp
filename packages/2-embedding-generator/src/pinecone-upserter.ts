@@ -332,9 +332,26 @@ export class PineconeUpserter {
     console.log(`Clearing all vectors from index: ${this.indexName}`);
     
     const index = this.pinecone.Index(this.indexName);
-    await index.deleteAll();
     
-    console.log('Index cleared successfully');
+    try {
+      // Check if index has any vectors first
+      const stats = await index.describeIndexStats();
+      
+      if (!stats.totalRecordCount || stats.totalRecordCount === 0) {
+        console.log('Index is already empty, nothing to clear');
+        return;
+      }
+      
+      await index.deleteAll();
+      console.log('Index cleared successfully');
+    } catch (error: any) {
+      // Handle case where index is empty or doesn't exist yet
+      if (error?.name === 'PineconeNotFoundError' || error?.status === 404) {
+        console.log('Index is empty or not initialized, nothing to clear');
+        return;
+      }
+      throw error;
+    }
   }
 
   /**

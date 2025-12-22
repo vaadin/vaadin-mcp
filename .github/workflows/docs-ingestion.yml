@@ -31,116 +31,21 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./packages/1-asciidoc-converter/vaadin-docs
-          key: vaadin-docs-${{ inputs.branch || 'latest' }}-${{ github.run_id }}
+          key: vaadin-docs-${{ github.run_id }}
           restore-keys: |
-            vaadin-docs-${{ inputs.branch || 'latest' }}-
             vaadin-docs-
 
-      - name: Install workspace dependencies
-        run: bun install
-
-      - name: Build packages
-        run: bun run build
-
       - name: Process Vaadin Documentation (v24 and v25)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_INDEX: ${{ secrets.PINECONE_INDEX || 'vaadin-docs' }}
         run: |
-          echo "Processing Vaadin documentation for v24 and v25"
-          echo ""
-
-          # Process v24 first
-          VERSION="v24"
-          echo "========================================"
-          echo "Processing Vaadin $VERSION"
-          echo "========================================"
-
-          # v24: clear index if requested, or always clear on first version
           CLEAR_FLAG=""
           if [ "${{ inputs.clear_index }}" = "true" ]; then
             CLEAR_FLAG="--clear"
-            echo "🗑️ Clear index requested - clearing before v24"
-          else
-            CLEAR_FLAG="--clear"
-            echo "🗑️ Clearing index for first version (v24)"
           fi
-
-          # Step 1: Convert AsciiDoc to Markdown (v24)
-          echo ""
-          echo "📄 Step 1: Converting AsciiDoc to Markdown ($VERSION)..."
-          cd packages/1-asciidoc-converter
-          mkdir -p logs
-          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-
-          bun run convert --branch "$VERSION" 2>&1 | tee logs/asciidoc_conversion_${VERSION}_${TIMESTAMP}.log
-
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "::error::AsciiDoc conversion failed for $VERSION"
-            exit 1
-          fi
-          echo "✅ AsciiDoc conversion completed for $VERSION"
-
-          # Step 2: Generate Embeddings and Upload to Pinecone (v24)
-          echo ""
-          echo "🧠 Step 2: Generating embeddings and uploading to Pinecone ($VERSION)..."
-          cd ../2-embedding-generator
-          mkdir -p logs
-
-          OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-          PINECONE_API_KEY="${{ secrets.PINECONE_API_KEY }}" \
-          PINECONE_INDEX="${{ secrets.PINECONE_INDEX || 'vaadin-docs' }}" \
-          bun run generate $CLEAR_FLAG 2>&1 | tee logs/embedding_generation_${VERSION}_${TIMESTAMP}.log
-
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "::error::Embedding generation failed for $VERSION"
-            exit 1
-          fi
-          echo "✅ Embedding generation completed for $VERSION"
-
-          cd ../..
-
-          # Process v25 second
-          VERSION="v25"
-          echo ""
-          echo "========================================"
-          echo "Processing Vaadin $VERSION"
-          echo "========================================"
-          echo "Preserving v24 data - not clearing index"
-
-          # Step 1: Convert AsciiDoc to Markdown (v25)
-          echo ""
-          echo "📄 Step 1: Converting AsciiDoc to Markdown ($VERSION)..."
-          cd packages/1-asciidoc-converter
-          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-
-          bun run convert --branch "$VERSION" 2>&1 | tee logs/asciidoc_conversion_${VERSION}_${TIMESTAMP}.log
-
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "::error::AsciiDoc conversion failed for $VERSION"
-            exit 1
-          fi
-          echo "✅ AsciiDoc conversion completed for $VERSION"
-
-          # Step 2: Generate Embeddings and Upload to Pinecone (v25)
-          echo ""
-          echo "🧠 Step 2: Generating embeddings and uploading to Pinecone ($VERSION)..."
-          cd ../2-embedding-generator
-
-          OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-          PINECONE_API_KEY="${{ secrets.PINECONE_API_KEY }}" \
-          PINECONE_INDEX="${{ secrets.PINECONE_INDEX || 'vaadin-docs' }}" \
-          bun run generate 2>&1 | tee logs/embedding_generation_${VERSION}_${TIMESTAMP}.log
-
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "::error::Embedding generation failed for $VERSION"
-            exit 1
-          fi
-          echo "✅ Embedding generation completed for $VERSION"
-
-          cd ../..
-
-          echo ""
-          echo "========================================"
-          echo "✅ Both v24 and v25 processed successfully"
-          echo "========================================"
+          ./scripts/ingest.sh $CLEAR_FLAG
       
       - name: Upload conversion logs
         if: always()
@@ -169,6 +74,15 @@ jobs:
           retention-days: 3
           include-hidden-files: true
       
+      - name: Upload markdown files for deployment
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: markdown-files
+          path: ./packages/1-asciidoc-converter/dist/markdown/
+          retention-days: 30
+          include-hidden-files: true
+      
       - name: Create summary
         if: always()
         run: |
@@ -178,6 +92,7 @@ jobs:
           echo "### Configuration" >> $GITHUB_STEP_SUMMARY
           echo "- **Versions:** v24, v25" >> $GITHUB_STEP_SUMMARY
           echo "- **Clear Index:** ${{ inputs.clear_index || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **REST Server Deploy:** ${{ secrets.FLY_API_TOKEN && 'Enabled' || 'Disabled (no FLY_API_TOKEN)' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 

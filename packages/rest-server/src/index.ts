@@ -201,8 +201,8 @@ app.post('/search', async (req: Request, res: Response) => {
       ? framework || 'common'
       : '';
 
-    // Validate and default version parameter
-    const validatedVersion = vaadin_version || '25';
+    // Validate and default version parameter (convert to number for Pinecone filter)
+    const validatedVersion = parseInt(vaadin_version || '25', 10);
 
     // Use hybrid search for enhanced results
     const results = await searchService.hybridSearch(question, {
@@ -263,10 +263,14 @@ app.get('/chunk/:chunkId', async (req: Request, res: Response) => {
 /**
  * Get full document endpoint
  * This enables retrieval of complete documentation pages instead of just chunks
+ * 
+ * Query params:
+ *   - vaadin_version: Optional version number (24, 25). Defaults to 25.
  */
 app.get('/document/:file_path(*)', async (req: Request, res: Response) => {
   try {
     const filePath = req.params.file_path;
+    const vaadinVersion = (req.query.vaadin_version as string) || '25';
     
     if (!filePath) {
       return res.status(400).json({
@@ -277,13 +281,14 @@ app.get('/document/:file_path(*)', async (req: Request, res: Response) => {
     // Decode URL-encoded file path
     const decodedFilePath = decodeURIComponent(filePath);
     
-    // Construct absolute path to markdown file
-    // In production: /app/packages/1-asciidoc-converter/dist/markdown/
+    // Construct absolute path to version-specific markdown file
+    // In production: /app/packages/1-asciidoc-converter/dist/markdown/v{version}/
     // In development: Navigate up from rest-server to project root, then to markdown dir
-    const markdownDir = process.env.NODE_ENV === 'production' 
+    const baseMarkdownDir = process.env.NODE_ENV === 'production' 
       ? '/app/packages/1-asciidoc-converter/dist/markdown'
       : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
     
+    const markdownDir = path.join(baseMarkdownDir, `v${vaadinVersion}`);
     const fullPath = path.join(markdownDir, decodedFilePath);
     
     // Security check: ensure the path is within the markdown directory
