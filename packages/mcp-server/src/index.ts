@@ -71,7 +71,7 @@ function setupTools(server: McpServer) {
     },
     withAnalytics("get_vaadin_primer", async () => {
       return await handleGetVaadinPrimerTool();
-    })
+    }) as any
   );
 
   // Register search_vaadin_docs tool
@@ -87,7 +87,7 @@ function setupTools(server: McpServer) {
         ui_language: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.')
       }
     },
-    withAnalytics("search_vaadin_docs", async (args) => {
+    withAnalytics("search_vaadin_docs", async (args: any) => {
       // Convert ui_language parameter from java/react to flow/hilla for internal docs lookup
       const convertedArgs = { ...args } as any;
       if (args.ui_language === 'java') {
@@ -100,7 +100,7 @@ function setupTools(server: McpServer) {
       // Remove ui_language from converted args since REST API expects framework
       delete convertedArgs.ui_language;
       return await handleSearchTool(convertedArgs);
-    })
+    }) as any
   );
 
   // Register get_full_document tool
@@ -115,7 +115,7 @@ function setupTools(server: McpServer) {
     },
     withAnalytics("get_full_document", async (args) => {
       return await handleGetFullDocumentTool(args);
-    })
+    }) as any
   );
 
   // Register get_vaadin_version tool
@@ -128,7 +128,7 @@ function setupTools(server: McpServer) {
     },
     withAnalytics("get_vaadin_version", async () => {
       return await handleGetVaadinVersionTool();
-    })
+    }) as any
   );
 
   // Register get_components_by_version tool
@@ -143,7 +143,7 @@ function setupTools(server: McpServer) {
     },
     withAnalytics("get_components_by_version", async (args) => {
       return await handleGetComponentsByVersionTool(args);
-    })
+    }) as any
   );
 
   // Register get_component_java_api tool
@@ -158,7 +158,7 @@ function setupTools(server: McpServer) {
     },
     withAnalytics("get_component_java_api", async (args) => {
       return await handleGetComponentJavaApiTool(args);
-    })
+    }) as any
   );
 
   // Register get_component_react_api tool
@@ -173,7 +173,7 @@ function setupTools(server: McpServer) {
     },
     withAnalytics("get_component_react_api", async (args) => {
       return await handleGetComponentReactApiTool(args);
-    })
+    }) as any
   );
 
   // Register get_component_web_component_api tool
@@ -188,7 +188,7 @@ function setupTools(server: McpServer) {
     },
     withAnalytics("get_component_web_component_api", async (args) => {
       return await handleGetComponentWebComponentApiTool(args);
-    })
+    }) as any
   );
 
   // Register get_component_styling tool
@@ -203,7 +203,7 @@ function setupTools(server: McpServer) {
     },
     withAnalytics("get_component_styling", async (args) => {
       return await handleGetComponentStylingTool(args);
-    })
+    }) as any
   );
 }
 

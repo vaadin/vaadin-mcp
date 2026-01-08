@@ -55,11 +55,11 @@ function extractResultCount(result: any): number | undefined {
  * @param handler - The original tool handler function
  * @returns Wrapped handler that tracks analytics
  */
-export function withAnalytics<T extends (...args: any[]) => Promise<any>>(
+export function withAnalytics(
   toolName: string,
-  handler: T
-): T {
-  return (async (...args: any[]) => {
+  handler: (...args: any[]) => Promise<any>
+): (...args: any[]) => Promise<any> {
+  return async (...args: any[]) => {
     const startTime = Date.now();
     let success = true;
     let result: any;
@@ -103,5 +103,5 @@ export function withAnalytics<T extends (...args: any[]) => Promise<any>>(
       // Track to Amplitude
       await trackToolCall(toolName, eventProperties);
     }
-  }) as T;
+  };
 }
