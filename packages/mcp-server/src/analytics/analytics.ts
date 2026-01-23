@@ -15,7 +15,7 @@ let enabled = false;
  */
 export function initializeAnalytics(apiKey: string | undefined): void {
   if (!apiKey) {
-    console.log('📊 Analytics: Amplitude API key not provided, analytics disabled');
+    console.debug('📊 Analytics: Amplitude API key not provided, analytics disabled');
     enabled = false;
     return;
   }
@@ -24,7 +24,7 @@ export function initializeAnalytics(apiKey: string | undefined): void {
     init(apiKey);
     initialized = true;
     enabled = true;
-    console.log('📊 Analytics: Amplitude initialized successfully');
+    console.debug('📊 Analytics: Amplitude initialized successfully');
   } catch (error) {
     console.error('📊 Analytics: Failed to initialize Amplitude:', error);
     enabled = false;

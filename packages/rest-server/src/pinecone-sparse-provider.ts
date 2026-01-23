@@ -30,8 +30,8 @@ export class PineconeSparseProvider {
       const hasIndex = await this.checkIndexExists(this.sparseIndexName);
       
       if (!hasIndex) {
-        console.log(`🔧 Creating sparse index: ${this.sparseIndexName}`);
-        
+        console.debug(`🔧 Creating sparse index: ${this.sparseIndexName}`);
+
         await this.pinecone.createIndexForModel({
           name: this.sparseIndexName,
           cloud: 'aws',
@@ -41,12 +41,12 @@ export class PineconeSparseProvider {
             fieldMap: { text: 'content' }
           }
         });
-        
+
         // Wait for index to be ready
         await this.waitForIndexReady(this.sparseIndexName);
-        console.log(`✅ Sparse index created and ready: ${this.sparseIndexName}`);
+        console.debug(`✅ Sparse index created and ready: ${this.sparseIndexName}`);
       } else {
-        console.log(`✅ Sparse index exists: ${this.sparseIndexName}`);
+        console.debug(`✅ Sparse index exists: ${this.sparseIndexName}`);
       }
     } catch (error) {
       console.error('Error ensuring sparse index:', error);
@@ -73,23 +73,23 @@ export class PineconeSparseProvider {
   private async waitForIndexReady(indexName: string, maxWaitTime: number = 300000): Promise<void> {
     const startTime = Date.now();
     const pollInterval = 5000; // Check every 5 seconds
-    
-    console.log(`⏳ Waiting for index ${indexName} to be ready...`);
-    
+
+    console.debug(`⏳ Waiting for index ${indexName} to be ready...`);
+
     while (Date.now() - startTime < maxWaitTime) {
       try {
         const indexDescription = await this.pinecone.describeIndex(indexName);
-        
+
         if (indexDescription.status?.ready) {
-          console.log(`✅ Index ${indexName} is ready!`);
+          console.debug(`✅ Index ${indexName} is ready!`);
           return;
         }
-        
-        console.log(`⏳ Index ${indexName} status: ${indexDescription.status?.state}, waiting...`);
+
+        console.debug(`⏳ Index ${indexName} status: ${indexDescription.status?.state}, waiting...`);
         await new Promise(resolve => setTimeout(resolve, pollInterval));
-        
+
       } catch (error) {
-        console.log(`⏳ Index ${indexName} not yet available, waiting...`);
+        console.debug(`⏳ Index ${indexName} not yet available, waiting...`);
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
     }
@@ -114,7 +114,7 @@ export class PineconeSparseProvider {
         return [];
       }
 
-      console.log(`🔍 Keyword search for: [${keywords.join(', ')}]`);
+      console.debug(`🔍 Keyword search for: [${keywords.join(', ')}]`);
 
       // Build framework filter
       const filter = this.buildFrameworkFilter(framework);

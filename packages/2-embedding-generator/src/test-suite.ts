@@ -38,7 +38,7 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
   failed: number;
   results: TestResult[];
 }> {
-  console.log('🧪 Running Simplified Embedding Generator Test Suite...\n');
+  console.debug('🧪 Running Simplified Embedding Generator Test Suite...\n');
   
   const testCases: TestCase[] = [
     {
@@ -68,8 +68,8 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
   let failed = 0;
 
   for (const testCase of testCases) {
-    console.log(`🔍 Running: ${testCase.name}`);
-    console.log(`   ${testCase.description}`);
+    console.debug(`🔍 Running: ${testCase.name}`);
+    console.debug(`   ${testCase.description}`);
     
     const startTime = Date.now();
     
@@ -78,18 +78,18 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
       const duration = Date.now() - startTime;
       
       if (success) {
-        console.log(`   ✅ PASSED (${duration}ms)`);
+        console.debug(`   ✅ PASSED (${duration}ms)`);
         passed++;
         results.push({ name: testCase.name, passed: true, duration });
       } else {
-        console.log(`   ❌ FAILED (${duration}ms)`);
+        console.debug(`   ❌ FAILED (${duration}ms)`);
         failed++;
         results.push({ name: testCase.name, passed: false, duration });
       }
     } catch (error) {
       const duration = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.log(`   ❌ FAILED (${duration}ms): ${errorMessage}`);
+      console.debug(`   ❌ FAILED (${duration}ms): ${errorMessage}`);
       failed++;
       results.push({ 
         name: testCase.name, 
@@ -99,7 +99,7 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
       });
     }
     
-    console.log('');
+    console.debug('');
   }
 
   return {
@@ -123,7 +123,7 @@ async function testFrontmatterParsing(testDataDir: string): Promise<boolean> {
   const fileContent = fs.readFileSync(testFile, 'utf-8');
   const { frontmatter, content } = parseFrontmatter(fileContent);
   
-  console.log(`     📄 Parsed frontmatter with ${Object.keys(frontmatter).length} fields`);
+  console.debug(`     📄 Parsed frontmatter with ${Object.keys(frontmatter).length} fields`);
   
   // Should have basic frontmatter fields
   return Object.keys(frontmatter).length > 0 && content.length > 0;
@@ -153,7 +153,7 @@ async function testDocumentChunking(testDataDir: string): Promise<boolean> {
   const chunker = createChunker();
   const chunks = await chunker.processDocuments([document]);
   
-  console.log(`     ✂️ Created ${chunks.length} chunks with proper structure`);
+  console.debug(`     ✂️ Created ${chunks.length} chunks with proper structure`);
   
   // Should create at least one chunk with proper structure
   return chunks.length > 0 && 
@@ -198,7 +198,7 @@ async function testFilePathMetadata(testDataDir: string): Promise<boolean> {
   const chunker = createChunker();
   const chunks = await chunker.processDocuments(documents);
   
-  console.log(`     📁 Processed ${documents.length} documents into ${chunks.length} chunks`);
+  console.debug(`     📁 Processed ${documents.length} documents into ${chunks.length} chunks`);
   
   // All chunks should have file_path metadata
   const hasValidFilePaths = chunks.every(chunk => 
@@ -237,7 +237,7 @@ async function testChunkStructure(testDataDir: string): Promise<boolean> {
   const chunker = createChunker();
   const chunks = await chunker.processDocuments([document]);
   
-  console.log(`     🏗️ Validated structure of ${chunks.length} chunks`);
+  console.debug(`     🏗️ Validated structure of ${chunks.length} chunks`);
   
   // All chunks should have simplified structure
   return chunks.every(chunk => {
@@ -265,18 +265,18 @@ export function printTestResults(results: {
   failed: number;
   results: TestResult[];
 }): void {
-  console.log(`📊 Test Suite Results:`);
-  console.log(`  Total: ${results.totalTests}`);
-  console.log(`  Passed: ${results.passed}`);
-  console.log(`  Failed: ${results.failed}`);
-  console.log(`  Success Rate: ${((results.passed / results.totalTests) * 100).toFixed(1)}%`);
+  console.debug(`📊 Test Suite Results:`);
+  console.debug(`  Total: ${results.totalTests}`);
+  console.debug(`  Passed: ${results.passed}`);
+  console.debug(`  Failed: ${results.failed}`);
+  console.debug(`  Success Rate: ${((results.passed / results.totalTests) * 100).toFixed(1)}%`);
   
   if (results.failed > 0) {
-    console.log('\n❌ Failed Tests:');
+    console.debug('\n❌ Failed Tests:');
     results.results
       .filter(r => !r.passed)
       .forEach(result => {
-        console.log(`  - ${result.name}: ${result.error || 'Test returned false'}`);
+        console.debug(`  - ${result.name}: ${result.error || 'Test returned false'}`);
       });
   }
 }

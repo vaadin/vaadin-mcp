@@ -69,7 +69,7 @@ export class PineconeUpserter {
    * Upserts chunks with embeddings to Pinecone
    */
   async upsertChunks(chunksWithEmbeddings: ChunkWithEmbedding[]): Promise<void> {
-    console.log(`Upserting ${chunksWithEmbeddings.length} chunks to Pinecone...`);
+    console.debug(`Upserting ${chunksWithEmbeddings.length} chunks to Pinecone...`);
     
     const index = this.pinecone.Index(this.indexName);
     const vectors = this.prepareVectors(chunksWithEmbeddings);
@@ -83,7 +83,7 @@ export class PineconeUpserter {
       await this.upsertBatch(index, batch, batchNumber, totalBatches);
     }
 
-    console.log(`Successfully upserted ${chunksWithEmbeddings.length} chunks to Pinecone`);
+    console.debug(`Successfully upserted ${chunksWithEmbeddings.length} chunks to Pinecone`);
   }
 
   /**
@@ -91,7 +91,7 @@ export class PineconeUpserter {
    * Perfect for CI/CD scenarios where files might be added/removed/renamed
    */
   async smartUpdate(chunksWithEmbeddings: ChunkWithEmbedding[]): Promise<UpdateResult> {
-    console.log(`🔄 Starting smart update for ${chunksWithEmbeddings.length} chunks...`);
+    console.debug(`🔄 Starting smart update for ${chunksWithEmbeddings.length} chunks...`);
     
     const index = this.pinecone.Index(this.indexName);
     const newChunkIds = new Set(chunksWithEmbeddings.map(c => c.chunk.chunk_id));
@@ -99,20 +99,20 @@ export class PineconeUpserter {
     // Step 1: Get existing chunks to identify orphans
     console.log('📊 Identifying existing chunks...');
     const existingChunkIds = await this.getAllChunkIds();
-    console.log(`Found ${existingChunkIds.length} existing chunks`);
+    console.debug(`Found ${existingChunkIds.length} existing chunks`);
     
     // Step 2: Identify orphaned chunks (exist in Pinecone but not in new data)
     const orphanedChunks = existingChunkIds.filter(id => !newChunkIds.has(id));
-    console.log(`Found ${orphanedChunks.length} orphaned chunks to delete`);
+    console.debug(`Found ${orphanedChunks.length} orphaned chunks to delete`);
     
     // Step 3: Delete orphaned chunks
     if (orphanedChunks.length > 0) {
-      console.log(`🗑️ Deleting ${orphanedChunks.length} orphaned chunks...`);
+      console.debug(`🗑️ Deleting ${orphanedChunks.length} orphaned chunks...`);
       await this.deleteChunks(orphanedChunks);
     }
     
     // Step 4: Upsert new/updated chunks
-    console.log(`📤 Upserting ${chunksWithEmbeddings.length} chunks...`);
+    console.debug(`📤 Upserting ${chunksWithEmbeddings.length} chunks...`);
     await this.upsertChunks(chunksWithEmbeddings);
     
     const result = {
@@ -121,7 +121,7 @@ export class PineconeUpserter {
       unchanged: existingChunkIds.length - orphanedChunks.length
     };
     
-    console.log(`✅ Smart update complete: ${result.upserted} upserted, ${result.deleted} deleted, ${result.unchanged} unchanged`);
+    console.debug(`✅ Smart update complete: ${result.upserted} upserted, ${result.deleted} deleted, ${result.unchanged} unchanged`);
     return result;
   }
 
@@ -130,15 +130,15 @@ export class PineconeUpserter {
    */
   async clearSparseIndex(): Promise<void> {
     if (!this.enableSparseIndex) {
-      console.log('⏭️ Sparse index operations disabled, skipping clear');
+      console.debug('⏭️ Sparse index operations disabled, skipping clear');
       return;
     }
 
     try {
-      console.log(`🗑️ Clearing sparse index: ${this.sparseIndexName}`);
+      console.debug(`🗑️ Clearing sparse index: ${this.sparseIndexName}`);
       const sparseIndex = this.pinecone.index(this.sparseIndexName);
       await sparseIndex.deleteAll();
-      console.log(`✅ Sparse index cleared successfully`);
+      console.debug(`✅ Sparse index cleared successfully`);
     } catch (error) {
       console.warn(`⚠️ Could not clear sparse index (may not exist yet): ${error}`);
     }
@@ -149,11 +149,11 @@ export class PineconeUpserter {
    */
   async upsertSparseChunks(chunksWithEmbeddings: ChunkWithEmbedding[]): Promise<void> {
     if (!this.enableSparseIndex) {
-      console.log('⏭️ Sparse index operations disabled, skipping upsert');
+      console.debug('⏭️ Sparse index operations disabled, skipping upsert');
       return;
     }
 
-    console.log(`📡 Upserting ${chunksWithEmbeddings.length} chunks to sparse index...`);
+    console.debug(`📡 Upserting ${chunksWithEmbeddings.length} chunks to sparse index...`);
     
     try {
       // Ensure sparse index exists
@@ -167,15 +167,15 @@ export class PineconeUpserter {
         
         // For sparse vectors, we use a simplified approach since the integrated embedding
         // API is complex. Let's disable sparse for now and just use dense search.
-        console.log(`⏭️ Sparse index operations temporarily disabled due to API complexity`);
-        console.log(`✅ Batch ${Math.floor(i / this.batchSize) + 1}/${Math.ceil(chunksWithEmbeddings.length / this.batchSize)} skipped (sparse)`);
+        console.debug(`⏭️ Sparse index operations temporarily disabled due to API complexity`);
+        console.debug(`✅ Batch ${Math.floor(i / this.batchSize) + 1}/${Math.ceil(chunksWithEmbeddings.length / this.batchSize)} skipped (sparse)`);
       }
       
-      console.log(`✅ Sparse index population skipped (will use dense-only search for now)`);
+      console.debug(`✅ Sparse index population skipped (will use dense-only search for now)`);
     } catch (error) {
       console.error(`❌ Failed to setup sparse chunks:`, error);
       // Don't throw error, just log and continue with dense-only search
-      console.log(`⚠️ Continuing with dense-only search`);
+      console.debug(`⚠️ Continuing with dense-only search`);
     }
   }
 
@@ -184,15 +184,15 @@ export class PineconeUpserter {
    */
   async smartSparseUpdate(chunksWithEmbeddings: ChunkWithEmbedding[]): Promise<UpdateResult> {
     if (!this.enableSparseIndex) {
-      console.log('⏭️ Sparse index operations disabled, skipping smart update');
+      console.debug('⏭️ Sparse index operations disabled, skipping smart update');
       return { upserted: 0, deleted: 0, unchanged: 0 };
     }
 
-    console.log(`🔄 Starting smart sparse update for ${chunksWithEmbeddings.length} chunks...`);
+    console.debug(`🔄 Starting smart sparse update for ${chunksWithEmbeddings.length} chunks...`);
     
     try {
       // Temporarily skip sparse operations due to API complexity
-      console.log(`⏭️ Sparse smart update temporarily disabled due to API complexity`);
+      console.debug(`⏭️ Sparse smart update temporarily disabled due to API complexity`);
       
       const result: UpdateResult = {
         upserted: 0, // Will be 0 since we're skipping
@@ -200,7 +200,7 @@ export class PineconeUpserter {
         unchanged: chunksWithEmbeddings.length // Consider all as unchanged
       };
       
-      console.log(`✅ Sparse smart update skipped: using dense-only search`);
+      console.debug(`✅ Sparse smart update skipped: using dense-only search`);
       return result;
     } catch (error) {
       console.error(`❌ Smart sparse update failed:`, error);
@@ -226,8 +226,8 @@ export class PineconeUpserter {
       
       // For now, use a simpler approach - query with empty vector to get sample IDs
       // This is a limitation of current Pinecone SDK - full listing requires enterprise features
-      console.log('Note: Full vector listing not available, using nuclear approach for cleanup');
-      console.log('Consider using clearExistingIndex: true for complete cleanup');
+      console.debug('Note: Full vector listing not available, using nuclear approach for cleanup');
+      console.debug('Consider using clearExistingIndex: true for complete cleanup');
       
       // Return empty array - will fall back to simple upsert behavior
       return [];
@@ -301,7 +301,7 @@ export class PineconeUpserter {
     batchNumber: number,
     totalBatches: number
   ): Promise<void> {
-    console.log(`Upserting batch ${batchNumber}/${totalBatches} (${batch.length} vectors)`);
+    console.debug(`Upserting batch ${batchNumber}/${totalBatches} (${batch.length} vectors)`);
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
@@ -324,7 +324,7 @@ export class PineconeUpserter {
    * Clears all vectors from the index (use with caution)
    */
   async clearIndex(): Promise<void> {
-    console.log(`Clearing all vectors from index: ${this.indexName}`);
+    console.debug(`Clearing all vectors from index: ${this.indexName}`);
     
     const index = this.pinecone.Index(this.indexName);
     await index.deleteAll();
@@ -336,7 +336,7 @@ export class PineconeUpserter {
    * Deletes specific chunks by their IDs
    */
   async deleteChunks(chunkIds: string[]): Promise<void> {
-    console.log(`Deleting ${chunkIds.length} chunks from Pinecone...`);
+    console.debug(`Deleting ${chunkIds.length} chunks from Pinecone...`);
     
     const index = this.pinecone.Index(this.indexName);
     
@@ -346,7 +346,7 @@ export class PineconeUpserter {
       await index.deleteMany(batch);
     }
     
-    console.log(`Successfully deleted ${chunkIds.length} chunks`);
+    console.debug(`Successfully deleted ${chunkIds.length} chunks`);
   }
 
   /**
@@ -392,7 +392,7 @@ export class PineconeUpserter {
       const indexExists = indexes.indexes?.some(index => index.name === this.sparseIndexName);
       
       if (!indexExists) {
-        console.log(`🔧 Creating sparse index: ${this.sparseIndexName}`);
+        console.debug(`🔧 Creating sparse index: ${this.sparseIndexName}`);
         
         await this.pinecone.createIndex({
           name: this.sparseIndexName,
@@ -407,9 +407,9 @@ export class PineconeUpserter {
         });
         
         // Wait for index to be ready
-        console.log('⏳ Waiting for sparse index to be ready...');
+        console.debug('⏳ Waiting for sparse index to be ready...');
         await this.waitForIndexReady(this.sparseIndexName);
-        console.log(`✅ Sparse index created and ready: ${this.sparseIndexName}`);
+        console.debug(`✅ Sparse index created and ready: ${this.sparseIndexName}`);
       }
     } catch (error) {
       console.error(`❌ Failed to ensure sparse index exists:`, error);

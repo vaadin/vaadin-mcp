@@ -38,21 +38,21 @@ export class HybridSearchService {
    * Initialize the service by ensuring sparse index exists
    */
   async initialize(): Promise<void> {
-    console.log('🚀 Initializing Enhanced Hybrid Search Service...');
-    
+    console.debug('🚀 Initializing Enhanced Hybrid Search Service...');
+
     try {
       // Ensure sparse index exists and is ready
       await this.sparseProvider.ensureSparseIndex();
-      
+
       // Check if sparse index needs data population
       const status = await this.sparseProvider.checkIndexStatus();
       if (status.exists && !status.hasData) {
-        console.log('⚠️  Sparse index exists but has no data. You may need to populate it.');
-        console.log(`   Index name: ${this.sparseProvider.getSparseIndexName()}`);
-        console.log('   💡 Run the embedding generator to populate both dense and sparse indexes.');
+        console.debug('⚠️  Sparse index exists but has no data. You may need to populate it.');
+        console.debug(`   Index name: ${this.sparseProvider.getSparseIndexName()}`);
+        console.debug('   💡 Run the embedding generator to populate both dense and sparse indexes.');
       }
-      
-      console.log('✅ Enhanced Hybrid Search Service initialized successfully');
+
+      console.debug('✅ Enhanced Hybrid Search Service initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Enhanced Hybrid Search Service:', error);
       throw error;
@@ -76,25 +76,25 @@ export class HybridSearchService {
       // 2. Parallel search (dense + sparse) - get more results for reranking
       const searchResultsMultiplier = 3; // Get 3x results for better reranking
       const candidateCount = Math.min(maxResults * searchResultsMultiplier, 100);
-      
-      console.log(`🔍 Searching: "${processedQuery.cleaned}" (${framework || 'all frameworks'})`);
-      
+
+      console.debug(`🔍 Searching: "${processedQuery.cleaned}" (${framework || 'all frameworks'})`);
+
       const [semanticResults, keywordResults] = await Promise.all([
         this.denseProvider.semanticSearch(processedQuery.cleaned, candidateCount, framework),
         this.sparseProvider.keywordSearch(processedQuery.cleaned, candidateCount, framework)
       ]);
 
-      console.log(`📊 Results: ${semanticResults.length} semantic, ${keywordResults.length} keyword`);
+      console.debug(`📊 Results: ${semanticResults.length} semantic, ${keywordResults.length} keyword`);
 
       // 3. Merge and deduplicate results
       const mergedResults = this.mergeAndDeduplicateResults(semanticResults, keywordResults);
-      console.log(`🔗 Merged to ${mergedResults.length} unique results`);
+      console.debug(`🔗 Merged to ${mergedResults.length} unique results`);
 
       // 4. If we have enough results, use Pinecone's native reranking
       if (mergedResults.length > 1) {
         const rerankedResults = await this.rerank(processedQuery.original, mergedResults, maxResults);
-        console.log(`🎯 Reranked to top ${rerankedResults.length} results`);
-        
+        console.debug(`🎯 Reranked to top ${rerankedResults.length} results`);
+
         // 5. Apply token limits and return
         return this.applyTokenLimits(rerankedResults, maxTokens);
       } else {
@@ -105,7 +105,7 @@ export class HybridSearchService {
     } catch (error) {
       console.error('Error in hybrid search:', error);
       // Graceful fallback to semantic search only
-      console.log('🔄 Falling back to semantic search only');
+      console.debug('🔄 Falling back to semantic search only');
       const semanticResults = await this.denseProvider.semanticSearch(query, maxResults, framework);
       return semanticResults.map(this.convertSemanticToRetrievalResult.bind(this));
     }
@@ -209,7 +209,7 @@ export class HybridSearchService {
         return results.slice(0, topN).map(result => this.convertToRetrievalResult(result));
       }
 
-      console.log(`🔄 Reranking ${documents.length} documents...`);
+      console.debug(`🔄 Reranking ${documents.length} documents...`);
 
       // Use Pinecone's rerank API with correct format
       const rerankedResponse = await this.pinecone.inference.rerank(
@@ -233,7 +233,7 @@ export class HybridSearchService {
         }
       }
 
-      console.log(`✅ Reranked to ${rerankedResults.length} results`);
+      console.debug(`✅ Reranked to ${rerankedResults.length} results`);
       return rerankedResults;
 
     } catch (error) {
