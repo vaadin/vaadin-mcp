@@ -306,11 +306,11 @@ async function startServer() {
   // Start the server
   const port = config.server.httpPort;
   app.listen(port, () => {
-    logger.debug(`🚀 Vaadin Documentation MCP Server (HTTP) listening on port ${port}`);
-    logger.debug(`📍 MCP endpoint: http://localhost:${port}/`);
-    logger.debug(`🏥 Health check: http://localhost:${port}/health`);
-    logger.debug(`🔧 Transport: Streamable HTTP (stateless mode)`);
-    logger.debug(`🔗 REST Server: ${config.restServer.url}`);
+    logger.info(`🚀 Vaadin Documentation MCP Server (HTTP) listening on port ${port}`);
+    logger.info(`📍 MCP endpoint: http://localhost:${port}/`);
+    logger.info(`🏥 Health check: http://localhost:${port}/health`);
+    logger.info(`🔧 Transport: Streamable HTTP (stateless mode)`);
+    logger.info(`🔗 REST Server: ${config.restServer.url}`);
   });
 
   // Graceful shutdown
