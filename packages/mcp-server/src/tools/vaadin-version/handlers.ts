@@ -3,6 +3,7 @@
  */
 
 import { config } from '../../config.js';
+import { logger } from '../../logger.js';
 
 /**
  * Handle get_vaadin_version tool
@@ -34,7 +35,7 @@ export async function handleGetVaadinVersionTool() {
       ]
     };
   } catch (error) {
-    console.error('Error fetching Vaadin version:', error);
+    logger.error('Error fetching Vaadin version:', error);
 
     return {
       content: [

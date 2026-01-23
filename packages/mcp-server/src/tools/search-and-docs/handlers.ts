@@ -4,6 +4,7 @@
 
 import { config } from '../../config.js';
 import type { RetrievalResult } from '../../types.js';
+import { logger } from '../../logger.js';
 
 /**
  * Handle search_vaadin_docs tool
@@ -48,7 +49,7 @@ export async function handleSearchTool(args: any) {
       ]
     };
   } catch (error) {
-    console.error('Error searching documentation:', error);
+    logger.error('Error searching documentation:', error);
 
     return {
       content: [
@@ -115,7 +116,7 @@ export async function handleGetFullDocumentTool(args: any) {
       ]
     };
   } catch (error) {
-    console.error('Error fetching full documents:', error);
+    logger.error('Error fetching full documents:', error);
 
     return {
       content: [

@@ -5,6 +5,7 @@
 
 import { config } from './config.js';
 import type { RetrievalResult } from './types.js';
+import { logger } from './logger.js';
 
 /**
  * Test result interface
@@ -833,26 +834,26 @@ async function runTest(scenario: any, client: MockMCPTestClient): Promise<TestRe
  * Run all document-based test scenarios
  */
 export async function runHierarchicalTests(config: TestConfig): Promise<void> {
-  console.debug('🧪 Running MCP Server Document-Based Test Scenarios (Mock Data)...\n');
+  logger.info('🧪 Running MCP Server Document-Based Test Scenarios (Mock Data)...\n');
   
   const client = new MockMCPTestClient(config);
   const results: TestResult[] = [];
   
   for (const scenario of DOCUMENT_TEST_SCENARIOS) {
     if (config.verbose) {
-      console.debug(`  Running: ${scenario.name}`);
+      logger.info(`  Running: ${scenario.name}`);
     }
     
     const result = await runTest(scenario, client);
     results.push(result);
     
     if (config.verbose) {
-      console.debug(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
+      logger.info(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
       if (!result.passed && result.error) {
-        console.debug(`       Error: ${result.error}`);
+        logger.info(`       Error: ${result.error}`);
       }
       if (result.details) {
-        console.debug(`       Details: ${JSON.stringify(result.details, null, 2)}`);
+        logger.info(`       Details: ${JSON.stringify(result.details, null, 2)}`);
       }
     }
   }
@@ -860,20 +861,20 @@ export async function runHierarchicalTests(config: TestConfig): Promise<void> {
   const passedTests = results.filter(r => r.passed).length;
   const failedTests = results.length - passedTests;
   
-  console.debug('\n📊 Document-Based Test Results:');
-  console.debug(`  ✅ Passed: ${passedTests}`);
-  console.debug(`  ❌ Failed: ${failedTests}`);
-  console.debug(`  📝 Total: ${results.length}`);
+  logger.info('\n📊 Document-Based Test Results:');
+  logger.info(`  ✅ Passed: ${passedTests}`);
+  logger.info(`  ❌ Failed: ${failedTests}`);
+  logger.info(`  📝 Total: ${results.length}`);
   
   if (failedTests > 0) {
-    console.debug('\n⚠️ Failed Tests:');
+    logger.info('\n⚠️ Failed Tests:');
     results.filter(r => !r.passed).forEach(result => {
-      console.debug(`  - ${result.name}: ${result.error}`);
+      logger.info(`  - ${result.name}: ${result.error}`);
     });
   }
   
   const overallSuccess = failedTests === 0;
-  console.debug(`\n🎯 Overall Result: ${overallSuccess ? '✅ SUCCESS' : '❌ FAILURE'}`);
+  logger.info(`\n🎯 Overall Result: ${overallSuccess ? '✅ SUCCESS' : '❌ FAILURE'}`);
 }
 
 /**
@@ -895,5 +896,5 @@ async function main(): Promise<void> {
 
 // Run tests if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(console.error);
+  main().catch(logger.error);
 } 

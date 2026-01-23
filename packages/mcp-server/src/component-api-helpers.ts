@@ -4,6 +4,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
+import { logger } from './logger.js';
 
 /**
  * Normalize component name to match directory structure
@@ -93,7 +94,7 @@ export function parseFrontmatter(content: string): { metadata: Record<string, st
       }
       markdownContent = frontmatterMatch[2];
     } catch (error) {
-      console.warn('Failed to parse frontmatter:', error);
+      logger.warn('Failed to parse frontmatter:', error);
     }
   }
 

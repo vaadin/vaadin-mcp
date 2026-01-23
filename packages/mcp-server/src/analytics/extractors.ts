@@ -6,6 +6,8 @@
  * Never logs actual search queries (only query length).
  */
 
+import { logger } from '../logger.js';
+
 /**
  * Extract properties from search_vaadin_docs arguments
  */
@@ -115,7 +117,7 @@ export function extractToolParams(toolName: string, args: any): Record<string, a
       return extractNoParams(args);
 
     default:
-      console.warn(`📊 Analytics: Unknown tool name "${toolName}", no parameter extraction`);
+      logger.warn(`📊 Analytics: Unknown tool name "${toolName}", no parameter extraction`);
       return {};
   }
 }

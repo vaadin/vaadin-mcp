@@ -2,12 +2,14 @@
  * Functions for fetching component data from GitHub repositories
  */
 
+import { logger } from '../../logger.js';
+
 /**
  * Fetch and parse versions.json from platform repository
  */
 export async function fetchVersionsJson(version: string): Promise<any> {
   const url = `https://raw.githubusercontent.com/vaadin/platform/${version}/versions.json`;
-  console.log(`Fetching versions.json for ${version}...`);
+  logger.debug(`Fetching versions.json for ${version}...`);
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -22,7 +24,7 @@ export async function fetchVersionsJson(version: string): Promise<any> {
  */
 export async function fetchFlowComponentsTree(version: string): Promise<Map<string, string>> {
   const url = `https://api.github.com/repos/vaadin/flow-components/git/trees/${version}?recursive=1`;
-  console.log(`Fetching flow-components tree for ${version}...`);
+  logger.debug(`Fetching flow-components tree for ${version}...`);
 
   const response = await fetch(url, {
     headers: {
@@ -73,6 +75,6 @@ export async function fetchFlowComponentsTree(version: string): Promise<Map<stri
     }
   }
 
-  console.log(`Found ${javaClassMap.size} Java components`);
+  logger.debug(`Found ${javaClassMap.size} Java components`);
   return javaClassMap;
 }

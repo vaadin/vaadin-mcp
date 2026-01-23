@@ -4,6 +4,7 @@
 
 import { getCachedVersion, setCachedVersion, hasCachedVersion } from './cache.js';
 import { buildComponentVersionData } from './builder.js';
+import { logger } from '../../logger.js';
 
 /**
  * Handle get_components_by_version tool
@@ -26,7 +27,7 @@ export async function handleGetComponentsByVersionTool(args: any) {
   try {
     // Check cache first
     if (hasCachedVersion(version)) {
-      console.log(`✓ Returning cached data for version ${version}`);
+      logger.debug(`✓ Returning cached data for version ${version}`);
       const cachedData = getCachedVersion(version)!;
 
       return {
@@ -40,12 +41,12 @@ export async function handleGetComponentsByVersionTool(args: any) {
     }
 
     // Build component data from sources
-    console.log(`Building component data for version ${version}...`);
+    logger.debug(`Building component data for version ${version}...`);
     const componentData = await buildComponentVersionData(version);
 
     // Cache the result
     setCachedVersion(version, componentData);
-    console.log(`✓ Cached data for version ${version}`);
+    logger.debug(`✓ Cached data for version ${version}`);
 
     return {
       content: [
@@ -56,7 +57,7 @@ export async function handleGetComponentsByVersionTool(args: any) {
       ]
     };
   } catch (error) {
-    console.error('Error fetching components by version:', error);
+    logger.error('Error fetching components by version:', error);
 
     return {
       content: [

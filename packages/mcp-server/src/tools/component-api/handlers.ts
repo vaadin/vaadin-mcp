@@ -4,6 +4,7 @@
 
 import * as fs from 'fs';
 import { normalizeComponentName, findComponentFile, parseFrontmatter } from '../../component-api-helpers.js';
+import { logger } from '../../logger.js';
 
 /**
  * Handle get_component_java_api tool
@@ -63,7 +64,7 @@ export async function handleGetComponentJavaApiTool(args: any) {
       ]
     };
   } catch (error) {
-    console.error('Error fetching component Java API:', error);
+    logger.error('Error fetching component Java API:', error);
 
     return {
       content: [
@@ -137,7 +138,7 @@ export async function handleGetComponentReactApiTool(args: any) {
       ]
     };
   } catch (error) {
-    console.error('Error fetching component React API:', error);
+    logger.error('Error fetching component React API:', error);
 
     return {
       content: [
@@ -260,7 +261,7 @@ export async function handleGetComponentWebComponentApiTool(args: any) {
       ]
     };
   } catch (error) {
-    console.error('Error fetching component web component API:', error);
+    logger.error('Error fetching component web component API:', error);
 
     return {
       content: [
@@ -349,7 +350,7 @@ export async function handleGetComponentStylingTool(args: any) {
       ]
     };
   } catch (error) {
-    console.error('Error fetching component styling:', error);
+    logger.error('Error fetching component styling:', error);
 
     return {
       content: [

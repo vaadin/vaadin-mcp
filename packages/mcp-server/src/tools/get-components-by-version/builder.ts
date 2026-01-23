@@ -5,6 +5,7 @@
 import { toTitleCase, toPascalCase } from '../../utils/string-utils.js';
 import type { ComponentData, ComponentVersionData } from './types.js';
 import { fetchVersionsJson, fetchFlowComponentsTree } from './fetchers.js';
+import { logger } from '../../logger.js';
 
 /**
  * Build component version data from versions.json and flow-components
@@ -14,7 +15,7 @@ export async function buildComponentVersionData(version: string): Promise<Compon
   const [versionsData, javaClassMap] = await Promise.all([
     fetchVersionsJson(version),
     fetchFlowComponentsTree(version).catch(err => {
-      console.warn('Failed to fetch flow-components tree:', err.message);
+      logger.warn('Failed to fetch flow-components tree:', err.message);
       return new Map<string, string>(); // Return empty map on error
     })
   ]);

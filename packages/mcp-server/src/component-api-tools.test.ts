@@ -6,6 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { normalizeComponentName, findComponentFile, parseFrontmatter } from './component-api-helpers.js';
+import { logger } from './logger.js';
 
 /**
  * Test result interface
@@ -368,7 +369,7 @@ async function testPathSecurity() {
  * Run all component API helper tests
  */
 export async function runComponentApiHelperTests(): Promise<{ passed: number; failed: number; results: TestResult[] }> {
-  console.log('\n🧪 Running Component API Helper Tests...\n');
+  logger.info('\n🧪 Running Component API Helper Tests...\n');
 
   const tests = [
     ['Normalize Component Name', testNormalizeComponentName],
@@ -383,24 +384,24 @@ export async function runComponentApiHelperTests(): Promise<{ passed: number; fa
   const results: TestResult[] = [];
 
   for (const [name, testFn] of tests) {
-    console.log(`  Running: ${name}`);
+    logger.info(`  Running: ${name}`);
     const result = await runTest(name, testFn);
     results.push(result);
 
-    console.log(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
+    logger.info(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
     if (!result.passed) {
-      console.log(`       Error: ${result.error}`);
+      logger.info(`       Error: ${result.error}`);
     }
   }
 
   const passed = results.filter(r => r.passed).length;
   const failed = results.length - passed;
 
-  console.log('\n📊 Component API Helper Test Results:');
-  console.log(`  Tests: ${results.length}`);
-  console.log(`  Passed: ${passed} ✅`);
-  console.log(`  Failed: ${failed} ${failed > 0 ? '❌' : ''}`);
-  console.log(`  Success Rate: ${(passed / results.length * 100).toFixed(1)}%`);
+  logger.info('\n📊 Component API Helper Test Results:');
+  logger.info(`  Tests: ${results.length}`);
+  logger.info(`  Passed: ${passed} ✅`);
+  logger.info(`  Failed: ${failed} ${failed > 0 ? '❌' : ''}`);
+  logger.info(`  Success Rate: ${(passed / results.length * 100).toFixed(1)}%`);
 
   return { passed, failed, results };
 }

@@ -26,6 +26,7 @@ import { handleGetVaadinVersionTool } from './tools/vaadin-version/index.js';
 import { handleGetVaadinPrimerTool } from './tools/vaadin-primer/index.js';
 import { LANDING_PAGE_HTML } from './tools/landing-page/index.js';
 import { initializeAnalytics, withAnalytics } from './analytics/index.js';
+import { logger } from './logger.js';
 
 /**
  * Search result interface (legacy compatibility)
@@ -246,7 +247,7 @@ async function startServer() {
       
       // Clean up when request is closed
       res.on('close', () => {
-        console.debug('Request closed');
+        logger.debug('Request closed');
         transport.close();
         server.close();
       });
@@ -257,7 +258,7 @@ async function startServer() {
       // Handle the request
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
-      console.error('Error handling MCP request:', error);
+      logger.error('Error handling MCP request:', error);
       if (!res.headersSent) {
         res.status(500).json({
           jsonrpc: '2.0',
@@ -273,7 +274,7 @@ async function startServer() {
 
   // SSE notifications not supported in stateless mode
   app.get('/', async (req: Request, res: Response) => {
-    console.debug('Received GET MCP request - returning setup page');
+    logger.debug('Received GET MCP request - returning setup page');
     res.setHeader('Content-Type', 'text/html');
     res.send(LANDING_PAGE_HTML);
   });
@@ -291,7 +292,7 @@ async function startServer() {
 
   // Session termination not needed in stateless mode
   app.delete('/', async (req: Request, res: Response) => {
-    console.debug('Received DELETE MCP request');
+    logger.debug('Received DELETE MCP request');
     res.writeHead(405).end(JSON.stringify({
       jsonrpc: "2.0",
       error: {
@@ -305,27 +306,27 @@ async function startServer() {
   // Start the server
   const port = config.server.httpPort;
   app.listen(port, () => {
-    console.debug(`🚀 Vaadin Documentation MCP Server (HTTP) listening on port ${port}`);
-    console.debug(`📍 MCP endpoint: http://localhost:${port}/`);
-    console.debug(`🏥 Health check: http://localhost:${port}/health`);
-    console.debug(`🔧 Transport: Streamable HTTP (stateless mode)`);
-    console.debug(`🔗 REST Server: ${config.restServer.url}`);
+    logger.info(`🚀 Vaadin Documentation MCP Server (HTTP) listening on port ${port}`);
+    logger.info(`📍 MCP endpoint: http://localhost:${port}/`);
+    logger.info(`🏥 Health check: http://localhost:${port}/health`);
+    logger.info(`🔧 Transport: Streamable HTTP (stateless mode)`);
+    logger.info(`🔗 REST Server: ${config.restServer.url}`);
   });
 
   // Graceful shutdown
   process.on('SIGINT', () => {
-    console.debug('\n🛑 Received SIGINT, shutting down gracefully...');
+    logger.debug('\n🛑 Received SIGINT, shutting down gracefully...');
     process.exit(0);
   });
 
   process.on('SIGTERM', () => {
-    console.debug('\n🛑 Received SIGTERM, shutting down gracefully...');
+    logger.debug('\n🛑 Received SIGTERM, shutting down gracefully...');
     process.exit(0);
   });
 }
 
 // Start the server
 startServer().catch((error) => {
-  console.error('❌ Failed to start MCP server:', error);
+  logger.error('❌ Failed to start MCP server:', error);
   process.exit(1);
 });
