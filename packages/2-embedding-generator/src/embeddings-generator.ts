@@ -54,9 +54,9 @@ export class EmbeddingsGenerator {
    */
   async generateEmbeddings(chunks: DocumentChunk[]): Promise<ChunkWithEmbedding[]> {
     const results: ChunkWithEmbedding[] = [];
-    
-    console.log(`Generating embeddings for ${chunks.length} chunks...`);
-    
+
+    console.debug(`Generating embeddings for ${chunks.length} chunks...`);
+
     // Process chunks in batches
     for (let i = 0; i < chunks.length; i += this.batchSize) {
       const batch = chunks.slice(i, i + this.batchSize);
@@ -64,7 +64,7 @@ export class EmbeddingsGenerator {
       results.push(...batchResults);
     }
 
-    console.log(`Successfully generated embeddings for ${results.length} chunks`);
+    console.debug(`Successfully generated embeddings for ${results.length} chunks`);
     return results;
   }
 
@@ -72,12 +72,12 @@ export class EmbeddingsGenerator {
    * Processes a single batch of chunks
    */
   private async processBatch(
-    batch: DocumentChunk[], 
-    batchNumber: number, 
+    batch: DocumentChunk[],
+    batchNumber: number,
     totalBatches: number
   ): Promise<ChunkWithEmbedding[]> {
-    console.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} chunks)`);
-    
+    console.debug(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} chunks)`);
+
     const texts = batch.map(chunk => this.prepareTextForEmbedding(chunk));
     
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {

@@ -24,21 +24,21 @@ export async function cloneOrPullRepo(config: IngestionConfig, branch?: string):
     // Check if repo already exists locally
     if (fs.existsSync(config.repository.localPath)) {
       // Pull latest changes
-      console.log(`Repository exists at ${config.repository.localPath}, pulling latest changes from branch '${targetBranch}'...`);
+      console.debug(`Repository exists at ${config.repository.localPath}, pulling latest changes from branch '${targetBranch}'...`);
       await git.cwd(config.repository.localPath)
         .fetch()
         .checkout(targetBranch)
         .pull();
-      console.log(`Repository updated successfully on branch '${targetBranch}'`);
+      console.debug(`Repository updated successfully on branch '${targetBranch}'`);
     } else {
       // Clone the repository
-      console.log(`Cloning repository from ${config.repository.url} (branch: ${targetBranch}) to ${config.repository.localPath}...`);
+      console.debug(`Cloning repository from ${config.repository.url} (branch: ${targetBranch}) to ${config.repository.localPath}...`);
       await git.clone(config.repository.url, config.repository.localPath);
       // Checkout the specified branch if it's not the default
       if (targetBranch !== 'main') {
         await git.cwd(config.repository.localPath).checkout(targetBranch);
       }
-      console.log(`Repository cloned successfully on branch '${targetBranch}'`);
+      console.debug(`Repository cloned successfully on branch '${targetBranch}'`);
     }
     return true;
   } catch (error) {
@@ -92,10 +92,10 @@ function shouldExcludeFile(filePath: string, articlesDir: string, excludePattern
     for (const pattern of excludePatterns) {
       // Check if the pattern matches the relative path or just the filename
       if (
-        minimatch(relativePath, pattern) || 
+        minimatch(relativePath, pattern) ||
         minimatch(filename, pattern)
       ) {
-        console.log(`Excluding file ${relativePath} (matched exclude pattern: ${pattern})`);
+        console.debug(`Excluding file ${relativePath} (matched exclude pattern: ${pattern})`);
         return true;
       }
     }
@@ -145,7 +145,7 @@ export function getAsciiDocFiles(config: IngestionConfig): string[] {
   
   if (fs.existsSync(articlesDir)) {
     getFiles(articlesDir);
-    console.log(`Found ${files.length} AsciiDoc files (not included: ${notIncludedCount} files based on include patterns, excluded: ${excludedCount} files based on exclude patterns)`);
+    console.debug(`Found ${files.length} AsciiDoc files (not included: ${notIncludedCount} files based on include patterns, excluded: ${excludedCount} files based on exclude patterns)`);
   } else {
     console.error(`Articles directory not found: ${articlesDir}`);
   }

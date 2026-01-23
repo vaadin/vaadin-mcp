@@ -246,7 +246,7 @@ async function startServer() {
       
       // Clean up when request is closed
       res.on('close', () => {
-        console.log('Request closed');
+        console.debug('Request closed');
         transport.close();
         server.close();
       });
@@ -273,7 +273,7 @@ async function startServer() {
 
   // SSE notifications not supported in stateless mode
   app.get('/', async (req: Request, res: Response) => {
-    console.log('Received GET MCP request - returning setup page');
+    console.debug('Received GET MCP request - returning setup page');
     res.setHeader('Content-Type', 'text/html');
     res.send(LANDING_PAGE_HTML);
   });
@@ -291,7 +291,7 @@ async function startServer() {
 
   // Session termination not needed in stateless mode
   app.delete('/', async (req: Request, res: Response) => {
-    console.log('Received DELETE MCP request');
+    console.debug('Received DELETE MCP request');
     res.writeHead(405).end(JSON.stringify({
       jsonrpc: "2.0",
       error: {
@@ -305,21 +305,21 @@ async function startServer() {
   // Start the server
   const port = config.server.httpPort;
   app.listen(port, () => {
-    console.log(`🚀 Vaadin Documentation MCP Server (HTTP) listening on port ${port}`);
-    console.log(`📍 MCP endpoint: http://localhost:${port}/`);
-    console.log(`🏥 Health check: http://localhost:${port}/health`);
-    console.log(`🔧 Transport: Streamable HTTP (stateless mode)`);
-    console.log(`🔗 REST Server: ${config.restServer.url}`);
+    console.debug(`🚀 Vaadin Documentation MCP Server (HTTP) listening on port ${port}`);
+    console.debug(`📍 MCP endpoint: http://localhost:${port}/`);
+    console.debug(`🏥 Health check: http://localhost:${port}/health`);
+    console.debug(`🔧 Transport: Streamable HTTP (stateless mode)`);
+    console.debug(`🔗 REST Server: ${config.restServer.url}`);
   });
 
   // Graceful shutdown
   process.on('SIGINT', () => {
-    console.log('\n🛑 Received SIGINT, shutting down gracefully...');
+    console.debug('\n🛑 Received SIGINT, shutting down gracefully...');
     process.exit(0);
   });
 
   process.on('SIGTERM', () => {
-    console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
+    console.debug('\n🛑 Received SIGTERM, shutting down gracefully...');
     process.exit(0);
   });
 }

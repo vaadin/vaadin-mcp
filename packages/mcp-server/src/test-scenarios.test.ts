@@ -171,7 +171,7 @@ button.addClickListener(e ->
 
 ### In Hilla (React)
 \`\`\`tsx
-<Button onClick={() => console.log('Clicked!')}>
+<Button onClick={() => console.debug('Clicked!')}>
   Click me
 </Button>
 \`\`\`
@@ -833,26 +833,26 @@ async function runTest(scenario: any, client: MockMCPTestClient): Promise<TestRe
  * Run all document-based test scenarios
  */
 export async function runHierarchicalTests(config: TestConfig): Promise<void> {
-  console.log('🧪 Running MCP Server Document-Based Test Scenarios (Mock Data)...\n');
+  console.debug('🧪 Running MCP Server Document-Based Test Scenarios (Mock Data)...\n');
   
   const client = new MockMCPTestClient(config);
   const results: TestResult[] = [];
   
   for (const scenario of DOCUMENT_TEST_SCENARIOS) {
     if (config.verbose) {
-      console.log(`  Running: ${scenario.name}`);
+      console.debug(`  Running: ${scenario.name}`);
     }
     
     const result = await runTest(scenario, client);
     results.push(result);
     
     if (config.verbose) {
-      console.log(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
+      console.debug(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
       if (!result.passed && result.error) {
-        console.log(`       Error: ${result.error}`);
+        console.debug(`       Error: ${result.error}`);
       }
       if (result.details) {
-        console.log(`       Details: ${JSON.stringify(result.details, null, 2)}`);
+        console.debug(`       Details: ${JSON.stringify(result.details, null, 2)}`);
       }
     }
   }
@@ -860,20 +860,20 @@ export async function runHierarchicalTests(config: TestConfig): Promise<void> {
   const passedTests = results.filter(r => r.passed).length;
   const failedTests = results.length - passedTests;
   
-  console.log('\n📊 Document-Based Test Results:');
-  console.log(`  ✅ Passed: ${passedTests}`);
-  console.log(`  ❌ Failed: ${failedTests}`);
-  console.log(`  📝 Total: ${results.length}`);
+  console.debug('\n📊 Document-Based Test Results:');
+  console.debug(`  ✅ Passed: ${passedTests}`);
+  console.debug(`  ❌ Failed: ${failedTests}`);
+  console.debug(`  📝 Total: ${results.length}`);
   
   if (failedTests > 0) {
-    console.log('\n⚠️ Failed Tests:');
+    console.debug('\n⚠️ Failed Tests:');
     results.filter(r => !r.passed).forEach(result => {
-      console.log(`  - ${result.name}: ${result.error}`);
+      console.debug(`  - ${result.name}: ${result.error}`);
     });
   }
   
   const overallSuccess = failedTests === 0;
-  console.log(`\n🎯 Overall Result: ${overallSuccess ? '✅ SUCCESS' : '❌ FAILURE'}`);
+  console.debug(`\n🎯 Overall Result: ${overallSuccess ? '✅ SUCCESS' : '❌ FAILURE'}`);
 }
 
 /**

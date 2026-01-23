@@ -29,7 +29,7 @@ let reducerRegistered = false;
 registerReducer().then(result => {
   reducerRegistered = result;
   if (result) {
-    console.log('Asciidoctor reducer extension registered successfully');
+    console.debug('Asciidoctor reducer extension registered successfully');
   } else {
     console.warn('Failed to register asciidoctor reducer extension. Includes may not be processed correctly.');
   }

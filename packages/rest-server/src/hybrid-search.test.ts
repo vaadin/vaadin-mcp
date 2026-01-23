@@ -264,7 +264,7 @@ async function testEdgeCases() {
  * Run all unit tests
  */
 export async function runUnitTests(): Promise<{ passed: number; failed: number; results: TestResult[] }> {
-  console.log('🧪 Running Clean Architecture Unit Tests...\n');
+  console.debug('🧪 Running Clean Architecture Unit Tests...\n');
   
   const tests = [
     ['Semantic Search Functionality', testSemanticSearch],
@@ -281,24 +281,24 @@ export async function runUnitTests(): Promise<{ passed: number; failed: number; 
   const results: TestResult[] = [];
   
   for (const [name, testFn] of tests) {
-    console.log(`  Running: ${name}`);
+    console.debug(`  Running: ${name}`);
     const result = await runTest(name, testFn);
     results.push(result);
     
-    console.log(`    ${result.passed ? '✅' : '❌'} ${result.name}`);
+    console.debug(`    ${result.passed ? '✅' : '❌'} ${result.name}`);
     if (!result.passed) {
-      console.log(`       Error: ${result.error}`);
+      console.debug(`       Error: ${result.error}`);
     }
   }
   
   const passed = results.filter(r => r.passed).length;
   const failed = results.length - passed;
   
-  console.log('\n📊 Unit Test Results:');
-  console.log(`  Tests: ${results.length}`);
-  console.log(`  Passed: ${passed} ✅`);
-  console.log(`  Failed: ${failed} ${failed > 0 ? '❌' : ''}`);
-  console.log(`  Success Rate: ${(passed / results.length * 100).toFixed(1)}%`);
+  console.debug('\n📊 Unit Test Results:');
+  console.debug(`  Tests: ${results.length}`);
+  console.debug(`  Passed: ${passed} ✅`);
+  console.debug(`  Failed: ${failed} ${failed > 0 ? '❌' : ''}`);
+  console.debug(`  Success Rate: ${(passed / results.length * 100).toFixed(1)}%`);
   
   return { passed, failed, results };
 }

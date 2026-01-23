@@ -403,44 +403,44 @@ export async function runTestSuite(config: TestConfig): Promise<TestSuiteResult>
   const startTime = Date.now();
   const results: TestResult[] = [];
   
-  console.log('🧪 Starting Enhanced REST Server Test Suite...\n');
+  console.debug('🧪 Starting Enhanced REST Server Test Suite...\n');
   
   // Run API tests
-  console.log('📡 Running API Tests...');
+  console.debug('📡 Running API Tests...');
   for (const testCase of API_TEST_CASES) {
-    if (config.verbose) console.log(`  Running: ${testCase.name}`);
+    if (config.verbose) console.debug(`  Running: ${testCase.name}`);
     const result = await runApiTest(testCase, config);
     results.push(result);
     
     if (config.verbose) {
-      console.log(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
-      if (!result.passed) console.log(`       Error: ${result.error}`);
+      console.debug(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
+      if (!result.passed) console.debug(`       Error: ${result.error}`);
     }
   }
   
   // Run hybrid search tests
-  console.log('\n🔍 Running Hybrid Search Tests...');
+  console.debug('\n🔍 Running Hybrid Search Tests...');
   for (const testCase of HYBRID_SEARCH_TEST_CASES) {
-    if (config.verbose) console.log(`  Running: ${testCase.name}`);
+    if (config.verbose) console.debug(`  Running: ${testCase.name}`);
     const result = await runHybridSearchTest(testCase);
     results.push(result);
     
     if (config.verbose) {
-      console.log(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
-      if (!result.passed) console.log(`       Error: ${result.error}`);
+      console.debug(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
+      if (!result.passed) console.debug(`       Error: ${result.error}`);
     }
   }
   
   // Run chunk tests
-  console.log('\n📄 Running Document Chunk Tests...');
+  console.debug('\n📄 Running Document Chunk Tests...');
   for (const testCase of CHUNK_TEST_CASES) {
-    if (config.verbose) console.log(`  Running: ${testCase.name}`);
+    if (config.verbose) console.debug(`  Running: ${testCase.name}`);
     const result = await runChunkTest(testCase);
     results.push(result);
     
     if (config.verbose) {
-      console.log(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
-      if (!result.passed) console.log(`       Error: ${result.error}`);
+      console.debug(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
+      if (!result.passed) console.debug(`       Error: ${result.error}`);
     }
   }
   
@@ -449,17 +449,17 @@ export async function runTestSuite(config: TestConfig): Promise<TestSuiteResult>
   const failedTests = results.length - passedTests;
   
   // Print summary
-  console.log('\n📊 Test Suite Results:');
-  console.log(`  Total Tests: ${results.length}`);
-  console.log(`  Passed: ${passedTests} ✅`);
-  console.log(`  Failed: ${failedTests} ${failedTests > 0 ? '❌' : ''}`);
-  console.log(`  Duration: ${overallDuration}ms`);
-  console.log(`  Success Rate: ${(passedTests / results.length * 100).toFixed(1)}%`);
+  console.debug('\n📊 Test Suite Results:');
+  console.debug(`  Total Tests: ${results.length}`);
+  console.debug(`  Passed: ${passedTests} ✅`);
+  console.debug(`  Failed: ${failedTests} ${failedTests > 0 ? '❌' : ''}`);
+  console.debug(`  Duration: ${overallDuration}ms`);
+  console.debug(`  Success Rate: ${(passedTests / results.length * 100).toFixed(1)}%`);
   
   if (failedTests > 0) {
-    console.log('\n❌ Failed Tests:');
+    console.debug('\n❌ Failed Tests:');
     results.filter(r => !r.passed).forEach(result => {
-      console.log(`  - ${result.name}: ${result.error}`);
+      console.debug(`  - ${result.name}: ${result.error}`);
     });
   }
   
@@ -476,14 +476,14 @@ export async function runTestSuite(config: TestConfig): Promise<TestSuiteResult>
  * Quick validation tests that don't require external server
  */
 export async function runQuickValidation(): Promise<TestSuiteResult> {
-  console.log('⚡ Running Quick Validation Tests...\n');
+  console.debug('⚡ Running Quick Validation Tests...\n');
   
   const results: TestResult[] = [];
   const startTime = Date.now();
   
   // Test 1: Hybrid search basic functionality
   try {
-    console.log('  Testing hybrid search basic functionality...');
+    console.debug('  Testing hybrid search basic functionality...');
     const testStartTime = Date.now();
     const searchResults = await searchService.hybridSearch('test query', { maxResults: 1, maxTokens: 100 });
     const duration = Date.now() - testStartTime;
@@ -505,7 +505,7 @@ export async function runQuickValidation(): Promise<TestSuiteResult> {
   
   // Test 2: Framework filtering logic
   try {
-    console.log('  Testing framework filtering logic...');
+    console.debug('  Testing framework filtering logic...');
     const testStartTime = Date.now();
     
     // Test with empty framework (should work)
@@ -535,11 +535,11 @@ export async function runQuickValidation(): Promise<TestSuiteResult> {
   const passedTests = results.filter(r => r.passed).length;
   const failedTests = results.length - passedTests;
   
-  console.log('\n📊 Quick Validation Results:');
-  console.log(`  Tests: ${results.length}`);
-  console.log(`  Passed: ${passedTests} ✅`);
-  console.log(`  Failed: ${failedTests} ${failedTests > 0 ? '❌' : ''}`);
-  console.log(`  Duration: ${overallDuration}ms`);
+  console.debug('\n📊 Quick Validation Results:');
+  console.debug(`  Tests: ${results.length}`);
+  console.debug(`  Passed: ${passedTests} ✅`);
+  console.debug(`  Failed: ${failedTests} ${failedTests > 0 ? '❌' : ''}`);
+  console.debug(`  Duration: ${overallDuration}ms`);
   
   return {
     totalTests: results.length,
