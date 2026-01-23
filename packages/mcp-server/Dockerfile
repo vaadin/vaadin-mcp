@@ -2,17 +2,21 @@ FROM oven/bun:1.3.6
 
 WORKDIR /app
 
-# Copy package.json first for better Docker layer caching
-COPY package.json ./
-COPY tsconfig.json ./
+# Copy workspace configuration
+COPY package.json bun.lockb ./
+COPY packages/mcp-server/package.json packages/mcp-server/
 
-# Install dependencies
+# Install all workspace dependencies
 RUN bun install
 
-# Copy source code
-COPY src/ src/
+# Copy mcp-server source code
+COPY packages/mcp-server/ packages/mcp-server/
+
+# Copy converted markdown files for component API tools
+COPY packages/1-asciidoc-converter/dist/markdown/ packages/1-asciidoc-converter/dist/markdown/
 
 # Build the application
+WORKDIR /app/packages/mcp-server
 RUN bun run build
 
 # Expose the port the server runs on (matching fly.toml internal_port)
