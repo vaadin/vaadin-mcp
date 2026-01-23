@@ -6,6 +6,7 @@
  */
 
 import { init, track } from '@amplitude/analytics-node';
+import { logger } from '../logger.js';
 
 let initialized = false;
 let enabled = false;
@@ -15,7 +16,7 @@ let enabled = false;
  */
 export function initializeAnalytics(apiKey: string | undefined): void {
   if (!apiKey) {
-    console.debug('📊 Analytics: Amplitude API key not provided, analytics disabled');
+    logger.debug('📊 Analytics: Amplitude API key not provided, analytics disabled');
     enabled = false;
     return;
   }
@@ -24,9 +25,9 @@ export function initializeAnalytics(apiKey: string | undefined): void {
     init(apiKey);
     initialized = true;
     enabled = true;
-    console.debug('📊 Analytics: Amplitude initialized successfully');
+    logger.debug('📊 Analytics: Amplitude initialized successfully');
   } catch (error) {
-    console.error('📊 Analytics: Failed to initialize Amplitude:', error);
+    logger.error('📊 Analytics: Failed to initialize Amplitude:', error);
     enabled = false;
   }
 }
@@ -56,7 +57,7 @@ export async function trackToolCall(
     });
   } catch (error) {
     // Never throw errors that would break tool execution
-    console.error('📊 Analytics: Failed to track event:', error);
+    logger.error('📊 Analytics: Failed to track event:', error);
   }
 }
 
