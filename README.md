@@ -87,7 +87,7 @@ flowchart TD
 ## 🚀 Quick Start
 
 ### Prerequisites
-- [Bun](https://bun.sh/) runtime
+- [Bun](https://bun.sh/) runtime v1.3.6
 - OpenAI API key (for embeddings)
 - Pinecone API key and index
 
