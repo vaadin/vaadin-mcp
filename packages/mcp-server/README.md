@@ -84,6 +84,43 @@ Get the latest stable version of Vaadin Core from GitHub releases.
 - **Returns**: JSON object with version and release timestamp
 - **Purpose**: Useful for setting up new projects, checking for updates, or dependency management
 
+## Configuration
+
+### Environment Variables
+
+The MCP server requires the following environment variables:
+
+#### Required (Production)
+- `PINECONE_API_KEY`: Your Pinecone API key for semantic search
+- `PINECONE_INDEX`: Name of your Pinecone index (default: `vaadin-docs`)
+- `OPENAI_API_KEY`: Your OpenAI API key for embeddings
+
+#### Optional
+- `HTTP_PORT`: HTTP server port (default: 8080)
+- `AMPLITUDE_API_KEY`: Analytics tracking key (optional)
+- `MOCK_PINECONE`: Set to `true` to use mock search for testing (default: false)
+- `ENABLE_REST_API`: Enable legacy REST API endpoints (default: false)
+- `NODE_ENV`: Environment mode (`development` or `production`)
+
+### Setup
+
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Fill in your API keys:
+   ```bash
+   PINECONE_API_KEY=your_actual_key
+   PINECONE_INDEX=vaadin-docs
+   OPENAI_API_KEY=your_actual_key
+   ```
+
+3. For development/testing without Pinecone:
+   ```bash
+   MOCK_PINECONE=true
+   ```
+
 ## Development
 
 ### Local Development
@@ -92,10 +129,12 @@ To contribute to this package:
 
 1. Clone the repository
 2. Install dependencies: `bun install`
-3. Make your changes
-4. Build the package: `bun run build`
-5. Test your changes:
+3. Set up environment variables (see Configuration above)
+4. Make your changes
+5. Build the package: `bun run build`
+6. Test your changes:
    - **HTTP mode**: `bun run start:prod` (starts HTTP server on port 8080)
+   - **Development mode**: `bun run start` (with hot reload)
 
 ### Testing the HTTP Server
 
@@ -123,15 +162,59 @@ curl -X POST http://localhost:8080/ \
 
 ### Deployment
 
-The server is configured for deployment on Fly.io with:
+The server is configured for deployment on Fly.io:
+
+1. Install Fly CLI and authenticate:
+   ```bash
+   flyctl auth login
+   ```
+
+2. Set secrets (don't commit these!):
+   ```bash
+   fly secrets set PINECONE_API_KEY=your_key
+   fly secrets set PINECONE_INDEX=vaadin-docs
+   fly secrets set OPENAI_API_KEY=your_key
+   fly secrets set AMPLITUDE_API_KEY=your_key
+   ```
+
+3. Deploy:
+   ```bash
+   fly deploy
+   ```
+
+Configuration files:
 - `Dockerfile`: Multi-stage build with Bun runtime
-- `fly.toml`: Fly.io configuration with health checks
-- Environment variables: `HTTP_PORT`, `REST_SERVER_URL`
+- `fly.toml`: Fly.io configuration with health checks and environment variables
 
 ## Architecture
 
-- **Transport**: Streamable HTTP transport
-- **State**: Stateless design - each request creates a new server instance for isolation
+### Overview
+The MCP server integrates search and document services directly, eliminating HTTP overhead from the previous architecture.
+
+**Key Components:**
+- **Transport**: Streamable HTTP (stateless mode)
+- **Search Service**: Hybrid search using Pinecone (semantic + keyword) with reranking
+- **Document Service**: Direct file system access to markdown documentation
+- **State**: Stateless request handling with shared service instances
+
+### Architecture Changes (v0.8.0)
+
+**Previous Architecture:**
+- MCP Server → HTTP → REST Server → Pinecone/OpenAI
+- Two separate deployments
+- HTTP overhead for every search request
+
+**Current Architecture:**
+- MCP Server → Direct Service Calls → Pinecone/OpenAI
+- Single deployment
+- No HTTP overhead
+- Shared service instances initialized at startup
+
+**Benefits:**
+1. **Performance**: 200-500ms faster (eliminates HTTP round-trip)
+2. **Simplicity**: Single deployment instead of two
+3. **Reliability**: No external REST API dependency
+4. **Cost**: Reduced infrastructure (one Fly app instead of two)
 - **Backend**: Forwards search requests to the REST server at `https://vaadin-docs-search.fly.dev`
 - **SDK**: Built with MCP TypeScript SDK v1.17.0
 

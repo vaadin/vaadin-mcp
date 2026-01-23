@@ -884,7 +884,8 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose');
   const serverArg = args.find(arg => arg.startsWith('--server='));
-  const restServerUrl = serverArg ? serverArg.split('=')[1] : config.restServer.url;
+  // Default to localhost for testing MCP server
+  const restServerUrl = serverArg ? serverArg.split('=')[1] : 'http://localhost:8080';
 
   const testConfig: TestConfig = {
     restServerUrl,
