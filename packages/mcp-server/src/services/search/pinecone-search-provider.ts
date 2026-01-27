@@ -5,9 +5,10 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { PineconeStore } from '@langchain/pinecone';
 import { Pinecone } from '@pinecone-database/pinecone';
-import type { RetrievalResult } from 'core-types';
-import { config } from './config.js';
+import type { RetrievalResult } from '../../types.js';
+import { config } from '../../config.js';
 import type { SearchProvider, SemanticResult, KeywordResult } from './search-interfaces.js';
+import { logger } from '../../logger.js';
 
 export class PineconeSearchProvider implements SearchProvider {
   private pinecone: Pinecone;
@@ -63,7 +64,7 @@ export class PineconeSearchProvider implements SearchProvider {
 
     // Perform similarity search with LangChain
     const results = await this.vectorStore.similaritySearchWithScore(query, k, filter);
-    
+
     return results.map((result, index) => ({
       id: result[0].metadata.chunk_id || `semantic-${index}`,
       content: result[0].pageContent,
@@ -97,17 +98,17 @@ export class PineconeSearchProvider implements SearchProvider {
     }
 
     const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 2);
-    
+
     if (queryTerms.length === 0) {
       return [];
     }
 
     // Create a keyword-focused query
     const keywordQuery = queryTerms.join(' ');
-    
+
     // Use Pinecone directly for more control over the search
     const embedResponse = await this.embeddings.embedQuery(keywordQuery);
-    
+
     const queryResponse = await this.pineconeIndex.query({
       vector: embedResponse,
       topK: k * 2, // Get more results to filter for keyword relevance
@@ -117,19 +118,19 @@ export class PineconeSearchProvider implements SearchProvider {
 
     // Score results based on keyword overlap
     const results: KeywordResult[] = [];
-    
+
     for (const match of queryResponse.matches || []) {
       if (!match.metadata || !match.metadata.content) continue;
-      
+
       const content = String(match.metadata.content).toLowerCase();
-      
+
       // Calculate keyword score based on term frequency
       let keywordScore = 0;
       for (const term of queryTerms) {
         const termFreq = (content.match(new RegExp(term, 'g')) || []).length;
         keywordScore += termFreq * (1 / Math.log(1 + queryTerms.indexOf(term)));
       }
-      
+
       // Only include results with keyword matches
       if (keywordScore > 0) {
         results.push({
@@ -140,10 +141,10 @@ export class PineconeSearchProvider implements SearchProvider {
           source: 'keyword' as const,
         });
       }
-      
+
       if (results.length >= k) break;
     }
-    
+
     // Sort by keyword score
     return results.sort((a, b) => b.score - a.score);
   }
@@ -159,19 +160,20 @@ export class PineconeSearchProvider implements SearchProvider {
         topK: 1,
         includeMetadata: true,
       });
-      
+
       const match = queryResponse.matches?.[0];
       if (!match || !match.metadata) {
         return null;
       }
-      
+
       const frameworkValue = String(match.metadata.framework || 'common');
-      const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla') 
-        ? frameworkValue as 'flow' | 'hilla' 
+      const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla')
+        ? frameworkValue as 'flow' | 'hilla'
         : 'common' as const;
-      
+
       return {
         chunk_id: chunkId,
+        parent_id: match.metadata.parent_id || null,
         framework: validFramework,
         content: String(match.metadata.content || ''),
         source_url: String(match.metadata.source_url || ''),
@@ -182,8 +184,8 @@ export class PineconeSearchProvider implements SearchProvider {
         relevance_score: match.score || 0,
       };
     } catch (error) {
-      console.error('Error fetching document chunk:', error);
+      logger.error('Error fetching document chunk:', error);
       return null;
     }
   }
-} 
+}

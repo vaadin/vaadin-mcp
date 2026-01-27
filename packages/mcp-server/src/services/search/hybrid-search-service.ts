@@ -4,11 +4,12 @@
  * with built-in reranking for superior relevance
  */
 
-import type { RetrievalResult } from 'core-types';
+import type { RetrievalResult } from '../../types.js';
 import type { SearchProvider } from './search-interfaces.js';
 import { PineconeSparseProvider } from './pinecone-sparse-provider.js';
 import { Pinecone } from '@pinecone-database/pinecone';
-import { config } from './config.js';
+import { config } from '../../config.js';
+import { logger } from '../../logger.js';
 
 interface SearchOptions {
   maxResults?: number;
@@ -38,7 +39,7 @@ export class HybridSearchService {
    * Initialize the service by ensuring sparse index exists
    */
   async initialize(): Promise<void> {
-    console.debug('🚀 Initializing Enhanced Hybrid Search Service...');
+    logger.debug('🚀 Initializing Enhanced Hybrid Search Service...');
 
     try {
       // Ensure sparse index exists and is ready
@@ -47,14 +48,14 @@ export class HybridSearchService {
       // Check if sparse index needs data population
       const status = await this.sparseProvider.checkIndexStatus();
       if (status.exists && !status.hasData) {
-        console.debug('⚠️  Sparse index exists but has no data. You may need to populate it.');
-        console.debug(`   Index name: ${this.sparseProvider.getSparseIndexName()}`);
-        console.debug('   💡 Run the embedding generator to populate both dense and sparse indexes.');
+        logger.debug('⚠️  Sparse index exists but has no data. You may need to populate it.');
+        logger.debug(`   Index name: ${this.sparseProvider.getSparseIndexName()}`);
+        logger.debug('   💡 Run the embedding generator to populate both dense and sparse indexes.');
       }
 
-      console.debug('✅ Enhanced Hybrid Search Service initialized successfully');
+      logger.debug('✅ Enhanced Hybrid Search Service initialized successfully');
     } catch (error) {
-      console.error('❌ Failed to initialize Enhanced Hybrid Search Service:', error);
+      logger.error('❌ Failed to initialize Enhanced Hybrid Search Service:', error);
       throw error;
     }
   }
@@ -72,28 +73,28 @@ export class HybridSearchService {
     try {
       // 1. Preprocess query for better search quality
       const processedQuery = this.preprocessQuery(query);
-      
+
       // 2. Parallel search (dense + sparse) - get more results for reranking
       const searchResultsMultiplier = 3; // Get 3x results for better reranking
       const candidateCount = Math.min(maxResults * searchResultsMultiplier, 100);
 
-      console.debug(`🔍 Searching: "${processedQuery.cleaned}" (${framework || 'all frameworks'})`);
+      logger.debug(`🔍 Searching: "${processedQuery.cleaned}" (${framework || 'all frameworks'})`);
 
       const [semanticResults, keywordResults] = await Promise.all([
         this.denseProvider.semanticSearch(processedQuery.cleaned, candidateCount, framework),
         this.sparseProvider.keywordSearch(processedQuery.cleaned, candidateCount, framework)
       ]);
 
-      console.debug(`📊 Results: ${semanticResults.length} semantic, ${keywordResults.length} keyword`);
+      logger.debug(`📊 Results: ${semanticResults.length} semantic, ${keywordResults.length} keyword`);
 
       // 3. Merge and deduplicate results
       const mergedResults = this.mergeAndDeduplicateResults(semanticResults, keywordResults);
-      console.debug(`🔗 Merged to ${mergedResults.length} unique results`);
+      logger.debug(`🔗 Merged to ${mergedResults.length} unique results`);
 
       // 4. If we have enough results, use Pinecone's native reranking
       if (mergedResults.length > 1) {
         const rerankedResults = await this.rerank(processedQuery.original, mergedResults, maxResults);
-        console.debug(`🎯 Reranked to top ${rerankedResults.length} results`);
+        logger.debug(`🎯 Reranked to top ${rerankedResults.length} results`);
 
         // 5. Apply token limits and return
         return this.applyTokenLimits(rerankedResults, maxTokens);
@@ -103,9 +104,9 @@ export class HybridSearchService {
       }
 
     } catch (error) {
-      console.error('Error in hybrid search:', error);
+      logger.error('Error in hybrid search:', error);
       // Graceful fallback to semantic search only
-      console.debug('🔄 Falling back to semantic search only');
+      logger.debug('🔄 Falling back to semantic search only');
       const semanticResults = await this.denseProvider.semanticSearch(query, maxResults, framework);
       return semanticResults.map(this.convertSemanticToRetrievalResult.bind(this));
     }
@@ -117,12 +118,12 @@ export class HybridSearchService {
   async getDocumentChunk(chunkId: string): Promise<RetrievalResult | null> {
     // Try dense index first (more likely to have the chunk)
     let result = await this.denseProvider.getDocumentChunk(chunkId);
-    
+
     // Fallback to sparse index if not found
     if (!result) {
       result = await this.sparseProvider.getDocumentChunk(chunkId);
     }
-    
+
     return result;
   }
 
@@ -131,7 +132,7 @@ export class HybridSearchService {
    */
   private preprocessQuery(query: string): ProcessedQuery {
     const original = query;
-    
+
     // Clean and normalize query
     let cleaned = query
       .toLowerCase()
@@ -161,7 +162,7 @@ export class HybridSearchService {
    */
   private mergeAndDeduplicateResults(semanticResults: any[], keywordResults: any[]): any[] {
     const resultMap = new Map();
-    
+
     // Add semantic results
     semanticResults.forEach(result => {
       resultMap.set(result.id, {
@@ -171,7 +172,7 @@ export class HybridSearchService {
         keywordScore: 0
       });
     });
-    
+
     // Add keyword results, combining with semantic if duplicate
     keywordResults.forEach(result => {
       const existing = resultMap.get(result.id);
@@ -188,7 +189,7 @@ export class HybridSearchService {
         });
       }
     });
-    
+
     return Array.from(resultMap.values());
   }
 
@@ -203,13 +204,13 @@ export class HybridSearchService {
 
       // Prepare documents for reranking - use simple string array format
       const documents = results.map(result => result.content || '').filter(content => content.length > 0);
-      
+
       if (documents.length === 0) {
-        console.warn('No valid documents for reranking, returning original order');
+        logger.warn('No valid documents for reranking, returning original order');
         return results.slice(0, topN).map(result => this.convertToRetrievalResult(result));
       }
 
-      console.debug(`🔄 Reranking ${documents.length} documents...`);
+      logger.debug(`🔄 Reranking ${documents.length} documents...`);
 
       // Use Pinecone's rerank API with correct format
       const rerankedResponse = await this.pinecone.inference.rerank(
@@ -224,7 +225,7 @@ export class HybridSearchService {
 
       // Convert reranked results back to RetrievalResult format
       const rerankedResults: RetrievalResult[] = [];
-      
+
       for (const item of rerankedResponse.data || []) {
         const originalIndex = item.index;
         if (originalIndex >= 0 && originalIndex < results.length) {
@@ -233,11 +234,11 @@ export class HybridSearchService {
         }
       }
 
-      console.debug(`✅ Reranked to ${rerankedResults.length} results`);
+      logger.debug(`✅ Reranked to ${rerankedResults.length} results`);
       return rerankedResults;
 
     } catch (error) {
-      console.error('Reranking failed, falling back to original order:', error);
+      logger.error('Reranking failed, falling back to original order:', error);
       // Fallback to original order
       return results.slice(0, topN).map(result => this.convertToRetrievalResult(result));
     }
@@ -250,18 +251,18 @@ export class HybridSearchService {
     const approximateTokensPerChar = 0.25;
     let totalTokens = 0;
     const limitedResults: RetrievalResult[] = [];
-    
+
     for (const result of results) {
       const estimatedTokens = result.content.length * approximateTokensPerChar;
-      
+
       if (totalTokens + estimatedTokens > maxTokens && limitedResults.length > 0) {
         break;
       }
-      
+
       limitedResults.push(result);
       totalTokens += estimatedTokens;
     }
-    
+
     return limitedResults;
   }
 
@@ -270,13 +271,14 @@ export class HybridSearchService {
    */
   private convertToRetrievalResult(result: any): RetrievalResult {
     const frameworkValue = String(result.metadata?.framework || 'common');
-    const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla') 
-      ? frameworkValue as 'flow' | 'hilla' 
+    const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla')
+      ? frameworkValue as 'flow' | 'hilla'
       : 'common' as const;
 
     // Explicitly construct response without parent_id
     const response = {
       chunk_id: result.id,
+      parent_id: result.metadata?.parent_id || null,
       framework: validFramework,
       content: result.content,
       source_url: result.metadata?.source_url || '',
@@ -288,9 +290,6 @@ export class HybridSearchService {
       relevance_score: result.score || 0
     } as RetrievalResult;
 
-    // Ensure parent_id is not present in the response
-    delete (response as any).parent_id;
-    
     return response;
   }
 
@@ -299,15 +298,17 @@ export class HybridSearchService {
    */
   private convertSemanticToRetrievalResult(result: any): RetrievalResult {
     const frameworkValue = String(result.metadata?.framework || 'common');
-    const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla') 
-      ? frameworkValue as 'flow' | 'hilla' 
+    const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla')
+      ? frameworkValue as 'flow' | 'hilla'
       : 'common' as const;
 
     return {
       chunk_id: result.id,
+      parent_id: result.metadata?.parent_id || null,
       framework: validFramework,
       content: result.content,
       source_url: result.metadata?.source_url || '',
+      file_path: result.metadata?.file_path || '',
       metadata: {
         title: result.metadata?.title || 'Untitled',
         heading: result.metadata?.heading || '',
@@ -315,4 +316,4 @@ export class HybridSearchService {
       relevance_score: result.score || 0,
     };
   }
-} 
+}

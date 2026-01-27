@@ -734,7 +734,7 @@ url = "https://mcp.vaadin.com/docs"</pre>
               button.classList.remove('copied');
             }, 2000);
           }).catch(function(err) {
-            console.error('Failed to copy:', err);
+            logger.error('Failed to copy:', err);
             button.textContent = 'Failed';
             setTimeout(function() {
               button.textContent = 'Copy';

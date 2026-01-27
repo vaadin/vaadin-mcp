@@ -12,7 +12,7 @@ import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { config } from './config.js';
+import { config, validateConfig } from './config.js';
 import { z } from 'zod';
 import { handleGetComponentsByVersionTool } from './tools/get-components-by-version/index.js';
 import {
@@ -27,6 +27,9 @@ import { handleGetVaadinPrimerTool } from './tools/vaadin-primer/index.js';
 import { LANDING_PAGE_HTML } from './tools/landing-page/index.js';
 import { initializeAnalytics, withAnalytics } from './analytics/index.js';
 import { logger } from './logger.js';
+import { getSearchService } from './services/search/search-factory.js';
+import { DocumentService } from './services/document/document-service.js';
+import type { HybridSearchService } from './services/search/hybrid-search-service.js';
 
 /**
  * Search result interface (legacy compatibility)
@@ -43,17 +46,50 @@ export interface SearchResult {
   score: number;
 }
 
+// Global service instances (initialized once, shared across requests)
+let hybridSearchService: HybridSearchService | null = null;
+let documentService: DocumentService | null = null;
+
+/**
+ * Initialize all services at startup
+ */
+async function initializeServices() {
+  logger.info('🚀 Initializing services...');
+
+  try {
+    // Validate configuration
+    validateConfig();
+
+    // Initialize search service
+    hybridSearchService = await getSearchService();
+    if (!config.features.mockPinecone) {
+      await hybridSearchService.initialize();
+    }
+
+    // Initialize document service
+    documentService = new DocumentService();
+
+    logger.info('✅ Services initialized successfully');
+  } catch (error) {
+    logger.error('❌ Failed to initialize services:', error);
+    throw error;
+  }
+}
+
 /**
  * Create and configure MCP server instance
  */
-function createMcpServer(): McpServer {
+function createMcpServer(services: {
+  search: HybridSearchService;
+  document: DocumentService;
+}): McpServer {
   const server = new McpServer({
     name: config.server.name,
     version: config.server.version
   });
 
   // Register tools using the new API
-  setupTools(server);
+  setupTools(server, services);
 
   return server;
 }
@@ -61,7 +97,10 @@ function createMcpServer(): McpServer {
 /**
  * Set up tools for the MCP server using the new registerTool API
  */
-function setupTools(server: McpServer) {
+function setupTools(server: McpServer, services: {
+  search: HybridSearchService;
+  document: DocumentService;
+}) {
   // Register get_vaadin_primer tool
   server.registerTool(
     "get_vaadin_primer",
@@ -98,9 +137,9 @@ function setupTools(server: McpServer) {
       } else if (args.ui_language === 'common') {
         convertedArgs.framework = 'common';
       }
-      // Remove ui_language from converted args since REST API expects framework
+      // Remove ui_language from converted args since service expects framework
       delete convertedArgs.ui_language;
-      return await handleSearchTool(convertedArgs);
+      return await handleSearchTool(convertedArgs, services.search);
     })
   );
 
@@ -115,7 +154,7 @@ function setupTools(server: McpServer) {
       }
     },
     withAnalytics("get_full_document", async (args) => {
-      return await handleGetFullDocumentTool(args);
+      return await handleGetFullDocumentTool(args, services.document);
     })
   );
 
@@ -215,6 +254,9 @@ async function startServer() {
   // Initialize analytics
   initializeAnalytics(config.analytics.amplitudeApiKey);
 
+  // Initialize services before starting server
+  await initializeServices();
+
   const app = express();
   
   // Configure CORS to support browser-based MCP clients
@@ -240,7 +282,11 @@ async function startServer() {
   app.post('/', async (req: Request, res: Response) => {
     try {
       // Create new server and transport instances for each request (stateless)
-      const server = createMcpServer();
+      // But pass shared service instances
+      const server = createMcpServer({
+        search: hybridSearchService!,
+        document: documentService!,
+      });
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined, // Stateless mode
       });
@@ -306,11 +352,12 @@ async function startServer() {
   // Start the server
   const port = config.server.httpPort;
   app.listen(port, () => {
-    logger.info(`🚀 Vaadin Documentation MCP Server (HTTP) listening on port ${port}`);
+    logger.info(`🚀 Vaadin Documentation MCP Server listening on port ${port}`);
     logger.info(`📍 MCP endpoint: http://localhost:${port}/`);
     logger.info(`🏥 Health check: http://localhost:${port}/health`);
     logger.info(`🔧 Transport: Streamable HTTP (stateless mode)`);
-    logger.info(`🔗 REST Server: ${config.restServer.url}`);
+    logger.info(`🔍 Search: Hybrid (Pinecone + Reranking)`);
+    logger.info(`🎯 Mock mode: ${config.features.mockPinecone ? 'ENABLED' : 'disabled'}`);
   });
 
   // Graceful shutdown

@@ -2,7 +2,7 @@
  * Mock search provider for testing - completely separated from production code
  */
 
-import type { RetrievalResult } from 'core-types';
+import type { RetrievalResult } from '../../types.js';
 import type { SearchProvider, SemanticResult, KeywordResult } from './search-interfaces.js';
 
 /**
@@ -104,7 +104,7 @@ const MOCK_PINECONE_DATA = [
 ];
 
 export class MockSearchProvider implements SearchProvider {
-  
+
   /**
    * Mock semantic search implementation
    */
@@ -117,38 +117,38 @@ export class MockSearchProvider implements SearchProvider {
     if (!query || query.trim() === '') {
       return [];
     }
-    
+
     const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 0);
-    
+
     // Filter by framework if specified
     let filteredData = MOCK_PINECONE_DATA;
     if (framework === 'flow') {
-      filteredData = MOCK_PINECONE_DATA.filter(item => 
-        item.metadata.framework === 'flow' || 
+      filteredData = MOCK_PINECONE_DATA.filter(item =>
+        item.metadata.framework === 'flow' ||
         item.metadata.framework === 'common' ||
         item.metadata.framework === ''
       );
     } else if (framework === 'hilla') {
-      filteredData = MOCK_PINECONE_DATA.filter(item => 
-        item.metadata.framework === 'hilla' || 
+      filteredData = MOCK_PINECONE_DATA.filter(item =>
+        item.metadata.framework === 'hilla' ||
         item.metadata.framework === 'common' ||
         item.metadata.framework === ''
       );
     }
-    
+
     // Score based on keyword matches
     const scoredResults = filteredData.map(item => {
       const content = item.content.toLowerCase();
       const title = (item.metadata.title || '').toLowerCase();
       const heading = (item.metadata.heading || '').toLowerCase();
-      
+
       let score = 0;
       for (const word of queryWords) {
         if (content.includes(word)) score += 0.3;
         if (title.includes(word)) score += 0.4;
         if (heading.includes(word)) score += 0.3;
       }
-      
+
       return {
         id: item.metadata.chunk_id,
         content: item.content,
@@ -157,7 +157,7 @@ export class MockSearchProvider implements SearchProvider {
         source: 'semantic' as const
       };
     });
-    
+
     // Sort by score and return top k
     return scoredResults
       .filter(result => result.score > 0)
@@ -177,41 +177,41 @@ export class MockSearchProvider implements SearchProvider {
     if (!query || query.trim() === '') {
       return [];
     }
-    
+
     const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 3);
-    
+
     if (queryTerms.length === 0) {
       return [];
     }
-    
+
     // Filter by framework if specified
     let filteredData = MOCK_PINECONE_DATA;
     if (framework === 'flow') {
-      filteredData = MOCK_PINECONE_DATA.filter(item => 
-        item.metadata.framework === 'flow' || 
+      filteredData = MOCK_PINECONE_DATA.filter(item =>
+        item.metadata.framework === 'flow' ||
         item.metadata.framework === 'common' ||
         item.metadata.framework === ''
       );
     } else if (framework === 'hilla') {
-      filteredData = MOCK_PINECONE_DATA.filter(item => 
-        item.metadata.framework === 'hilla' || 
+      filteredData = MOCK_PINECONE_DATA.filter(item =>
+        item.metadata.framework === 'hilla' ||
         item.metadata.framework === 'common' ||
         item.metadata.framework === ''
       );
     }
-    
+
     // Score based on exact term frequency
     const results = [];
-    
+
     for (const item of filteredData) {
       const content = item.content.toLowerCase();
       let keywordScore = 0;
-      
+
       for (const term of queryTerms) {
         const termFreq = (content.match(new RegExp(term, 'g')) || []).length;
         keywordScore += termFreq * (1 / Math.log(1 + queryTerms.indexOf(term)));
       }
-      
+
       if (keywordScore > 0) {
         results.push({
           id: item.metadata.chunk_id,
@@ -222,7 +222,7 @@ export class MockSearchProvider implements SearchProvider {
         });
       }
     }
-    
+
     // Sort by keyword score and return top k
     return results
       .sort((a, b) => b.score - a.score)
@@ -234,11 +234,11 @@ export class MockSearchProvider implements SearchProvider {
    */
   async getDocumentChunk(chunkId: string): Promise<RetrievalResult | null> {
     const item = MOCK_PINECONE_DATA.find(item => item.metadata.chunk_id === chunkId);
-    
+
     if (!item) {
       return null;
     }
-    
+
     return {
       chunk_id: item.metadata.chunk_id,
       parent_id: item.metadata.parent_id,
@@ -252,4 +252,4 @@ export class MockSearchProvider implements SearchProvider {
       relevance_score: item.score
     };
   }
-} 
+}

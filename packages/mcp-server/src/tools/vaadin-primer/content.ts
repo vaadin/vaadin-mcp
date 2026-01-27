@@ -224,9 +224,9 @@ const createTask = async (request: CreateTaskRequest) => {
     try {
         // Type-safe call with automatic validation
         const newTask = await TaskEndpoint.createTask(request);
-        console.log('Created:', newTask);
+        logger.info('Created:', newTask);
     } catch (error) {
-        console.error('Validation or business logic error:', error);
+        logger.error('Validation or business logic error:', error);
     }
 };
 \`\`\`
