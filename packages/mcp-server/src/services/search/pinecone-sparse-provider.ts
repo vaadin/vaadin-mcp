@@ -5,9 +5,10 @@
  */
 
 import { Pinecone } from '@pinecone-database/pinecone';
-import type { RetrievalResult } from 'core-types';
-import { config } from './config.js';
+import { config } from '../../config.js';
+import type { RetrievalResult } from '../../types.js';
 import type { KeywordResult } from './search-interfaces.js';
+import { logger } from '../../logger.js';
 
 export class PineconeSparseProvider {
   private pinecone: Pinecone;
@@ -17,7 +18,7 @@ export class PineconeSparseProvider {
     this.pinecone = new Pinecone({
       apiKey: config.pinecone.apiKey!,
     });
-    
+
     // Use the main dense index for keyword search with different scoring
     this.sparseIndexName = config.pinecone.index + '-sparse';
   }
@@ -28,9 +29,9 @@ export class PineconeSparseProvider {
   async ensureSparseIndex(): Promise<void> {
     try {
       const hasIndex = await this.checkIndexExists(this.sparseIndexName);
-      
+
       if (!hasIndex) {
-        console.debug(`🔧 Creating sparse index: ${this.sparseIndexName}`);
+        logger.debug(`🔧 Creating sparse index: ${this.sparseIndexName}`);
 
         await this.pinecone.createIndexForModel({
           name: this.sparseIndexName,
@@ -44,12 +45,12 @@ export class PineconeSparseProvider {
 
         // Wait for index to be ready
         await this.waitForIndexReady(this.sparseIndexName);
-        console.debug(`✅ Sparse index created and ready: ${this.sparseIndexName}`);
+        logger.debug(`✅ Sparse index created and ready: ${this.sparseIndexName}`);
       } else {
-        console.debug(`✅ Sparse index exists: ${this.sparseIndexName}`);
+        logger.debug(`✅ Sparse index exists: ${this.sparseIndexName}`);
       }
     } catch (error) {
-      console.error('Error ensuring sparse index:', error);
+      logger.error('Error ensuring sparse index:', error);
       throw error;
     }
   }
@@ -62,7 +63,7 @@ export class PineconeSparseProvider {
       const indexList = await this.pinecone.listIndexes();
       return indexList.indexes?.some(index => index.name === indexName) || false;
     } catch (error) {
-      console.error('Error checking if index exists:', error);
+      logger.error('Error checking if index exists:', error);
       return false;
     }
   }
@@ -74,26 +75,26 @@ export class PineconeSparseProvider {
     const startTime = Date.now();
     const pollInterval = 5000; // Check every 5 seconds
 
-    console.debug(`⏳ Waiting for index ${indexName} to be ready...`);
+    logger.debug(`⏳ Waiting for index ${indexName} to be ready...`);
 
     while (Date.now() - startTime < maxWaitTime) {
       try {
         const indexDescription = await this.pinecone.describeIndex(indexName);
 
         if (indexDescription.status?.ready) {
-          console.debug(`✅ Index ${indexName} is ready!`);
+          logger.debug(`✅ Index ${indexName} is ready!`);
           return;
         }
 
-        console.debug(`⏳ Index ${indexName} status: ${indexDescription.status?.state}, waiting...`);
+        logger.debug(`⏳ Index ${indexName} status: ${indexDescription.status?.state}, waiting...`);
         await new Promise(resolve => setTimeout(resolve, pollInterval));
 
       } catch (error) {
-        console.debug(`⏳ Index ${indexName} not yet available, waiting...`);
+        logger.debug(`⏳ Index ${indexName} not yet available, waiting...`);
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
     }
-    
+
     throw new Error(`Timeout waiting for index ${indexName} to be ready after ${maxWaitTime}ms`);
   }
 
@@ -109,29 +110,29 @@ export class PineconeSparseProvider {
     try {
       // Extract meaningful keywords from query
       const keywords = this.extractKeywords(query);
-      
+
       if (keywords.length === 0) {
         return [];
       }
 
-      console.debug(`🔍 Keyword search for: [${keywords.join(', ')}]`);
+      logger.debug(`🔍 Keyword search for: [${keywords.join(', ')}]`);
 
       // Build framework filter
       const filter = this.buildFrameworkFilter(framework);
 
       // Search using keyword-focused query
       const keywordQuery = keywords.join(' ');
-      
+
       // Use the dense index for keyword search since we don't have a separate sparse index
       const denseIndex = this.pinecone.index(this.sparseIndexName.replace('-sparse', ''));
-      
+
       // Get embedding using the same method as the dense provider
       const { OpenAIEmbeddings } = await import('@langchain/openai');
       const embeddings = new OpenAIEmbeddings({
         apiKey: process.env.OPENAI_API_KEY!,
         model: 'text-embedding-3-small',
       });
-      
+
       const embedResponse = await embeddings.embedQuery(keywordQuery);
 
       const queryResponse = await denseIndex.query({
@@ -143,17 +144,17 @@ export class PineconeSparseProvider {
 
       // Score results based on keyword relevance
       const keywordResults: KeywordResult[] = [];
-      
+
       for (const match of queryResponse.matches || []) {
         if (!match.metadata?.content) continue;
-        
+
         const content = String(match.metadata.content).toLowerCase();
         const title = String(match.metadata.title || '').toLowerCase();
         const heading = String(match.metadata.heading || '').toLowerCase();
-        
+
         // Calculate keyword score
         const keywordScore = this.calculateKeywordScore(keywords, content, title, heading);
-        
+
         // Only include results with good keyword match
         if (keywordScore > 0.1) {
           keywordResults.push({
@@ -170,9 +171,9 @@ export class PineconeSparseProvider {
       return keywordResults
         .sort((a, b) => b.score - a.score)
         .slice(0, k);
-        
+
     } catch (error) {
-      console.error('Error in keyword search:', error);
+      logger.error('Error in keyword search:', error);
       return [];
     }
   }
@@ -182,7 +183,7 @@ export class PineconeSparseProvider {
    */
   private extractKeywords(query: string): string[] {
     const stopWords = new Set([
-      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
       'of', 'with', 'by', 'from', 'how', 'what', 'when', 'where', 'why', 'is', 'are', 'was', 'were'
     ]);
 
@@ -200,31 +201,31 @@ export class PineconeSparseProvider {
   private calculateKeywordScore(keywords: string[], content: string, title: string, heading: string): number {
     let score = 0;
     const contentWords = content.split(/\s+/);
-    
+
     for (const keyword of keywords) {
       // Title matches are weighted heavily
       if (title.includes(keyword)) {
         score += 2.0;
       }
-      
-      // Heading matches are weighted moderately  
+
+      // Heading matches are weighted moderately
       if (heading.includes(keyword)) {
         score += 1.5;
       }
-      
+
       // Content matches
       const contentMatches = (content.match(new RegExp(keyword, 'gi')) || []).length;
       if (contentMatches > 0) {
         // Term frequency with diminishing returns
         score += Math.min(contentMatches * 0.3, 1.0);
-        
+
         // Bonus for exact phrase matches
         if (content.includes(keywords.join(' '))) {
           score += 0.5;
         }
       }
     }
-    
+
     // Normalize by content length (prevent long docs from dominating)
     const lengthPenalty = Math.min(contentWords.length / 200, 1.0);
     return score / (1 + lengthPenalty);
@@ -276,16 +277,16 @@ export class PineconeSparseProvider {
       try {
         const denseIndex = this.pinecone.index(indexName);
         const stats = await denseIndex.describeIndexStats();
-        return { 
-          exists: true, 
-          hasData: (stats.totalRecordCount || 0) > 0 
+        return {
+          exists: true,
+          hasData: (stats.totalRecordCount || 0) > 0
         };
       } catch (error) {
         // If we can't get stats, assume index exists but has no data
         return { exists: true, hasData: false };
       }
     } catch (error) {
-      console.error('Error checking index status:', error);
+      logger.error('Error checking index status:', error);
       return { exists: false, hasData: false };
     }
   }
@@ -309,4 +310,4 @@ export class PineconeSparseProvider {
   getSparseIndexName(): string {
     return this.sparseIndexName;
   }
-} 
+}

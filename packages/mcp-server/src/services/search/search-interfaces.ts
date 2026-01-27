@@ -3,7 +3,7 @@
  * This allows for proper dependency injection and testing
  */
 
-import type { RetrievalResult } from 'core-types';
+import type { RetrievalResult } from '../../types.js';
 
 /**
  * Abstract interface for search providers
@@ -13,12 +13,12 @@ export interface SearchProvider {
    * Perform semantic search
    */
   semanticSearch(query: string, k: number, framework: string): Promise<SemanticResult[]>;
-  
+
   /**
    * Perform keyword search
    */
   keywordSearch(query: string, k: number, framework: string): Promise<KeywordResult[]>;
-  
+
   /**
    * Get a document chunk by ID
    */
@@ -63,12 +63,12 @@ export class RRFCombiner {
     k: number = 60
   ): CombinedResult[] {
     const combinedMap = new Map<string, CombinedResult>();
-    
+
     // Process semantic results
     semanticResults.forEach((result, index) => {
       const rank = index + 1;
       const rrfScore = 1 / (k + rank);
-      
+
       combinedMap.set(result.id, {
         id: result.id,
         content: result.content,
@@ -78,12 +78,12 @@ export class RRFCombiner {
         ranks: { semantic: rank },
       });
     });
-    
+
     // Process keyword results and combine with semantic
     keywordResults.forEach((result, index) => {
       const rank = index + 1;
       const rrfScore = 1 / (k + rank);
-      
+
       if (combinedMap.has(result.id)) {
         // Combine with existing result
         const existing = combinedMap.get(result.id)!;
@@ -102,7 +102,7 @@ export class RRFCombiner {
         });
       }
     });
-    
+
     // Convert to array and sort by combined RRF score
     return Array.from(combinedMap.values()).sort((a, b) => b.score - a.score);
   }
@@ -120,24 +120,25 @@ export class ResultFormatter {
     const results: RetrievalResult[] = [];
     let totalTokens = 0;
     const approximateTokensPerChar = 0.25;
-    
+
     for (const result of combinedResults) {
       // Estimate token count
       const estimatedTokens = result.content.length * approximateTokensPerChar;
-      
+
       // Check if adding this result would exceed the token limit
       if (totalTokens + estimatedTokens > maxTokens && results.length > 0) {
         break;
       }
-      
+
       // Convert to RetrievalResult format
       const frameworkValue = String(result.metadata.framework || 'common');
-      const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla') 
-        ? frameworkValue as 'flow' | 'hilla' 
+      const validFramework = (frameworkValue === 'flow' || frameworkValue === 'hilla')
+        ? frameworkValue as 'flow' | 'hilla'
         : 'common' as const;
-      
+
       results.push({
         chunk_id: result.id,
+        parent_id: result.metadata.parent_id || null,
         framework: validFramework,
         content: result.content,
         source_url: result.metadata.source_url || '',
@@ -148,15 +149,15 @@ export class ResultFormatter {
         },
         relevance_score: result.score,
       });
-      
+
       totalTokens += estimatedTokens;
-      
+
       // Stop if we have enough results
       if (results.length >= maxResults) {
         break;
       }
     }
-    
+
     return results;
   }
-} 
+}

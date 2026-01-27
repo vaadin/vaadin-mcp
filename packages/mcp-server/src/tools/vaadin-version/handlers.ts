@@ -1,8 +1,8 @@
 /**
  * Handler for Vaadin version tool
+ * Fetches latest stable version from GitHub API
  */
 
-import { config } from '../../config.js';
 import { logger } from '../../logger.js';
 
 /**
@@ -10,20 +10,41 @@ import { logger } from '../../logger.js';
  */
 export async function handleGetVaadinVersionTool() {
   try {
-    // Forward request to REST server
-    const response = await fetch(`${config.restServer.url}/vaadin-version`);
+    // Query GitHub API directly for the latest Vaadin platform release
+    const githubUrl = 'https://api.github.com/repos/vaadin/platform/releases/latest';
+
+    logger.info('🔍 Fetching latest Vaadin version from GitHub...');
+    const response = await fetch(githubUrl, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'vaadin-mcp-server'
+      }
+    });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
+      throw new Error(`GitHub API request failed: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
 
+    if (!data.tag_name) {
+      throw new Error('No tag_name found in GitHub release response');
+    }
+
+    // Extract version from tag (e.g., "24.8.4" from tag_name)
+    const latestVersion = data.tag_name;
+
+    // Validate that it's a stable version (semantic versioning pattern)
+    if (!/^\d+\.\d+\.\d+$/.test(latestVersion)) {
+      throw new Error(`Invalid version format: ${latestVersion}`);
+    }
+
+    logger.info(`✅ Latest Vaadin version: ${latestVersion}`);
+
     // Return simple JSON structure with only version and release timestamp
     const versionInfo = {
-      version: data.version,
-      released: data.released
+      version: latestVersion,
+      released: data.published_at
     };
 
     return {

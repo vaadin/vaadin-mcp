@@ -3,11 +3,12 @@
  * Uses hybrid search with native Pinecone sparse vectors and reranking
  */
 
-import { config } from './config.js';
+import { config } from '../../config.js';
 import { PineconeSearchProvider } from './pinecone-search-provider.js';
 import { PineconeSparseProvider } from './pinecone-sparse-provider.js';
 import { HybridSearchService } from './hybrid-search-service.js';
 import { MockSearchProvider } from './mock-search-provider.js';
+import { logger } from '../../logger.js';
 
 // Global service instance (initialized once)
 let hybridSearchService: HybridSearchService | null = null;
@@ -21,7 +22,7 @@ export async function createHybridSearchService(): Promise<HybridSearchService> 
     return hybridSearchService;
   }
 
-  console.debug('🏭 Creating Hybrid Search Service...');
+  logger.debug('🏭 Creating Hybrid Search Service...');
 
   // Check if we have the required API keys for production
   if (!config.pinecone.apiKey || !config.pinecone.index) {
@@ -39,11 +40,11 @@ export async function createHybridSearchService(): Promise<HybridSearchService> 
     // Initialize (this will create sparse index if needed)
     await hybridSearchService.initialize();
 
-    console.debug('✅ Hybrid Search Service ready!');
+    logger.debug('✅ Hybrid Search Service ready!');
     return hybridSearchService;
-    
+
   } catch (error) {
-    console.error('❌ Failed to create Hybrid Search Service:', error);
+    logger.error('❌ Failed to create Hybrid Search Service:', error);
     throw error;
   }
 }
@@ -52,7 +53,7 @@ export async function createHybridSearchService(): Promise<HybridSearchService> 
  * Create a mock hybrid search service for testing
  */
 export function createMockSearchService(): HybridSearchService {
-  console.debug('🧪 Creating Mock Search Service...');
+  logger.debug('🧪 Creating Mock Search Service...');
   const mockProvider = new MockSearchProvider();
   const sparseProvider = new PineconeSparseProvider(); // Will work in mock mode
   return new HybridSearchService(mockProvider, sparseProvider);
@@ -65,10 +66,10 @@ export function createMockSearchService(): HybridSearchService {
 export async function getSearchService(): Promise<HybridSearchService> {
   // Use mock service in test mode or when Pinecone is not configured
   if (process.env.MOCK_PINECONE === 'true' || !config.pinecone.apiKey || !config.pinecone.index) {
-    console.debug('🧪 Using mock search service');
+    logger.debug('🧪 Using mock search service');
     return createMockSearchService();
   }
-  
+
   return await createHybridSearchService();
 }
 
@@ -77,4 +78,4 @@ export async function getSearchService(): Promise<HybridSearchService> {
  */
 export function resetServices(): void {
   hybridSearchService = null;
-} 
+}
