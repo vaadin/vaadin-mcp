@@ -145,7 +145,7 @@ export class MarkdownChunker {
    * Generates a base ID for chunks from a file path
    */
   private generateBaseId(filePath: string): string {
-    return 'v24-' + filePath
+    return filePath
       .replace(/\.md$/, '')
       .replace(/[^a-zA-Z0-9]/g, '-')
       .toLowerCase();
