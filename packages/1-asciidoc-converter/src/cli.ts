@@ -13,7 +13,7 @@ async function main() {
   
   // Parse command line arguments
   const args = process.argv.slice(2);
-  let outputDir = path.join(process.cwd(), 'dist/markdown');
+  let outputDir = path.join(process.cwd(), 'dist/markdown/v24');
   let configToUse = config;
   
   // Simple argument parsing
@@ -39,7 +39,7 @@ async function main() {
 Usage: bun run convert [options]
 
 Options:
-  -o, --output <dir>    Output directory for markdown files (default: dist/markdown)
+  -o, --output <dir>    Output directory for markdown files (default: dist/markdown/v24)
   -b, --branch <name>   Git branch to use (default: latest)
   -h, --help           Show this help message
 
