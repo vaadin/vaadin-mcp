@@ -7,7 +7,6 @@ app = "vaadin-mcp"
   HTTP_PORT = "8080"
   # Feature flags
   MOCK_PINECONE = "false"
-  ENABLE_REST_API = "false"
   # Pinecone and OpenAI API keys are set via fly secrets:
   # fly secrets set PINECONE_API_KEY=...
   # fly secrets set PINECONE_INDEX=...

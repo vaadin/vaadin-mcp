@@ -22,7 +22,6 @@ interface TestResult {
  * Test configuration
  */
 interface TestConfig {
-  restServerUrl: string;
   verbose: boolean;
 }
 
@@ -883,12 +882,8 @@ export async function runHierarchicalTests(config: TestConfig): Promise<void> {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose');
-  const serverArg = args.find(arg => arg.startsWith('--server='));
-  // Default to localhost for testing MCP server
-  const restServerUrl = serverArg ? serverArg.split('=')[1] : 'http://localhost:8080';
 
   const testConfig: TestConfig = {
-    restServerUrl,
     verbose
   };
 

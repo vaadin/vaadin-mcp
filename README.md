@@ -21,7 +21,6 @@ vaadin-documentation-services/
 │   ├── core-types/              # Shared TypeScript interfaces
 │   ├── 1-asciidoc-converter/    # AsciiDoc → Markdown + metadata extraction
 │   ├── 2-embedding-generator/   # Markdown → Vector database with hierarchical chunking
-│   ├── rest-server/             # Enhanced REST API with hybrid search + reranking
 │   └── mcp-server/              # MCP server with hierarchical navigation
 ├── package.json                 # Bun workspace configuration
 └── PROJECT_PLAN.md             # Complete project documentation
@@ -37,12 +36,8 @@ flowchart TD
         Processor["⚡ Embedding Generator<br/>• Hierarchical chunking<br/>• Parent-child relationships<br/>• OpenAI embeddings"]
     end
 
-    subgraph "Step 2: Enhanced Retrieval"
+    subgraph "Step 2: Agent Integration"
         Pinecone["🗄️ Pinecone Vector DB<br/>• Rich metadata<br/>• Hierarchical relationships<br/>• Framework tags"]
-        RestAPI["🌐 REST API<br/>• Enhanced hybrid search<br/>• Native Pinecone reranking<br/>• Framework filtering"]
-    end
-
-    subgraph "Step 3: Agent Integration"
         MCP["🤖 MCP Server<br/>• search_vaadin_docs<br/>• get_full_document<br/>• Full document retrieval"]
         IDEs["💻 IDE Assistants<br/>• Context-aware search<br/>• Hierarchical exploration<br/>• Framework-specific help"]
     end
@@ -50,8 +45,7 @@ flowchart TD
     VaadinDocs --> Converter
     Converter --> Processor
     Processor --> Pinecone
-    Pinecone <--> RestAPI
-    RestAPI <--> MCP
+    Pinecone <--> MCP
     MCP <--> IDEs
 
     classDef processing fill:#e1f5fe,stroke:#01579b,stroke-width:2px
@@ -60,7 +54,7 @@ flowchart TD
     classDef agent fill:#fff3e0,stroke:#e65100,stroke-width:2px
 
     class VaadinDocs,Converter,Processor processing
-    class Pinecone,RestAPI storage
+    class Pinecone storage
     class MCP api
     class IDEs agent
 ```
@@ -120,14 +114,7 @@ cd ../2-embedding-generator
 bun run generate
 ```
 
-#### 2. Start REST API Server
-```bash
-cd packages/rest-server
-bun run start
-# Server runs at http://localhost:3001
-```
-
-#### 3. Use MCP Server with IDE Assistant
+#### 2. Use MCP Server with IDE Assistant
 The MCP server is deployed and available remotely via HTTP transport at:
 **`https://mcp.vaadin.com/`**
 
@@ -173,27 +160,6 @@ bun run generate        # Generate embeddings from Markdown
 bun run test           # Run chunking and relationship tests
 ```
 
-### REST Server (`packages/rest-server/`)
-Enhanced API server with hybrid search capabilities:
-- **Hybrid Search**: Semantic + keyword search with RRF fusion
-- **Framework Filtering**: Flow/Hilla/common content filtering
-- **Document Navigation**: `/chunk/:chunkId` endpoint for parent-child navigation
-- **Backward Compatibility**: Maintains existing API contracts
-
-```bash
-cd packages/rest-server
-bun run start          # Start production server
-bun run test           # Run comprehensive test suite
-bun run test:verbose   # Detailed test output
-```
-
-**API Endpoints:**
-- `POST /search` - Hybrid search with framework filtering
-- `GET /chunk/:chunkId` - Retrieve specific document chunk
-- `POST /ask` - AI-generated answers (with streaming support)
-- `GET /health` - Health check
-- `GET /vaadin-version` - Get latest Vaadin version from GitHub releases
-
 ### MCP Server (`packages/mcp-server/`)
 Model Context Protocol server for IDE assistant integration:
 - **Document Tools**: `search_vaadin_docs` and `get_full_document`
@@ -221,11 +187,7 @@ Each package includes comprehensive test suites:
 # Test individual packages
 cd packages/1-asciidoc-converter && bun run test
 cd packages/2-embedding-generator && bun run test  
-cd packages/rest-server && bun run test
 cd packages/mcp-server && bun run test
-
-# Run REST server against live endpoint
-cd packages/rest-server && bun run test:server
 ```
 
 ## 📈 Performance & Metrics
@@ -249,11 +211,6 @@ cd packages/rest-server && bun run test:server
 - **Fresh Data**: Recently updated with complete Vaadin documentation coverage
 
 ## 🌐 Deployment
-
-### REST Server
-The REST server is available at:
-- **Production**: `https://vaadin-docs-search.fly.dev`
-- **Health Check**: `https://vaadin-docs-search.fly.dev/health`
 
 ### MCP Server
 The MCP server is available at:
@@ -279,8 +236,7 @@ bun run test          # Test all packages
 ### Adding New Features
 1. **Core Types**: Add interfaces to `packages/core-types/`
 2. **Processing**: Extend converters in `packages/1-asciidoc-converter/` or `packages/2-embedding-generator/`
-3. **API**: Enhance search in `packages/rest-server/`
-4. **Integration**: Update MCP tools in `packages/mcp-server/`
+3. **Integration**: Update MCP tools in `packages/mcp-server/`
 
 ### Architecture Principles
 - **Single Responsibility**: Each package has a clear, focused purpose

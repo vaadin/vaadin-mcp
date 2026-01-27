@@ -51,7 +51,6 @@ export const config = {
   // Feature flags
   features: {
     mockPinecone: process.env.MOCK_PINECONE === 'true',
-    enableRestApi: process.env.ENABLE_REST_API === 'true', // Optional for backward compatibility
   }
 };
 
@@ -66,10 +65,5 @@ export function validateConfig() {
     if (!config.pinecone.index) {
       throw new Error('Missing required environment variable: PINECONE_INDEX');
     }
-  }
-
-  // OpenAI is optional (only needed for /ask endpoint if REST API is enabled)
-  if (config.features.enableRestApi && !config.openai.apiKey) {
-    logger.warn('⚠️  OpenAI API key missing - /ask endpoint will be disabled');
   }
 }

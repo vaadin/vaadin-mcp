@@ -99,7 +99,6 @@ The MCP server requires the following environment variables:
 - `HTTP_PORT`: HTTP server port (default: 8080)
 - `AMPLITUDE_API_KEY`: Analytics tracking key (optional)
 - `MOCK_PINECONE`: Set to `true` to use mock search for testing (default: false)
-- `ENABLE_REST_API`: Enable legacy REST API endpoints (default: false)
 - `NODE_ENV`: Environment mode (`development` or `production`)
 
 ### Setup
@@ -197,26 +196,11 @@ The MCP server integrates search and document services directly, eliminating HTT
 - **Document Service**: Direct file system access to markdown documentation
 - **State**: Stateless request handling with shared service instances
 
-### Architecture Changes (v0.8.0)
-
-**Previous Architecture:**
-- MCP Server → HTTP → REST Server → Pinecone/OpenAI
-- Two separate deployments
-- HTTP overhead for every search request
-
-**Current Architecture:**
-- MCP Server → Direct Service Calls → Pinecone/OpenAI
-- Single deployment
-- No HTTP overhead
+### Key Design Decisions
+- Direct service calls to Pinecone/OpenAI (no HTTP intermediary)
+- Single deployment on Fly.io
 - Shared service instances initialized at startup
-
-**Benefits:**
-1. **Performance**: 200-500ms faster (eliminates HTTP round-trip)
-2. **Simplicity**: Single deployment instead of two
-3. **Reliability**: No external REST API dependency
-4. **Cost**: Reduced infrastructure (one Fly app instead of two)
-- **Backend**: Forwards search requests to the REST server at `https://vaadin-docs-search.fly.dev`
-- **SDK**: Built with MCP TypeScript SDK v1.17.0
+- Built with MCP TypeScript SDK v1.17.0
 
 ## License
 
