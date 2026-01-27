@@ -70,9 +70,9 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     console.log('\n📖 Step 1: Loading markdown documents...');
     const loadingStart = Date.now();
     
-    const loader = createDirectoryLoader(config.markdownDir, { 
+    const loader = createDirectoryLoader(config.markdownDir, {
       recursive: true,
-      baseDir: config.markdownDir  // Ensure paths are relative to the markdown directory
+      baseDir: path.dirname(config.markdownDir)  // Parent dir so file_path includes version prefix (e.g. "v24/")
     });
     const documents = await loader.load();
     
