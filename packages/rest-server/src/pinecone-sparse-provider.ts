@@ -234,23 +234,15 @@ export class PineconeSparseProvider {
    * Build framework filter for Pinecone query
    */
   private buildFrameworkFilter(framework: string): any {
-    if (framework === 'flow') {
-      return {
+    // Always scope to vaadin_version, optionally filter by framework
+    let filter: any = { vaadin_version: '24' };
+
+    if (framework === 'flow' || framework === 'hilla') {
+      filter = {
         $and: [
-          { vaadin_version: '24' },
+          filter,
           { $or: [
-            { framework: 'flow' },
-            { framework: 'common' },
-            { framework: 'common' }
-          ] }
-        ]
-      };
-    } else if (framework === 'hilla') {
-      return {
-        $and: [
-          { vaadin_version: '24' },
-          { $or: [
-            { framework: 'hilla' },
+            { framework },
             { framework: 'common' },
             { framework: 'common' }
           ] }
@@ -258,8 +250,7 @@ export class PineconeSparseProvider {
       };
     }
 
-    // No framework filter, but still filter by version
-    return { vaadin_version: '24' };
+    return filter;
   }
 
   /**

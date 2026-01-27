@@ -46,33 +46,20 @@ export class PineconeSearchProvider implements SearchProvider {
     k: number,
     framework: string
   ): Promise<SemanticResult[]> {
-    // Build filter - always include vaadin_version, optionally filter by framework
-    let filter: any;
+    // Build filter - always scope to vaadin_version, optionally filter by framework
+    let filter: any = { vaadin_version: '24' };
 
-    if (framework === 'flow') {
+    if (framework === 'flow' || framework === 'hilla') {
       filter = {
         $and: [
-          { vaadin_version: '24' },
+          filter,
           { $or: [
-            { framework: 'flow' },
+            { framework },
             { framework: 'common' },
             { framework: 'common' }
           ] }
         ]
       };
-    } else if (framework === 'hilla') {
-      filter = {
-        $and: [
-          { vaadin_version: '24' },
-          { $or: [
-            { framework: 'hilla' },
-            { framework: 'common' },
-            { framework: 'common' }
-          ] }
-        ]
-      };
-    } else {
-      filter = { vaadin_version: '24' };
     }
 
     // Perform similarity search with LangChain
@@ -95,33 +82,20 @@ export class PineconeSearchProvider implements SearchProvider {
     k: number,
     framework: string
   ): Promise<KeywordResult[]> {
-    // Build filter - always include vaadin_version, optionally filter by framework
-    let filter: any;
+    // Build filter - always scope to vaadin_version, optionally filter by framework
+    let filter: any = { vaadin_version: '24' };
 
-    if (framework === 'flow') {
+    if (framework === 'flow' || framework === 'hilla') {
       filter = {
         $and: [
-          { vaadin_version: '24' },
+          filter,
           { $or: [
-            { framework: 'flow' },
+            { framework },
             { framework: 'common' },
             { framework: 'common' }
           ] }
         ]
       };
-    } else if (framework === 'hilla') {
-      filter = {
-        $and: [
-          { vaadin_version: '24' },
-          { $or: [
-            { framework: 'hilla' },
-            { framework: 'common' },
-            { framework: 'common' }
-          ] }
-        ]
-      };
-    } else {
-      filter = { vaadin_version: '24' };
     }
 
     const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 2);

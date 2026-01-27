@@ -67,25 +67,15 @@ export async function searchDocumentation(
   // Generate embedding for the query
   const queryEmbedding = await generateQueryEmbedding(query);
   
-  // Prepare filter based on framework parameter - always include vaadin_version
-  let filter = {};
+  // Prepare filter - always scope to vaadin_version, optionally filter by framework
+  let filter: any = { vaadin_version: '24' };
 
-  if (framework === 'flow') {
+  if (framework === 'flow' || framework === 'hilla') {
     filter = {
       $and: [
-        { vaadin_version: '24' },
+        filter,
         { $or: [
-          { framework: 'flow' },
-          { framework: 'common' }
-        ] }
-      ]
-    };
-  } else if (framework === 'hilla') {
-    filter = {
-      $and: [
-        { vaadin_version: '24' },
-        { $or: [
-          { framework: 'hilla' },
+          { framework },
           { framework: 'common' }
         ] }
       ]
@@ -94,7 +84,7 @@ export async function searchDocumentation(
     // No specific framework filter, include all documents for v24
     filter = {
       $and: [
-        { vaadin_version: '24' },
+        filter,
         { $or: [
           { framework: 'flow' },
           { framework: 'hilla' },
