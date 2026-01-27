@@ -67,32 +67,39 @@ export async function searchDocumentation(
   // Generate embedding for the query
   const queryEmbedding = await generateQueryEmbedding(query);
   
-  // Prepare filter based on framework parameter
+  // Prepare filter based on framework parameter - always include vaadin_version
   let filter = {};
-  
+
   if (framework === 'flow') {
-    // Filter for 'flow' OR empty framework
     filter = {
-      $or: [
-        { framework: 'flow' },
-        { framework: 'common' }
+      $and: [
+        { vaadin_version: '24' },
+        { $or: [
+          { framework: 'flow' },
+          { framework: 'common' }
+        ] }
       ]
     };
   } else if (framework === 'hilla') {
-    // Filter for 'hilla' OR empty framework
     filter = {
-      $or: [
-        { framework: 'hilla' },
-        { framework: 'common' }
+      $and: [
+        { vaadin_version: '24' },
+        { $or: [
+          { framework: 'hilla' },
+          { framework: 'common' }
+        ] }
       ]
     };
   } else {
-    // No specific framework filter, include all documents
+    // No specific framework filter, include all documents for v24
     filter = {
-      $or: [
-        { framework: 'flow' },
-        { framework: 'hilla' },
-        { framework: 'common' }
+      $and: [
+        { vaadin_version: '24' },
+        { $or: [
+          { framework: 'flow' },
+          { framework: 'hilla' },
+          { framework: 'common' }
+        ] }
       ]
     };
   }
