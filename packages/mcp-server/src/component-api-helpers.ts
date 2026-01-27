@@ -31,8 +31,8 @@ export function getMarkdownDirectories(): string[] {
 
   // Primary markdown directory
   const primaryDir = process.env.NODE_ENV === 'production'
-    ? '/app/packages/1-asciidoc-converter/dist/markdown'
-    : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
+    ? '/app/packages/1-asciidoc-converter/dist/markdown/v24'
+    : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown/v24');
   directories.push(primaryDir);
 
   // Test fixtures directory (when in test mode)
