@@ -276,9 +276,9 @@ app.get('/document/:file_path(*)', async (req: Request, res: Response) => {
     // Construct absolute path to markdown file
     // In production: /app/packages/1-asciidoc-converter/dist/markdown/
     // In development: Navigate up from rest-server to project root, then to markdown dir
-    const markdownDir = process.env.NODE_ENV === 'production' 
-      ? '/app/packages/1-asciidoc-converter/dist/markdown'
-      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
+    const markdownDir = process.env.NODE_ENV === 'production'
+      ? '/app/packages/1-asciidoc-converter/dist/markdown/v24'
+      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown/v24');
     
     const fullPath = path.join(markdownDir, decodedFilePath);
     

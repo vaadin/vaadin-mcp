@@ -34,6 +34,12 @@ export interface DocumentChunk {
   source_url: string;
 
   /**
+   * The Vaadin major version this chunk applies to.
+   * e.g., '24'
+   */
+  vaadin_version?: string;
+
+  /**
    * Additional metadata, such as the original heading title.
    */
   metadata?: {
@@ -78,6 +84,7 @@ export interface ProcessedMetadata {
   framework: Framework;
   source_url: string;
   title?: string;
+  vaadin_version?: string;
   [key: string]: any;
 }
 
