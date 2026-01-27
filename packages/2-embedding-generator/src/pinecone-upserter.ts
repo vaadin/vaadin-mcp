@@ -259,6 +259,7 @@ export class PineconeUpserter {
       framework: chunk.framework,
       source_url: chunk.source_url,
       content: chunk.content,
+      vaadin_version: chunk.vaadin_version || (chunk.metadata as any)?.vaadin_version || '24',
     };
 
     // Add optional metadata fields
