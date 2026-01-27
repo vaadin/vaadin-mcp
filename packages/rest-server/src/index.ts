@@ -274,11 +274,11 @@ app.get('/document/:file_path(*)', async (req: Request, res: Response) => {
     const decodedFilePath = decodeURIComponent(filePath);
     
     // Construct absolute path to markdown file
-    // In production: /app/packages/1-asciidoc-converter/dist/markdown/v24/
-    // In development: Navigate up from rest-server to project root, then to markdown dir
+    // file_path includes version prefix (e.g. "v24/articles/flow/forms/binder.md")
+    // so markdownDir points to the parent of version directories
     const markdownDir = process.env.NODE_ENV === 'production'
-      ? '/app/packages/1-asciidoc-converter/dist/markdown/v24'
-      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown/v24');
+      ? '/app/packages/1-asciidoc-converter/dist/markdown'
+      : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
     
     const fullPath = path.join(markdownDir, decodedFilePath);
     
