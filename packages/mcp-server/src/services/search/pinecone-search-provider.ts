@@ -47,27 +47,20 @@ export class PineconeSearchProvider implements SearchProvider {
     k: number,
     framework: string
   ): Promise<SemanticResult[]> {
-    // Build filter for framework - use undefined if no specific framework filter needed
-    let filter: any = undefined;
+    // Build filter - always scope to vaadin_version, optionally filter by framework
+    let filter: any = { vaadin_version: '24' };
 
-    if (framework === 'flow') {
+    if (framework === 'flow' || framework === 'hilla') {
       filter = {
-        $or: [
-          { framework: 'flow' },
-          { framework: 'common' },
-          { framework: 'common' }
-        ]
-      };
-    } else if (framework === 'hilla') {
-      filter = {
-        $or: [
-          { framework: 'hilla' },
-          { framework: 'common' },
-          { framework: 'common' }
+        $and: [
+          filter,
+          { $or: [
+            { framework },
+            { framework: 'common' }
+          ] }
         ]
       };
     }
-    // For any other framework value (including empty string), search all documents
 
     // Perform similarity search with LangChain
     const results = await this.vectorStore.similaritySearchWithScore(query, k, filter);
@@ -89,23 +82,17 @@ export class PineconeSearchProvider implements SearchProvider {
     k: number,
     framework: string
   ): Promise<KeywordResult[]> {
-    // Build filter for framework
-    let filter = {};
+    // Build filter - always scope to vaadin_version, optionally filter by framework
+    let filter: any = { vaadin_version: '24' };
 
-    if (framework === 'flow') {
+    if (framework === 'flow' || framework === 'hilla') {
       filter = {
-        $or: [
-          { framework: 'flow' },
-          { framework: 'common' },
-          { framework: 'common' }
-        ]
-      };
-    } else if (framework === 'hilla') {
-      filter = {
-        $or: [
-          { framework: 'hilla' },
-          { framework: 'common' },
-          { framework: 'common' }
+        $and: [
+          filter,
+          { $or: [
+            { framework },
+            { framework: 'common' }
+          ] }
         ]
       };
     }
@@ -126,7 +113,7 @@ export class PineconeSearchProvider implements SearchProvider {
       vector: embedResponse,
       topK: k * 2, // Get more results to filter for keyword relevance
       includeMetadata: true,
-      filter: Object.keys(filter).length > 0 ? filter : undefined,
+      filter: filter,
     });
 
     // Score results based on keyword overlap
