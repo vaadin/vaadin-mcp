@@ -62,6 +62,7 @@ export async function convertFile(
       framework: detectedFramework,
       source_url: sourceUrl,
       title,
+      vaadin_version: '24',
       ...existingMetadata
     };
     
@@ -115,14 +116,14 @@ export async function convertFile(
 /**
  * Convert all AsciiDoc files to Markdown with frontmatter
  * @param config - Ingestion configuration
- * @param outputDir - Output directory for markdown files (defaults to packages/1-asciidoc-converter/dist/markdown/)
+ * @param outputDir - Output directory for markdown files (defaults to packages/1-asciidoc-converter/dist/markdown/v24/)
  * @returns Promise with conversion results
  */
 export async function convertDocumentation(
   config: IngestionConfig,
   outputDir?: string
 ): Promise<ConversionResult[]> {
-  const defaultOutputDir = path.join(process.cwd(), 'packages/1-asciidoc-converter/dist/markdown');
+  const defaultOutputDir = path.join(process.cwd(), 'packages/1-asciidoc-converter/dist/markdown/v24');
   const targetOutputDir = outputDir || defaultOutputDir;
   
   console.log('Starting AsciiDoc to Markdown conversion...');
