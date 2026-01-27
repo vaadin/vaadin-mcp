@@ -259,7 +259,6 @@ export class PineconeUpserter {
       framework: chunk.framework,
       source_url: chunk.source_url,
       content: chunk.content,
-      vaadin_version: chunk.vaadin_version || (chunk.metadata as any)?.vaadin_version || '24',
     };
 
     // Add optional metadata fields
@@ -289,6 +288,10 @@ export class PineconeUpserter {
         }
       }
     }
+
+    // Always store vaadin_version as a string for consistent Pinecone filtering
+    // (the YAML parser may return it as a number)
+    metadata.vaadin_version = String((chunk.metadata as any)?.vaadin_version || '24');
 
     return metadata;
   }
