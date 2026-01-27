@@ -34,6 +34,11 @@ export interface DocumentChunk {
   source_url: string;
 
   /**
+   * The Vaadin major version this chunk belongs to (e.g., "24", "25").
+   */
+  vaadin_version?: string;
+
+  /**
    * Additional metadata, such as the original heading title.
    */
   metadata?: {
@@ -59,6 +64,11 @@ export interface IngestionConfig {
     url: string;
     branch: string;
     localPath: string;
+    /**
+     * Explicit Vaadin version (e.g., "24", "25").
+     * Used for metadata instead of extracting from branch name.
+     */
+    vaadinVersion?: string;
   };
   processing: {
     includePatterns: string[];
@@ -78,6 +88,7 @@ export interface ProcessedMetadata {
   framework: Framework;
   source_url: string;
   title?: string;
+  vaadin_version?: string;
   [key: string]: any;
 }
 
