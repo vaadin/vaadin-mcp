@@ -56,12 +56,17 @@ export async function convertFile(
     
     // Generate source URL
     const sourceUrl = generateVaadinUrl(filePath, config.repository.localPath);
-    
+
+    // Use explicit version from config (preferred) or fallback to branch parsing
+    const vaadinVersion = config.repository.vaadinVersion 
+      || config.repository.branch.match(/v(\d+)/)?.[1];
+
     // Create processed metadata
     const processedMetadata: ProcessedMetadata = {
       framework: detectedFramework,
       source_url: sourceUrl,
       title,
+      vaadin_version: vaadinVersion,
       ...existingMetadata
     };
     
