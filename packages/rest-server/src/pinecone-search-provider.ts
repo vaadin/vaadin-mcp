@@ -55,7 +55,6 @@ export class PineconeSearchProvider implements SearchProvider {
           filter,
           { $or: [
             { framework },
-            { framework: 'common' },
             { framework: 'common' }
           ] }
         ]
@@ -91,7 +90,6 @@ export class PineconeSearchProvider implements SearchProvider {
           filter,
           { $or: [
             { framework },
-            { framework: 'common' },
             { framework: 'common' }
           ] }
         ]

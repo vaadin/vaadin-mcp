@@ -243,7 +243,6 @@ export class PineconeSparseProvider {
           filter,
           { $or: [
             { framework },
-            { framework: 'common' },
             { framework: 'common' }
           ] }
         ]
