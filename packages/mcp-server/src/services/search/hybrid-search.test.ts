@@ -78,27 +78,27 @@ async function main() {
    * Test 1: Semantic search functionality
    */
   async function testSemanticSearch() {
-    const results = await mockProvider.semanticSearch('form binding', 3, '');
+    const results = await mockProvider.semanticSearch('form binding', 3, '', '24');
     assertTrue(results.length > 0, 'Should return results for form binding');
     assertTrue(results[0].score > 0, 'Results should have positive scores');
     assertEqual(results[0].source, 'semantic', 'Should have semantic source');
 
     // Test framework filtering - Flow
-    const flowResults = await mockProvider.semanticSearch('grid', 5, 'flow');
+    const flowResults = await mockProvider.semanticSearch('grid', 5, 'flow', '24');
     assertTrue(
       flowResults.every(r => r.metadata.framework === 'flow' || r.metadata.framework === 'common'),
       'Flow search should only return Flow or common results'
     );
 
     // Test framework filtering - Hilla
-    const hillaResults = await mockProvider.semanticSearch('form', 5, 'hilla');
+    const hillaResults = await mockProvider.semanticSearch('form', 5, 'hilla', '24');
     assertTrue(
       hillaResults.every(r => r.metadata.framework === 'hilla' || r.metadata.framework === 'common'),
       'Hilla search should only return Hilla or common results'
     );
 
     // Test no results for irrelevant query
-    const noResults = await mockProvider.semanticSearch('irrelevant query xyz', 5, '');
+    const noResults = await mockProvider.semanticSearch('irrelevant query xyz', 5, '', '24');
     assertEqual(noResults.length, 0, 'Should return no results for irrelevant query');
   }
 
@@ -106,7 +106,7 @@ async function main() {
    * Test 2: Keyword search functionality
    */
   async function testKeywordSearch() {
-    const results = await mockProvider.keywordSearch('Grid column', 3, '');
+    const results = await mockProvider.keywordSearch('Grid column', 3, '', '24');
     assertTrue(results.length > 0, 'Should return results for grid column');
     assertEqual(results[0].source, 'keyword', 'Should have keyword source');
 
@@ -118,18 +118,18 @@ async function main() {
     assertTrue(hasGridKeyword, 'Results should contain grid keyword');
 
     // Test framework filtering
-    const flowResults = await mockProvider.keywordSearch('button', 5, 'flow');
+    const flowResults = await mockProvider.keywordSearch('button', 5, 'flow', '24');
     assertTrue(
       flowResults.every(r => r.metadata.framework === 'flow' || r.metadata.framework === 'common'),
       'Flow keyword search should respect framework filter'
     );
 
     // Test empty query
-    const emptyResults = await mockProvider.keywordSearch('', 5, '');
+    const emptyResults = await mockProvider.keywordSearch('', 5, '', '24');
     assertEqual(emptyResults.length, 0, 'Empty query should return no results');
 
     // Test short terms filtered out
-    const shortTermResults = await mockProvider.keywordSearch('a an the', 5, '');
+    const shortTermResults = await mockProvider.keywordSearch('a an the', 5, '', '24');
     assertEqual(shortTermResults.length, 0, 'Short terms should be filtered out');
   }
 
@@ -171,7 +171,7 @@ async function main() {
    * Test 4: Hybrid search service integration
    */
   async function testHybridSearchService() {
-    const results = await searchService.hybridSearch('form validation', { maxResults: 3 });
+    const results = await searchService.hybridSearch('form validation', { maxResults: 3, vaadinVersion: '24' });
 
     assertTrue(Array.isArray(results), 'Should return array');
     assertTrue(results.length > 0, 'Should return results');
@@ -191,7 +191,8 @@ async function main() {
     // Test that common framework results are included in Flow searches
     const flowResults = await searchService.hybridSearch('component', {
       maxResults: 10,
-      framework: 'flow'
+      framework: 'flow',
+      vaadinVersion: '24'
     });
     const hasCommon = flowResults.some(r => r.framework === 'common');
     assertTrue(hasCommon, 'Flow search should include common framework results');
@@ -199,7 +200,8 @@ async function main() {
     // Test that Flow results are not included in Hilla searches
     const hillaResults = await searchService.hybridSearch('grid', {
       maxResults: 10,
-      framework: 'hilla'
+      framework: 'hilla',
+      vaadinVersion: '24'
     });
     const hasFlow = hillaResults.some(r => r.framework === 'flow');
     assertTrue(!hasFlow, 'Hilla search should not include Flow-specific results');
@@ -224,7 +226,7 @@ async function main() {
    * Test 7: Result structure and metadata
    */
   async function testResultStructure() {
-    const results = await searchService.hybridSearch('grid', { maxResults: 1 });
+    const results = await searchService.hybridSearch('grid', { maxResults: 1, vaadinVersion: '24' });
     assertTrue(results.length > 0, 'Should have results');
 
     const result = results[0];
@@ -262,16 +264,16 @@ async function main() {
    */
   async function testEdgeCases() {
     // Test empty query
-    const emptyResults = await searchService.hybridSearch('', { maxResults: 5 });
+    const emptyResults = await searchService.hybridSearch('', { maxResults: 5, vaadinVersion: '24' });
     assertEqual(emptyResults.length, 0, 'Empty query should return no results');
 
     // Test very long query
     const longQuery = 'very '.repeat(100) + 'long query';
-    const longResults = await searchService.hybridSearch(longQuery, { maxResults: 5 });
+    const longResults = await searchService.hybridSearch(longQuery, { maxResults: 5, vaadinVersion: '24' });
     assertTrue(Array.isArray(longResults), 'Should handle long queries gracefully');
 
     // Test zero max results
-    const zeroResults = await searchService.hybridSearch('test', { maxResults: 0 });
+    const zeroResults = await searchService.hybridSearch('test', { maxResults: 0, vaadinVersion: '24' });
     assertEqual(zeroResults.length, 0, 'Zero max results should return empty array');
   }
 
