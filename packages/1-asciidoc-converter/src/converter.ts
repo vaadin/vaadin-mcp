@@ -50,8 +50,8 @@ export async function convertFile(
     // Parse existing metadata and clean content
     const { content: cleanContent, metadata: existingMetadata } = parseMetadata(content);
     
-    // Detect framework if not specified
-    const detectedFramework = framework || detectFramework(filePath, cleanContent);
+    // Detect framework if not specified (pass version for legacy version handling)
+    const detectedFramework = framework || detectFramework(filePath, cleanContent, version);
     
     // Extract title from content
     const title = extractTitle(cleanContent);
@@ -155,15 +155,19 @@ export async function convertDocumentation(
   
   // Process each file
   const results: ConversionResult[] = [];
-  
+
+  // Legacy versions (7, 8, 14) are Java-only, no dual-framework processing needed
+  const isLegacyVersion = ['7', '8', '14'].includes(version);
+
   for (const file of files) {
-    if (isComponentFile(file)) {
-      // Component files should be processed for both frameworks
+    if (!isLegacyVersion && isComponentFile(file)) {
+      // Component files should be processed for both frameworks (modern versions only)
       const flowResult = await convertFile(file, config, targetOutputDir, 'flow', version);
       const hillaResult = await convertFile(file, config, targetOutputDir, 'hilla', version);
       results.push(flowResult, hillaResult);
     } else {
       // Regular files are processed with auto-detected framework
+      // Legacy versions will always get 'flow' as the framework
       const result = await convertFile(file, config, targetOutputDir, undefined, version);
       results.push(result);
     }
