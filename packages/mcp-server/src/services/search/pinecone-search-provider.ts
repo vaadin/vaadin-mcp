@@ -45,10 +45,11 @@ export class PineconeSearchProvider implements SearchProvider {
   async semanticSearch(
     query: string,
     k: number,
-    framework: string
+    framework: string,
+    vaadinVersion: string
   ): Promise<SemanticResult[]> {
     // Build filter - always scope to vaadin_version, optionally filter by framework
-    let filter: any = { vaadin_version: '24' };
+    let filter: any = { vaadin_version: vaadinVersion };
 
     if (framework === 'flow' || framework === 'hilla') {
       filter = {
@@ -80,10 +81,11 @@ export class PineconeSearchProvider implements SearchProvider {
   async keywordSearch(
     query: string,
     k: number,
-    framework: string
+    framework: string,
+    vaadinVersion: string
   ): Promise<KeywordResult[]> {
     // Build filter - always scope to vaadin_version, optionally filter by framework
-    let filter: any = { vaadin_version: '24' };
+    let filter: any = { vaadin_version: vaadinVersion };
 
     if (framework === 'flow' || framework === 'hilla') {
       filter = {

@@ -22,7 +22,8 @@ export async function handleSearchTool(args: any, searchService: HybridSearchSer
     const results = await searchService.hybridSearch(args.question, {
       maxResults: args.max_results || config.search.defaultMaxResults,
       maxTokens: args.max_tokens || config.search.defaultMaxTokens,
-      framework: args.framework || 'common'
+      framework: args.framework || 'common',
+      vaadinVersion: args.vaadin_version
     });
 
     // Format results with hierarchical information
