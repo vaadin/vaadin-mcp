@@ -122,6 +122,7 @@ function setupTools(server: McpServer, services: {
       description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. USE THIS TOOL for questions about: Vaadin components (Button, Grid, Dialog, etc.), TestBench, UI testing, unit testing, integration testing, @BrowserCallable, Binder, DataProvider, validation, styling, theming, security, Push, Collaboration Engine, PWA, production builds, Docker, deployment, performance, and any Vaadin-specific topics. When using this tool, try to deduce the correct development model from context: use \"java\" for Java-based views, \"react\" for React-based views, or \"common\" for both. Use get_full_document with file_paths containing the result's file_path when you need complete context.",
       inputSchema: {
         question: z.string().describe("The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword)."),
+        vaadin_version: z.enum(['24', '25']).describe('Vaadin platform version: "24" for Vaadin 24, "25" for Vaadin 25.'),
         max_results: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 5)"),
         max_tokens: z.number().min(100).max(5000).optional().describe("Maximum number of tokens to return (default: 1500)"),
         ui_language: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.')
@@ -139,6 +140,8 @@ function setupTools(server: McpServer, services: {
       }
       // Remove ui_language from converted args since service expects framework
       delete convertedArgs.ui_language;
+      // Pass vaadin_version through as-is
+      convertedArgs.vaadin_version = args.vaadin_version;
       return await handleSearchTool(convertedArgs, services.search);
     })
   );

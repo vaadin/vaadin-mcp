@@ -105,7 +105,8 @@ export class PineconeSparseProvider {
   async keywordSearch(
     query: string,
     k: number,
-    framework: string
+    framework: string,
+    vaadinVersion: string
   ): Promise<KeywordResult[]> {
     try {
       // Extract meaningful keywords from query
@@ -118,7 +119,7 @@ export class PineconeSparseProvider {
       logger.debug(`🔍 Keyword search for: [${keywords.join(', ')}]`);
 
       // Build framework filter
-      const filter = this.buildFrameworkFilter(framework);
+      const filter = this.buildFrameworkFilter(framework, vaadinVersion);
 
       // Search using keyword-focused query
       const keywordQuery = keywords.join(' ');
@@ -234,9 +235,9 @@ export class PineconeSparseProvider {
   /**
    * Build framework filter for Pinecone query
    */
-  private buildFrameworkFilter(framework: string): any {
+  private buildFrameworkFilter(framework: string, vaadinVersion: string): any {
     // Always scope to vaadin_version, optionally filter by framework
-    let filter: any = { vaadin_version: '24' };
+    let filter: any = { vaadin_version: vaadinVersion };
 
     if (framework === 'flow' || framework === 'hilla') {
       filter = {

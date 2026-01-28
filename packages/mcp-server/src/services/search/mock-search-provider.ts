@@ -111,7 +111,8 @@ export class MockSearchProvider implements SearchProvider {
   async semanticSearch(
     query: string,
     k: number,
-    framework: string
+    framework: string,
+    vaadinVersion: string
   ): Promise<SemanticResult[]> {
     // Handle empty query
     if (!query || query.trim() === '') {
@@ -171,7 +172,8 @@ export class MockSearchProvider implements SearchProvider {
   async keywordSearch(
     query: string,
     k: number,
-    framework: string
+    framework: string,
+    vaadinVersion: string
   ): Promise<KeywordResult[]> {
     // Handle empty query or query with only short terms
     if (!query || query.trim() === '') {
