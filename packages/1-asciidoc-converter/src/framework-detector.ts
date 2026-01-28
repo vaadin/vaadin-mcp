@@ -2,13 +2,7 @@
  * Framework detection utilities for Vaadin documentation
  */
 
-import type { Framework } from 'core-types';
-
-/**
- * Legacy versions that are pure Java without Hilla/React support.
- * These versions should always return 'flow' as the framework.
- */
-const LEGACY_JAVA_ONLY_VERSIONS = ['7', '8', '14'];
+import { LEGACY_VERSIONS, type Framework } from 'core-types';
 
 /**
  * Detect the framework from the file name, content, and version
@@ -20,7 +14,7 @@ const LEGACY_JAVA_ONLY_VERSIONS = ['7', '8', '14'];
 export function detectFramework(filePath: string, content: string, version?: string): Framework {
   // Legacy versions (7, 8, 14) are pure Java - always return 'flow' for consistency
   // These versions predate Hilla/React support
-  if (version && LEGACY_JAVA_ONLY_VERSIONS.includes(version)) {
+  if (version && (LEGACY_VERSIONS as readonly string[]).includes(version)) {
     return 'flow';
   }
 

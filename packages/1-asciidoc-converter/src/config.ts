@@ -4,17 +4,7 @@
 
 import path from 'path';
 import type { IngestionConfig } from 'core-types';
-
-/**
- * Maps a Vaadin major version to the corresponding docs repo branch.
- */
-export const VERSION_BRANCHES: Record<string, string> = {
-  '7': 'v7',
-  '8': 'v8',
-  '14': 'v14',
-  '24': 'v24',
-  '25': 'main',
-};
+export { VERSION_BRANCHES } from 'core-types';
 
 export const config: IngestionConfig = {
   repository: {

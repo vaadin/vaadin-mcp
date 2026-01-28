@@ -3,16 +3,12 @@
  */
 
 import * as fs from 'fs';
+import { LEGACY_VERSIONS } from 'core-types';
 import { normalizeComponentName, findComponentFile, parseFrontmatter } from '../../component-api-helpers.js';
 import { logger } from '../../logger.js';
 
 /**
- * Vaadin versions that don't support React/Hilla (pre-Hilla versions)
- */
-const LEGACY_JAVA_ONLY_VERSIONS = ['7', '8', '14'];
-
-/**
- * Vaadin versions that don't have modern web component APIs
+ * Vaadin versions that don't have modern web component APIs (GWT-based, pre-Web Components)
  */
 const LEGACY_NO_WEB_COMPONENT_API_VERSIONS = ['7', '8'];
 
@@ -100,7 +96,7 @@ export async function handleGetComponentReactApiTool(args: any) {
   }
 
   // Check for legacy versions that don't support React/Hilla
-  if (args.vaadin_version && LEGACY_JAVA_ONLY_VERSIONS.includes(args.vaadin_version)) {
+  if (args.vaadin_version && (LEGACY_VERSIONS as readonly string[]).includes(args.vaadin_version)) {
     return {
       content: [
         {

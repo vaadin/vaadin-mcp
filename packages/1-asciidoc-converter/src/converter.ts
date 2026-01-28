@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import type { IngestionConfig, ProcessedMetadata, Framework } from 'core-types';
+import { LEGACY_VERSIONS, type IngestionConfig, type ProcessedMetadata, type Framework } from 'core-types';
 import { cloneOrPullRepo, getAsciiDocFiles } from './repository-manager.js';
 import { detectFramework, isComponentFile } from './framework-detector.js';
 import { generateVaadinUrl, parseMetadata, generateFrontmatter } from './url-generator.js';
@@ -156,8 +156,8 @@ export async function convertDocumentation(
   // Process each file
   const results: ConversionResult[] = [];
 
-  // Legacy versions (7, 8, 14) are Java-only, no dual-framework processing needed
-  const isLegacyVersion = ['7', '8', '14'].includes(version);
+  // Legacy versions are Java-only, no dual-framework processing needed
+  const isLegacyVersion = (LEGACY_VERSIONS as readonly string[]).includes(version);
 
   for (const file of files) {
     if (!isLegacyVersion && isComponentFile(file)) {
