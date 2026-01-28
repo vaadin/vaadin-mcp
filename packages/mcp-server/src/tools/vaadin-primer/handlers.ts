@@ -2,17 +2,17 @@
  * Handler for Vaadin primer tool
  */
 
-import { VAADIN_PRIMER_CONTENT } from './content.js';
+import { getVaadinPrimerContent } from './content.js';
 
 /**
  * Handle get_vaadin_primer tool
  */
-export async function handleGetVaadinPrimerTool() {
+export async function handleGetVaadinPrimerTool(args: { vaadin_version: string }) {
   return {
     content: [
       {
         type: 'text' as const,
-        text: VAADIN_PRIMER_CONTENT
+        text: getVaadinPrimerContent(args.vaadin_version)
       }
     ]
   };

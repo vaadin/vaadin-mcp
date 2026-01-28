@@ -86,10 +86,23 @@ export function extractComponentApiParams(args: any): Record<string, any> {
 
 /**
  * Extract properties for tools with no parameters
- * Used by: get_vaadin_version, get_vaadin_primer
+ * Used by: get_vaadin_version
  */
 export function extractNoParams(_args: any): Record<string, any> {
   return {};
+}
+
+/**
+ * Extract properties from get_vaadin_primer arguments
+ */
+export function extractPrimerParams(args: any): Record<string, any> {
+  const params: Record<string, any> = {};
+
+  if (args.vaadin_version && typeof args.vaadin_version === 'string') {
+    params.vaadin_version = args.vaadin_version;
+  }
+
+  return params;
 }
 
 /**
@@ -113,8 +126,10 @@ export function extractToolParams(toolName: string, args: any): Record<string, a
       return extractComponentApiParams(args);
 
     case 'get_vaadin_version':
-    case 'get_vaadin_primer':
       return extractNoParams(args);
+
+    case 'get_vaadin_primer':
+      return extractPrimerParams(args);
 
     default:
       logger.warn(`📊 Analytics: Unknown tool name "${toolName}", no parameter extraction`);

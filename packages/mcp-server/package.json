@@ -4,7 +4,7 @@
   "description": "MCP server for Vaadin documentation with document-based search and full document retrieval",
   "type": "module",
   "scripts": {
-    "build": "tsc && cp src/tools/landing-page/content.html dist/tools/landing-page/",
+    "build": "tsc && cp src/tools/landing-page/content.html dist/tools/landing-page/ && cp -r src/tools/vaadin-primer/content dist/tools/vaadin-primer/",
     "start": "bun run src/index.ts",
     "start:prod": "bun run dist/index.js",
     "test": "bun run src/test-scenarios.test.ts --verbose",
