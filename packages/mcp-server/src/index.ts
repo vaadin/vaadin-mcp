@@ -107,10 +107,12 @@ function setupTools(server: McpServer, services: {
     {
       title: "Vaadin Primer",
       description: "IMPORTANT: Always use this tool FIRST before working with Vaadin. Returns a comprehensive primer document with current (2025+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Java vs React development models, project structure, components, and best practices. Essential reading to avoid outdated assumptions.",
-      inputSchema: {}
+      inputSchema: {
+        vaadin_version: z.enum(['24', '25']).optional().describe('Vaadin platform version: "24" for Vaadin 24, "25" for Vaadin 25 (default: 25).')
+      }
     },
-    withAnalytics("get_vaadin_primer", async () => {
-      return await handleGetVaadinPrimerTool();
+    withAnalytics("get_vaadin_primer", async (args) => {
+      return await handleGetVaadinPrimerTool({ vaadin_version: args.vaadin_version || '25' });
     })
   );
 
