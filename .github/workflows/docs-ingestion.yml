@@ -12,96 +12,101 @@ on:
         required: false
         default: false
         type: boolean
-      branch:
-        description: 'Vaadin docs branch to process'
+      version:
+        description: 'Vaadin version to ingest'
         required: false
-        default: 'latest'
-        type: string
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - '24'
+          - '25'
 
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    
+    timeout-minutes: 60
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-      
+
       - name: Cache Vaadin docs repository
         uses: actions/cache@v4
         with:
           path: ./packages/1-asciidoc-converter/vaadin-docs
-          key: vaadin-docs-${{ inputs.branch || 'latest' }}-${{ github.run_id }}
+          key: vaadin-docs-${{ github.run_id }}
           restore-keys: |
-            vaadin-docs-${{ inputs.branch || 'latest' }}-
             vaadin-docs-
-      
+
       - name: Install workspace dependencies
         run: bun install
-      
+
       - name: Build packages
         run: bun run build
-      
-      - name: Step 1 - Convert AsciiDoc to Markdown
-        working-directory: ./packages/1-asciidoc-converter
-        env:
-          BRANCH: ${{ inputs.branch || 'latest' }}
-        run: |
-          # Create logs directory
-          mkdir -p logs
-          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-          
-          # Run AsciiDoc conversion
-          echo "🔄 Converting AsciiDoc files to Markdown..."
-          if [ "$BRANCH" != "latest" ]; then
-            bun run convert --branch "$BRANCH" 2>&1 | tee logs/asciidoc_conversion_${TIMESTAMP}.log
-          else
-            bun run convert 2>&1 | tee logs/asciidoc_conversion_${TIMESTAMP}.log
-          fi
-          
-          # Check exit status
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "::error::AsciiDoc conversion failed. See logs for details."
-            exit 1
-          fi
-          
-          # Show conversion summary
-          echo "✅ AsciiDoc conversion completed"
-          
-      - name: Step 2 - Generate Embeddings and Upload to Pinecone
-        working-directory: ./packages/2-embedding-generator
+
+      - name: Run ingestion pipeline
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_INDEX: ${{ secrets.PINECONE_INDEX || 'vaadin-docs' }}
         run: |
-          # Create logs directory
-          mkdir -p logs
+          VERSION="${{ inputs.version || 'all' }}"
+          CLEAR="${{ inputs.clear_index }}"
+
+          mkdir -p packages/1-asciidoc-converter/logs
+          mkdir -p packages/2-embedding-generator/logs
           TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-          
-          # Run embedding generation
-          echo "🧠 Generating embeddings and uploading to Pinecone..."
-          if [ "${{ inputs.clear_index }}" = "true" ]; then
-            echo "🗑️ Using clear index mode (complete rebuild)"
-            bun run generate --clear 2>&1 | tee logs/embedding_generation_${TIMESTAMP}.log
+
+          run_version() {
+            local ver=$1
+            local clear_flag=$2
+
+            echo "::group::Convert v${ver} AsciiDoc to Markdown"
+            echo "Converting AsciiDoc files for v${ver}..."
+            cd packages/1-asciidoc-converter
+            bun run convert --version "$ver" 2>&1 | tee "logs/asciidoc_conversion_v${ver}_${TIMESTAMP}.log"
+            local convert_status=${PIPESTATUS[0]}
+            cd ../..
+            if [ $convert_status -ne 0 ]; then
+              echo "::error::AsciiDoc conversion failed for v${ver}. See logs for details."
+              return 1
+            fi
+            echo "AsciiDoc conversion completed for v${ver}"
+            echo "::endgroup::"
+
+            echo "::group::Generate v${ver} Embeddings"
+            echo "Generating embeddings for v${ver}..."
+            cd packages/2-embedding-generator
+            if [ "$clear_flag" = "true" ]; then
+              echo "Using clear index mode for v${ver}"
+              bun run generate --version "$ver" --clear 2>&1 | tee "logs/embedding_generation_v${ver}_${TIMESTAMP}.log"
+            else
+              bun run generate --version "$ver" 2>&1 | tee "logs/embedding_generation_v${ver}_${TIMESTAMP}.log"
+            fi
+            local generate_status=${PIPESTATUS[0]}
+            cd ../..
+            if [ $generate_status -ne 0 ]; then
+              echo "::error::Embedding generation failed for v${ver}. See logs for details."
+              return 1
+            fi
+            echo "Embedding generation completed for v${ver}"
+            echo "::endgroup::"
+          }
+
+          if [ "$VERSION" = "all" ]; then
+            # Run v24 first (with --clear if requested), then v25 (without --clear)
+            run_version 24 "$CLEAR"
+            run_version 25 "false"
           else
-            echo "🔄 Using smart update mode (recommended)"
-            bun run generate 2>&1 | tee logs/embedding_generation_${TIMESTAMP}.log
+            run_version "$VERSION" "$CLEAR"
           fi
-          
-          # Check exit status
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "::error::Embedding generation failed. See logs for details."
-            exit 1
-          fi
-          
-          echo "✅ Embedding generation completed"
-      
+
       - name: Upload conversion logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -110,7 +115,7 @@ jobs:
           path: ./packages/1-asciidoc-converter/logs/
           retention-days: 7
           include-hidden-files: true
-      
+
       - name: Upload embedding logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -119,7 +124,7 @@ jobs:
           path: ./packages/2-embedding-generator/logs/
           retention-days: 7
           include-hidden-files: true
-      
+
       - name: Upload markdown artifacts (for debugging)
         if: failure()
         uses: actions/upload-artifact@v4
@@ -128,53 +133,68 @@ jobs:
           path: ./packages/1-asciidoc-converter/dist/markdown/
           retention-days: 3
           include-hidden-files: true
-      
+
       - name: Create summary
         if: always()
         run: |
-          echo "## 📊 Ingestion Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          VERSION="${{ inputs.version || 'all' }}"
+          echo "## Ingestion Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-          if [ -f "./packages/1-asciidoc-converter/logs/asciidoc_conversion_"*.log ]; then
-            echo "| AsciiDoc → Markdown | ✅ Completed |" >> $GITHUB_STEP_SUMMARY
+
+          check_logs() {
+            local ver=$1
+            local convert_log=$(ls ./packages/1-asciidoc-converter/logs/asciidoc_conversion_v${ver}_*.log 2>/dev/null | head -1)
+            local embed_log=$(ls ./packages/2-embedding-generator/logs/embedding_generation_v${ver}_*.log 2>/dev/null | head -1)
+            if [ -n "$convert_log" ]; then
+              echo "| v${ver} AsciiDoc -> Markdown | Completed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| v${ver} AsciiDoc -> Markdown | Failed |" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ -n "$embed_log" ]; then
+              echo "| v${ver} Markdown -> Embeddings | Completed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| v${ver} Markdown -> Embeddings | Failed |" >> $GITHUB_STEP_SUMMARY
+            fi
+          }
+
+          if [ "$VERSION" = "all" ]; then
+            check_logs 24
+            check_logs 25
           else
-            echo "| AsciiDoc → Markdown | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+            check_logs "$VERSION"
           fi
-          if [ -f "./packages/2-embedding-generator/logs/embedding_generation_"*.log ]; then
-            echo "| Markdown → Embeddings | ✅ Completed |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Markdown → Embeddings | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
-          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ inputs.branch || 'latest' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "**Clear Index:** ${{ inputs.clear_index || 'false' }}" >> $GITHUB_STEP_SUMMARY
           echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
-      
+
       - name: Notify on failure
         if: failure()
         uses: actions/github-script@v7
         with:
           script: |
-            const branch = '${{ inputs.branch || 'latest' }}';
+            const version = '${{ inputs.version || 'all' }}';
             const clearIndex = '${{ inputs.clear_index || 'false' }}';
-            
+
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Docs Ingestion Failed: ${new Date().toISOString()}`,
-              body: `## 🚨 Docs Ingestion Pipeline Failed
-              
+              body: `## Docs Ingestion Pipeline Failed
+
               **Details:**
-              - Branch: \`${branch}\`
+              - Version: \`${version}\`
               - Clear Index: \`${clearIndex}\`
               - Workflow Run: [#${context.runId}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
-              
+
               **Next Steps:**
               1. Check the workflow logs for specific error details
               2. Review the uploaded log artifacts
               3. Consider running with manual trigger to debug
-              
+
               **Common Issues:**
               - API rate limits (OpenAI/Pinecone)
               - Network connectivity issues

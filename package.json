@@ -9,7 +9,9 @@
   "scripts": {
     "build": "bun run --filter='core-types' build && bun run --filter='!core-types' build",
     "test": "bun run --filter='*' test",
-    "ingest:all": "bun run build && bun run --filter='1-asciidoc-converter' convert && bun run --filter='2-embedding-generator' generate",
+    "ingest:v24": "bun run build && bun run --filter='1-asciidoc-converter' convert -- --version 24 && bun run --filter='2-embedding-generator' generate -- --version 24",
+    "ingest:v25": "bun run build && bun run --filter='1-asciidoc-converter' convert -- --version 25 && bun run --filter='2-embedding-generator' generate -- --version 25",
+    "ingest:all": "bun run ingest:v24 && bun run ingest:v25",
     "start:mcp": "bun run --filter='mcp-server' start"
   },
   "devDependencies": {

@@ -9,21 +9,24 @@ import type { ProcessedMetadata, Framework } from 'core-types';
  * Generate a direct Vaadin docs URL from a file path
  * @param filePath - The path to the source file
  * @param repoPath - The path to the local repository
+ * @param version - Vaadin major version (e.g. '24', '25'). Defaults to '24'.
  * @returns The generated Vaadin.com URL
  */
-export function generateVaadinUrl(filePath: string, repoPath: string): string {
+export function generateVaadinUrl(filePath: string, repoPath: string, version: string = '24'): string {
   // Get the source path relative to repo root
   const sourcePath = filePath.replace(repoPath, '');
-  
+
   // Generate direct Vaadin docs URL
   if (sourcePath && sourcePath.includes('articles/')) {
     // Extract the path after 'articles/'
     const match = sourcePath.match(/articles\/(.+)/);
     if (match) {
-      const path = match[1];
+      const docPath = match[1];
       // Remove index.adoc or .adoc extension
-      const cleanPath = path.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
-      return `https://vaadin.com/docs/${cleanPath}`;
+      const cleanPath = docPath.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
+      // v24 is the default docs path (no prefix); other versions get a v{version}/ prefix
+      const versionPrefix = version === '24' ? '' : `v${version}/`;
+      return `https://vaadin.com/docs/${versionPrefix}${cleanPath}`;
     } else {
       // Fallback to GitHub URL if pattern doesn't match
       return `https://github.com/vaadin/docs/blob/main/${sourcePath}`;
