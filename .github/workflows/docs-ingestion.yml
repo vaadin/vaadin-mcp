@@ -19,8 +19,6 @@ on:
         type: choice
         options:
           - all
-          - modern
-          - legacy
           - '7'
           - '8'
           - '14'
@@ -105,22 +103,13 @@ jobs:
           }
 
           if [ "$VERSION" = "all" ]; then
-            # Run all versions: legacy first (7, 8, 14), then modern (24, 25)
+            # Run all versions in order (7, 8, 14, 24, 25)
             # Only the first version uses --clear if requested
             run_version 7 "$CLEAR"
             run_version 8 "false"
             run_version 14 "false"
             run_version 24 "false"
             run_version 25 "false"
-          elif [ "$VERSION" = "modern" ]; then
-            # Run modern versions only (24 + 25)
-            run_version 24 "$CLEAR"
-            run_version 25 "false"
-          elif [ "$VERSION" = "legacy" ]; then
-            # Run legacy versions only (7 + 8 + 14)
-            run_version 7 "$CLEAR"
-            run_version 8 "false"
-            run_version 14 "false"
           else
             run_version "$VERSION" "$CLEAR"
           fi
@@ -183,13 +172,6 @@ jobs:
             check_logs 14
             check_logs 24
             check_logs 25
-          elif [ "$VERSION" = "modern" ]; then
-            check_logs 24
-            check_logs 25
-          elif [ "$VERSION" = "legacy" ]; then
-            check_logs 7
-            check_logs 8
-            check_logs 14
           else
             check_logs "$VERSION"
           fi
