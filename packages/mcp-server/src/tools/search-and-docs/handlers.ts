@@ -3,42 +3,30 @@
  */
 
 import { config } from '../../config.js';
-import type { RetrievalResult } from '../../types.js';
 import { logger } from '../../logger.js';
+import type { DocumentService } from '../../services/document/document-service.js';
+import type { HybridSearchService } from '../../services/search/hybrid-search-service.js';
+import type { RetrievalResult } from '../../types.js';
 
 /**
  * Handle search_vaadin_docs tool
  */
-export async function handleSearchTool(args: any) {
+export async function handleSearchTool(args: any, searchService: HybridSearchService) {
   // Validate arguments
   if (!args.question || typeof args.question !== 'string') {
     throw new Error('Missing or invalid question parameter');
   }
 
   try {
-    // Forward request to REST server
-    const response = await fetch(`${config.restServer.url}/search`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        question: args.question, // Use 'question' for the enhanced API
-        max_results: args.max_results,
-        max_tokens: args.max_tokens,
-        framework: args.framework || 'common'
-      })
+    // Direct service call (no HTTP)
+    const results = await searchService.hybridSearch(args.question, {
+      maxResults: args.max_results || config.search.defaultMaxResults,
+      maxTokens: args.max_tokens || config.search.defaultMaxTokens,
+      framework: args.framework || 'common'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    const data = await response.json();
-
     // Format results with hierarchical information
-    const formattedResults = formatSearchResults(data.results);
+    const formattedResults = formatSearchResults(results);
 
     return {
       content: [
@@ -66,7 +54,7 @@ export async function handleSearchTool(args: any) {
 /**
  * Handle get_full_document tool
  */
-export async function handleGetFullDocumentTool(args: any) {
+export async function handleGetFullDocumentTool(args: any, documentService: DocumentService) {
   // Validate arguments (Zod schema validation handles this automatically)
   if (!args.file_paths || !Array.isArray(args.file_paths) || args.file_paths.length === 0) {
     throw new Error('Missing required parameter: file_paths (non-empty array)');
@@ -76,30 +64,20 @@ export async function handleGetFullDocumentTool(args: any) {
   const filePaths = args.file_paths as string[];
 
   try {
-    // Fetch all documents in parallel
+    // Fetch all documents in parallel using service
     const fetchPromises = filePaths.map(async (filePath: string) => {
-      const response = await fetch(`${config.restServer.url}/document/${encodeURIComponent(filePath)}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return {
-            error: `Document with file path "${filePath}" not found`,
-            filePath
-          };
-        }
-
-        const errorData = await response.json();
+      try {
+        const document = await documentService.getDocument(filePath);
         return {
-          error: errorData.error || `HTTP error ${response.status} for ${filePath}`,
+          document,
+          filePath
+        };
+      } catch (error) {
+        return {
+          error: error instanceof Error ? error.message : 'Unknown error',
           filePath
         };
       }
-
-      const document = await response.json();
-      return {
-        document,
-        filePath
-      };
     });
 
     const results = await Promise.all(fetchPromises);

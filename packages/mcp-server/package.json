@@ -1,6 +1,6 @@
 {
   "name": "vaadin-mcp",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "description": "MCP server for Vaadin documentation with document-based search and full document retrieval",
 
   "type": "module",
@@ -12,7 +12,6 @@
     "start:prod": "bun run dist/index.js",
     "test": "bun run src/test-scenarios.test.ts --verbose",
     "test:hierarchical": "bun run src/test-scenarios.test.ts --verbose",
-    "test:server": "bun run src/test-scenarios.test.ts --server=http://localhost:3001 --verbose",
     "test:component-api": "bun run src/component-api-tools.test.ts",
     "test:all": "bun run src/component-api-tools.test.ts && bun run src/test-scenarios.test.ts --verbose"
   },
@@ -42,8 +41,16 @@
   "dependencies": {
     "@amplitude/analytics-node": "^1.5.22",
     "@modelcontextprotocol/sdk": "^1.17.0",
-    "express": "^4.18.2",
+    "@langchain/community": "0.3.48",
+    "@langchain/core": "0.3.66",
+    "@langchain/openai": "^0.3.0",
+    "@langchain/pinecone": "^0.1.0",
+    "@pinecone-database/pinecone": "^5.1.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.18.2",
+    "langchain": "0.3.30",
+    "openai": "^4.86.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
