@@ -6,6 +6,7 @@
  * Note: The 7 HTTP API endpoint tests from test-suite.ts are dropped because
  * they tested Express routing/status codes for endpoints that no longer exist.
  */
+export {};
 
 // Set env vars BEFORE any module loading triggers config evaluation
 process.env.PINECONE_API_KEY = process.env.PINECONE_API_KEY || 'test-dummy-key';

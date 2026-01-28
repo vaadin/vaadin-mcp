@@ -3,6 +3,7 @@
  * Ported from packages/rest-server/src/hybrid-search.test.ts
  * These tests use dependency injection and can run without external API keys
  */
+export {};
 
 // Set env vars BEFORE any module loading triggers config evaluation
 process.env.PINECONE_API_KEY = process.env.PINECONE_API_KEY || 'test-dummy-key';
