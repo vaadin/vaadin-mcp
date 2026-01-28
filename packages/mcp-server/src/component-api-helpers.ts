@@ -24,16 +24,22 @@ export function normalizeComponentName(componentName: string): string {
 }
 
 /**
- * Get markdown directories to search (includes test fixtures when in test mode)
+ * Get the markdown directory for a specific Vaadin version
  */
-export function getMarkdownDirectories(): string[] {
-  const directories: string[] = [];
+export function getMarkdownDirectory(version: string): string {
+  const markdownRoot = process.env.NODE_ENV === 'production'
+    ? '/app/packages/1-asciidoc-converter/dist/markdown'
+    : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown');
 
-  // Primary markdown directory
-  const primaryDir = process.env.NODE_ENV === 'production'
-    ? '/app/packages/1-asciidoc-converter/dist/markdown/v24'
-    : path.join(process.cwd(), '..', '1-asciidoc-converter/dist/markdown/v24');
-  directories.push(primaryDir);
+  return path.join(markdownRoot, 'v' + version);
+}
+
+/**
+ * Find component file in the version-specific markdown directory
+ * Returns the full path if found, or null if not found
+ */
+export function findComponentFile(componentFilePath: string, version: string): { fullPath: string; markdownDir: string } | null {
+  const directories: string[] = [getMarkdownDirectory(version)];
 
   // Test fixtures directory (when in test mode)
   if (process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test') {
@@ -42,16 +48,6 @@ export function getMarkdownDirectories(): string[] {
       directories.push(testFixturesDir);
     }
   }
-
-  return directories;
-}
-
-/**
- * Find component file in markdown directories
- * Returns the full path if found, or null if not found
- */
-export function findComponentFile(componentFilePath: string): { fullPath: string; markdownDir: string } | null {
-  const directories = getMarkdownDirectories();
 
   for (const markdownDir of directories) {
     const fullPath = path.join(markdownDir, componentFilePath);
