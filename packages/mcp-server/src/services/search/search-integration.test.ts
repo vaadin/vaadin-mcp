@@ -90,7 +90,8 @@ async function main() {
     const results = await searchService.hybridSearch('How to bind form fields to data model', {
       maxResults: 10,
       maxTokens: 2000,
-      framework: 'common'
+      framework: 'common',
+      vaadinVersion: '24'
     });
 
     assertTrue(results.length >= 1, 'Should return at least 1 result');
@@ -114,7 +115,8 @@ async function main() {
     const results = await searchService.hybridSearch('Grid column configuration', {
       maxResults: 10,
       maxTokens: 2000,
-      framework: 'common'
+      framework: 'common',
+      vaadinVersion: '24'
     });
 
     assertTrue(results.length >= 1, 'Should return at least 1 result');
@@ -138,7 +140,8 @@ async function main() {
     const results = await searchService.hybridSearch('Button component', {
       maxResults: 10,
       maxTokens: 2000,
-      framework: 'flow'
+      framework: 'flow',
+      vaadinVersion: '24'
     });
 
     assertTrue(results.length >= 1, 'Should return at least 1 result');
@@ -160,7 +163,8 @@ async function main() {
     const results = await searchService.hybridSearch('general component usage', {
       maxResults: 10,
       maxTokens: 2000,
-      framework: 'flow'
+      framework: 'flow',
+      vaadinVersion: '24'
     });
 
     assertTrue(results.length >= 1, 'Should return at least 1 result');
@@ -176,7 +180,8 @@ async function main() {
     const results = await searchService.hybridSearch('Grid data binding validation', {
       maxResults: 10,
       maxTokens: 2000,
-      framework: 'common'
+      framework: 'common',
+      vaadinVersion: '24'
     });
 
     assertTrue(results.length >= 3, `Expected at least 3 results, got ${results.length}`);
@@ -218,7 +223,7 @@ async function main() {
    * Test 8: Search result metadata structure validation
    */
   async function testSearchResultMetadataStructure() {
-    const results = await searchService.hybridSearch('grid component', { maxResults: 3 });
+    const results = await searchService.hybridSearch('grid component', { maxResults: 3, vaadinVersion: '24' });
     assertTrue(results.length > 0, 'Should return at least 1 result');
 
     const result = results[0];
@@ -260,7 +265,7 @@ async function main() {
    */
   async function testNoRedundantMetadataFields() {
     // Check search results
-    const results = await searchService.hybridSearch('grid component', { maxResults: 3 });
+    const results = await searchService.hybridSearch('grid component', { maxResults: 3, vaadinVersion: '24' });
     assertTrue(results.length > 0, 'Should return results');
 
     const result = results[0];
