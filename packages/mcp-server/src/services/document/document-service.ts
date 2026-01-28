@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import YAML from 'yaml';
 import { logger } from '../../logger';
 
 export interface DocumentResult {
@@ -88,17 +89,11 @@ export class DocumentService {
     }
 
     try {
-      // Parse YAML frontmatter (simple key: value parser)
-      const yamlContent = frontmatterMatch[1];
+      const parsed = YAML.parse(frontmatterMatch[1]);
       const metadata: Record<string, string> = {};
-
-      const lines = yamlContent.split('\n');
-      for (const line of lines) {
-        const colonIndex = line.indexOf(':');
-        if (colonIndex > 0) {
-          const key = line.substring(0, colonIndex).trim();
-          const value = line.substring(colonIndex + 1).trim().replace(/^["']|["']$/g, '');
-          metadata[key] = value;
+      if (parsed && typeof parsed === 'object') {
+        for (const [key, value] of Object.entries(parsed)) {
+          metadata[key] = Array.isArray(value) ? value.join('\n') : String(value);
         }
       }
 

@@ -4,6 +4,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
+import YAML from 'yaml';
 import { logger } from './logger.js';
 
 /**
@@ -77,15 +78,10 @@ export function parseFrontmatter(content: string): { metadata: Record<string, st
 
   if (frontmatterMatch) {
     try {
-      // Parse YAML frontmatter
-      const yamlContent = frontmatterMatch[1];
-      const lines = yamlContent.split('\n');
-      for (const line of lines) {
-        const colonIndex = line.indexOf(':');
-        if (colonIndex > 0) {
-          const key = line.substring(0, colonIndex).trim();
-          const value = line.substring(colonIndex + 1).trim().replace(/^["']|["']$/g, '');
-          metadata[key] = value;
+      const parsed = YAML.parse(frontmatterMatch[1]);
+      if (parsed && typeof parsed === 'object') {
+        for (const [key, value] of Object.entries(parsed)) {
+          metadata[key] = Array.isArray(value) ? value.join('\n') : String(value);
         }
       }
       markdownContent = frontmatterMatch[2];
