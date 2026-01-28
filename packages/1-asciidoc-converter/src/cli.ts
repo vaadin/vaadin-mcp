@@ -5,7 +5,7 @@
  */
 
 import { convertDocumentation } from './converter.js';
-import { config, VERSION_BRANCHES, getVersionConfig } from './config.js';
+import { config, VERSION_BRANCHES } from './config.js';
 import path from 'path';
 
 async function main() {
@@ -64,12 +64,10 @@ Examples:
 
   for (const ver of versions) {
     const resolvedBranch = branch || VERSION_BRANCHES[ver] || `v${ver}`;
-    // Get version-specific config with appropriate include patterns
-    const versionConfig = getVersionConfig(ver, config);
     const configToUse = {
-      ...versionConfig,
+      ...config,
       repository: {
-        ...versionConfig.repository,
+        ...config.repository,
         branch: resolvedBranch
       }
     };
