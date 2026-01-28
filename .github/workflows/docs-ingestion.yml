@@ -19,6 +19,9 @@ on:
         type: choice
         options:
           - all
+          - '7'
+          - '8'
+          - '14'
           - '24'
           - '25'
 
@@ -100,8 +103,12 @@ jobs:
           }
 
           if [ "$VERSION" = "all" ]; then
-            # Run v24 first (with --clear if requested), then v25 (without --clear)
-            run_version 24 "$CLEAR"
+            # Run all versions in order (7, 8, 14, 24, 25)
+            # Only the first version uses --clear if requested
+            run_version 7 "$CLEAR"
+            run_version 8 "false"
+            run_version 14 "false"
+            run_version 24 "false"
             run_version 25 "false"
           else
             run_version "$VERSION" "$CLEAR"
@@ -160,6 +167,9 @@ jobs:
           }
 
           if [ "$VERSION" = "all" ]; then
+            check_logs 7
+            check_logs 8
+            check_logs 14
             check_logs 24
             check_logs 25
           else

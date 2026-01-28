@@ -4,14 +4,7 @@
 
 import path from 'path';
 import type { IngestionConfig } from 'core-types';
-
-/**
- * Maps a Vaadin major version to the corresponding docs repo branch.
- */
-export const VERSION_BRANCHES: Record<string, string> = {
-  '24': 'v24',
-  '25': 'main',
-};
+export { VERSION_BRANCHES } from 'core-types';
 
 export const config: IngestionConfig = {
   repository: {
@@ -20,14 +13,7 @@ export const config: IngestionConfig = {
     localPath: path.join(process.cwd(), 'vaadin-docs')
   },
   processing: {
-    includePatterns: [
-      'building-apps/**/*.{adoc,asciidoc}',
-      'components/**/*.{adoc,asciidoc}',
-      'designing-apps/**/*.{adoc,asciidoc}',
-      'getting-started/**/*.{adoc,asciidoc}',
-      'flow/**/*.{adoc,asciidoc}',
-      'styling/**/*.{adoc,asciidoc}'
-    ],
+    includePatterns: ['**/*.{adoc,asciidoc}'],
     excludePatterns: [
       '_*', // Not standalone files, used for imports
       '**/test-data/**'

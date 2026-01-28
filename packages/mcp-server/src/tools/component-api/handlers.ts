@@ -3,8 +3,14 @@
  */
 
 import * as fs from 'fs';
+import { LEGACY_VERSIONS } from 'core-types';
 import { normalizeComponentName, findComponentFile, parseFrontmatter } from '../../component-api-helpers.js';
 import { logger } from '../../logger.js';
+
+/**
+ * Vaadin versions that don't have modern web component APIs (GWT-based, pre-Web Components)
+ */
+const LEGACY_NO_WEB_COMPONENT_API_VERSIONS = ['7', '8'];
 
 /**
  * Handle get_component_java_api tool
@@ -89,6 +95,24 @@ export async function handleGetComponentReactApiTool(args: any) {
     throw new Error('Missing or invalid component_name parameter');
   }
 
+  // Check for legacy versions that don't support React/Hilla
+  if (args.vaadin_version && (LEGACY_VERSIONS as readonly string[]).includes(args.vaadin_version)) {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: `React API is not available for Vaadin ${args.vaadin_version}`,
+            reason: 'React/Hilla support was introduced in Vaadin 23+. Earlier versions only support Java-based UI development.',
+            suggestion: 'Use get_component_java_api instead for Java/Flow API documentation.',
+            alternative_tool: 'get_component_java_api'
+          }, null, 2)
+        }
+      ],
+      isError: true
+    };
+  }
+
   try {
     // Normalize component name
     const normalized = normalizeComponentName(args.component_name);
@@ -161,6 +185,24 @@ export async function handleGetComponentWebComponentApiTool(args: any) {
   // Validate arguments
   if (!args.component_name || typeof args.component_name !== 'string') {
     throw new Error('Missing or invalid component_name parameter');
+  }
+
+  // Check for legacy versions that don't have modern web component APIs
+  if (args.vaadin_version && LEGACY_NO_WEB_COMPONENT_API_VERSIONS.includes(args.vaadin_version)) {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: `Web Component API is not available for Vaadin ${args.vaadin_version}`,
+            reason: 'Vaadin 7 and 8 used GWT-based widgets, not Web Components. Web Components were introduced in Vaadin 10+.',
+            suggestion: 'Use get_component_java_api for Java API documentation.',
+            alternative_tool: 'get_component_java_api'
+          }, null, 2)
+        }
+      ],
+      isError: true
+    };
   }
 
   try {

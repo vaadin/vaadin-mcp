@@ -6,6 +6,7 @@
 
 import { convertDocumentation } from './converter.js';
 import { config, VERSION_BRANCHES } from './config.js';
+import { SUPPORTED_VERSIONS, type VaadinVersion } from 'core-types';
 import path from 'path';
 
 async function main() {
@@ -55,12 +56,12 @@ Examples:
   }
 
   // Validate version
-  if (version !== 'all' && !(version in VERSION_BRANCHES)) {
-    console.error(`❌ Unknown version '${version}'. Valid versions: ${Object.keys(VERSION_BRANCHES).join(', ')}, all`);
+  if (version !== 'all' && !(SUPPORTED_VERSIONS as readonly string[]).includes(version)) {
+    console.error(`❌ Unknown version '${version}'. Valid versions: ${SUPPORTED_VERSIONS.join(', ')}, all`);
     process.exit(1);
   }
 
-  const versions = version === 'all' ? Object.keys(VERSION_BRANCHES) : [version];
+  const versions: VaadinVersion[] = version === 'all' ? [...SUPPORTED_VERSIONS] : [version as VaadinVersion];
 
   for (const ver of versions) {
     const resolvedBranch = branch || VERSION_BRANCHES[ver] || `v${ver}`;
