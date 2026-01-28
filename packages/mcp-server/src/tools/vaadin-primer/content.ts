@@ -12,6 +12,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const PRIMER_FILES: Record<string, string> = {
+  '7': 'primer-v7.md',
+  '8': 'primer-v8.md',
+  '14': 'primer-v14.md',
   '24': 'primer-v24.md',
   '25': 'primer-v25.md',
 };

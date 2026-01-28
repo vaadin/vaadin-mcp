@@ -12,7 +12,7 @@ import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { SUPPORTED_VERSIONS, MODERN_VERSIONS } from 'core-types';
+import { SUPPORTED_VERSIONS } from 'core-types';
 import { config, validateConfig } from './config.js';
 import { z } from 'zod';
 import { handleGetComponentsByVersionTool } from './tools/get-components-by-version/index.js';
@@ -107,9 +107,9 @@ function setupTools(server: McpServer, services: {
     "get_vaadin_primer",
     {
       title: "Vaadin Primer",
-      description: "IMPORTANT: Always use this tool FIRST before working with Vaadin. Returns a comprehensive primer document with current (2025+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Java vs React development models, project structure, components, and best practices. Essential reading to avoid outdated assumptions.",
+      description: "IMPORTANT: Always use this tool FIRST before working with Vaadin. Returns a comprehensive primer document with current (2025+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Java vs React development models, project structure, components, and best practices. Essential reading to avoid outdated assumptions. For legacy versions (7, 8, 14), returns guidance on version-specific resources.",
       inputSchema: {
-        vaadin_version: z.enum(MODERN_VERSIONS).optional().describe('Vaadin platform version: "24" for Vaadin 24, "25" for Vaadin 25 (default: 25).')
+        vaadin_version: z.enum(SUPPORTED_VERSIONS).optional().describe('Vaadin platform version (default: 25). For legacy versions (7, 8, 14), returns guidance on version-specific resources.')
       }
     },
     withAnalytics("get_vaadin_primer", async (args) => {
