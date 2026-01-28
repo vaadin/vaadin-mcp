@@ -241,7 +241,7 @@ async function testFindComponentFile() {
   try {
     // Try to find button component
     const buttonFlowPath = 'components/button/index-flow.md';
-    const buttonFile = findComponentFile(buttonFlowPath);
+    const buttonFile = findComponentFile(buttonFlowPath, '25');
 
     assertTrue(buttonFile !== null, 'Button component file should be found');
     assertTrue(fs.existsSync(buttonFile!.fullPath), 'Found file should exist');
@@ -250,7 +250,7 @@ async function testFindComponentFile() {
 
     // Test non-existent component
     const nonExistentPath = 'components/non-existent-component-xyz/index-flow.md';
-    const nonExistentFile = findComponentFile(nonExistentPath);
+    const nonExistentFile = findComponentFile(nonExistentPath, '25');
     assertEqual(nonExistentFile, null, 'Non-existent component should return null');
   } finally {
     cleanupTestFixtures();
@@ -267,7 +267,7 @@ async function testReadActualComponentDocs() {
   try {
     // Try to find and read button component Java documentation
     const buttonPath = 'components/button/index-flow.md';
-    const buttonFile = findComponentFile(buttonPath);
+    const buttonFile = findComponentFile(buttonPath, '25');
 
     assertTrue(buttonFile !== null, 'Button component Java documentation should exist');
 
@@ -297,8 +297,8 @@ async function testReadStylingDocs() {
     const flowStylingPath = 'components/button/styling-flow.md';
     const hillaStylingPath = 'components/button/styling-hilla.md';
 
-    const flowFile = findComponentFile(flowStylingPath);
-    const hillaFile = findComponentFile(hillaStylingPath);
+    const flowFile = findComponentFile(flowStylingPath, '25');
+    const hillaFile = findComponentFile(hillaStylingPath, '25');
 
     // At least one styling file should exist for button
     assertTrue(flowFile !== null || hillaFile !== null, 'Button component should have at least one styling documentation file (Java or React)');
@@ -350,8 +350,8 @@ async function testPathSecurity() {
   const maliciousPath1 = '../../../etc/passwd';
   const maliciousPath2 = 'components/../../etc/passwd';
 
-  const result1 = findComponentFile(maliciousPath1);
-  const result2 = findComponentFile(maliciousPath2);
+  const result1 = findComponentFile(maliciousPath1, '25');
+  const result2 = findComponentFile(maliciousPath2, '25');
 
   // Should return null or not escape the markdown directory
   if (result1) {

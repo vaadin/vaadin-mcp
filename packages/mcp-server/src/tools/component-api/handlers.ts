@@ -23,7 +23,7 @@ export async function handleGetComponentJavaApiTool(args: any) {
     const filePath = `components/${normalized}/index-flow.md`;
 
     // Find component file
-    const fileLocation = findComponentFile(filePath);
+    const fileLocation = findComponentFile(filePath, args.vaadin_version);
 
     if (!fileLocation) {
       return {
@@ -97,7 +97,7 @@ export async function handleGetComponentReactApiTool(args: any) {
     const filePath = `components/${normalized}/index-hilla.md`;
 
     // Find component file
-    const fileLocation = findComponentFile(filePath);
+    const fileLocation = findComponentFile(filePath, args.vaadin_version);
 
     if (!fileLocation) {
       return {
@@ -169,7 +169,7 @@ export async function handleGetComponentWebComponentApiTool(args: any) {
 
     // Read the Java documentation to extract the TypeScript API URL from frontmatter
     const filePath = `components/${normalized}/index-flow.md`;
-    const fileLocation = findComponentFile(filePath);
+    const fileLocation = findComponentFile(filePath, args.vaadin_version);
 
     if (!fileLocation) {
       return {
@@ -294,8 +294,8 @@ export async function handleGetComponentStylingTool(args: any) {
     const flowFilePath = `components/${normalized}/styling-flow.md`;
     const hillaFilePath = `components/${normalized}/styling-hilla.md`;
 
-    const flowFileLocation = findComponentFile(flowFilePath);
-    const hillaFileLocation = findComponentFile(hillaFilePath);
+    const flowFileLocation = findComponentFile(flowFilePath, args.vaadin_version);
+    const hillaFileLocation = findComponentFile(hillaFilePath, args.vaadin_version);
 
     if (!flowFileLocation && !hillaFileLocation) {
       return {
