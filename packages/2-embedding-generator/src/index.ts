@@ -37,6 +37,7 @@ export interface EmbeddingGenerationConfig {
   };
   clearExistingIndex?: boolean;
   smartUpdate?: boolean; // New option for CI/CD scenarios
+  version?: string;
 }
 
 /**
@@ -89,7 +90,8 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     
     const chunker = createChunker({
       maxChunkSize: config.chunking?.maxChunkSize,
-      chunkOverlap: config.chunking?.chunkOverlap
+      chunkOverlap: config.chunking?.chunkOverlap,
+      version: config.version
     });
 
     const documentChunks = await chunker.processDocuments(documents);
@@ -162,9 +164,16 @@ export async function runCLI(): Promise<void> {
   
   const args = process.argv.slice(2);
   const clearFlag = args.includes('--clear');
-  
+
+  // Parse --version flag
+  let version = '24';
+  const versionIdx = args.indexOf('--version') !== -1 ? args.indexOf('--version') : args.indexOf('-v');
+  if (versionIdx !== -1 && versionIdx + 1 < args.length) {
+    version = args[versionIdx + 1];
+  }
+
   // Default to the AsciiDoc converter's output directory
-  const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), '..', '1-asciidoc-converter', 'dist', 'markdown', 'v24');
+  const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), '..', '1-asciidoc-converter', 'dist', 'markdown', `v${version}`);
   
   if (!process.env.OPENAI_API_KEY) {
     console.error('❌ OPENAI_API_KEY environment variable is required');
@@ -197,7 +206,8 @@ export async function runCLI(): Promise<void> {
       maxChunkSize: 1000,
       chunkOverlap: 200
     },
-    clearExistingIndex: clearFlag
+    clearExistingIndex: clearFlag,
+    version
   };
 
   try {

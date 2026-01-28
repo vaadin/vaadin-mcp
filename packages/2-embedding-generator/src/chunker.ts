@@ -17,6 +17,7 @@ export interface ChunkingConfig {
   maxChunkSize?: number;
   chunkOverlap?: number;
   generateChunkIds?: boolean;
+  version?: string;
 }
 
 /**

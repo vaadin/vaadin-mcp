@@ -24,13 +24,15 @@ export interface ConversionResult {
  * @param config - Ingestion configuration
  * @param outputDir - Output directory for markdown files
  * @param framework - Optional specific framework to process for
+ * @param version - Vaadin major version (e.g. '24', '25'). Defaults to '24'.
  * @returns Conversion result
  */
 export async function convertFile(
   filePath: string,
   config: IngestionConfig,
   outputDir: string,
-  framework?: Framework
+  framework?: Framework,
+  version: string = '24'
 ): Promise<ConversionResult> {
   const result: ConversionResult = {
     inputFile: filePath,
@@ -55,14 +57,14 @@ export async function convertFile(
     const title = extractTitle(cleanContent);
     
     // Generate source URL
-    const sourceUrl = generateVaadinUrl(filePath, config.repository.localPath);
+    const sourceUrl = generateVaadinUrl(filePath, config.repository.localPath, version);
     
     // Create processed metadata
     const processedMetadata: ProcessedMetadata = {
       framework: detectedFramework,
       source_url: sourceUrl,
       title,
-      vaadin_version: '24',
+      vaadin_version: version,
       ...existingMetadata
     };
     
@@ -116,14 +118,16 @@ export async function convertFile(
 /**
  * Convert all AsciiDoc files to Markdown with frontmatter
  * @param config - Ingestion configuration
- * @param outputDir - Output directory for markdown files (defaults to packages/1-asciidoc-converter/dist/markdown/v24/)
+ * @param outputDir - Output directory for markdown files
+ * @param version - Vaadin major version (e.g. '24', '25'). Defaults to '24'.
  * @returns Promise with conversion results
  */
 export async function convertDocumentation(
   config: IngestionConfig,
-  outputDir?: string
+  outputDir?: string,
+  version: string = '24'
 ): Promise<ConversionResult[]> {
-  const defaultOutputDir = path.join(process.cwd(), 'packages/1-asciidoc-converter/dist/markdown/v24');
+  const defaultOutputDir = path.join(process.cwd(), `packages/1-asciidoc-converter/dist/markdown/v${version}`);
   const targetOutputDir = outputDir || defaultOutputDir;
   
   console.log('Starting AsciiDoc to Markdown conversion...');
@@ -155,12 +159,12 @@ export async function convertDocumentation(
   for (const file of files) {
     if (isComponentFile(file)) {
       // Component files should be processed for both frameworks
-      const flowResult = await convertFile(file, config, targetOutputDir, 'flow');
-      const hillaResult = await convertFile(file, config, targetOutputDir, 'hilla');
+      const flowResult = await convertFile(file, config, targetOutputDir, 'flow', version);
+      const hillaResult = await convertFile(file, config, targetOutputDir, 'hilla', version);
       results.push(flowResult, hillaResult);
     } else {
       // Regular files are processed with auto-detected framework
-      const result = await convertFile(file, config, targetOutputDir);
+      const result = await convertFile(file, config, targetOutputDir, undefined, version);
       results.push(result);
     }
   }
