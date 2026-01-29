@@ -1,12 +1,12 @@
 // Supported Vaadin versions
-export const SUPPORTED_VERSIONS = ['7', '8', '14', '24', '25'] as const;
+export const SUPPORTED_VERSIONS = ['7', '8', '14', '24', '25', '25.1'] as const;
 export type VaadinVersion = typeof SUPPORTED_VERSIONS[number];
 
 // Legacy versions (Java/Flow only, no Hilla)
 export const LEGACY_VERSIONS = ['7', '8', '14'] as const;
 
 // Modern versions (Flow + Hilla)
-export const MODERN_VERSIONS = ['24', '25'] as const;
+export const MODERN_VERSIONS = ['24', '25', '25.1'] as const;
 
 // Version to git branch mapping
 export const VERSION_BRANCHES: Record<VaadinVersion, string> = {
@@ -14,7 +14,8 @@ export const VERSION_BRANCHES: Record<VaadinVersion, string> = {
   '8': 'v8',
   '14': 'v14',
   '24': 'v24',
-  '25': 'main',
+  '25': 'v25.0',
+  '25.1': 'main',
 };
 
 /**

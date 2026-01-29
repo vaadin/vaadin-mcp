@@ -24,6 +24,7 @@ on:
           - '14'
           - '24'
           - '25'
+          - '25.1'
 
 jobs:
   ingest:
@@ -103,13 +104,14 @@ jobs:
           }
 
           if [ "$VERSION" = "all" ]; then
-            # Run all versions in order (7, 8, 14, 24, 25)
+            # Run all versions in order (7, 8, 14, 24, 25, 25.1)
             # Only the first version uses --clear if requested
             run_version 7 "$CLEAR"
             run_version 8 "false"
             run_version 14 "false"
             run_version 24 "false"
             run_version 25 "false"
+            run_version 25.1 "false"
           else
             run_version "$VERSION" "$CLEAR"
           fi
@@ -172,6 +174,7 @@ jobs:
             check_logs 14
             check_logs 24
             check_logs 25
+            check_logs 25.1
           else
             check_logs "$VERSION"
           fi
