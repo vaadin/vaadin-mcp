@@ -17,6 +17,7 @@ const PRIMER_FILES: Record<string, string> = {
   '14': 'primer-v14.md',
   '24': 'primer-v24.md',
   '25': 'primer-v25.md',
+  '25.1': 'primer-v25.md',  // Development version uses same primer as v25
 };
 
 const contentCache: Record<string, string> = {};

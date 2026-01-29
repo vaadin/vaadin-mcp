@@ -21,9 +21,11 @@ export async function buildComponentVersionData(version: string): Promise<Compon
   ]);
 
   // Extract major version for documentation URL
-  const majorVersionMatch = version.match(/^(\d+)/);
+  const majorVersionMatch = version.match(/^(\d+(?:\.\d+)?)/);
   const majorVersion = majorVersionMatch ? majorVersionMatch[1] : '24';
-  const docsVersionPath = majorVersion === '24' ? 'latest' : `v${majorVersion}`;
+  // Use 'next' for 25.1 (development version), 'latest' for 24.x, otherwise 'v{majorVersion}'
+  const docsVersionPath = majorVersion.startsWith('25.1') ? 'next' :
+                          majorVersion === '24' ? 'latest' : `v${majorVersion}`;
 
   // Process core components
   const components: ComponentData[] = [];

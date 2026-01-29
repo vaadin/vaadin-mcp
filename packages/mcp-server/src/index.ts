@@ -109,7 +109,7 @@ function setupTools(server: McpServer, services: {
       title: "Vaadin Primer",
       description: "IMPORTANT: Always use this tool FIRST before working with Vaadin. Returns a comprehensive primer document with current (2025+) information about modern Vaadin development. This addresses common AI misconceptions about Vaadin and provides up-to-date information about Java vs React development models, project structure, components, and best practices. Essential reading to avoid outdated assumptions. For legacy versions (7, 8, 14), returns guidance on version-specific resources.",
       inputSchema: {
-        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", or "25". For legacy versions (7, 8, 14), returns guidance on version-specific resources.')
+        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", "25", or "25.1". For legacy versions (7, 8, 14), returns guidance on version-specific resources.')
       }
     },
     withAnalytics("get_vaadin_primer", async (args) => {
@@ -125,7 +125,7 @@ function setupTools(server: McpServer, services: {
       description: "Search Vaadin documentation for relevant information about Vaadin development, components, and best practices. Uses hybrid semantic + keyword search. USE THIS TOOL for questions about: Vaadin components (Button, Grid, Dialog, etc.), TestBench, UI testing, unit testing, integration testing, @BrowserCallable, Binder, DataProvider, validation, styling, theming, security, Push, Collaboration Engine, PWA, production builds, Docker, deployment, performance, and any Vaadin-specific topics. When using this tool, try to deduce the correct development model from context: use \"java\" for Java-based views, \"react\" for React-based views, or \"common\" for both. Use get_full_document with file_paths containing the result's file_path when you need complete context.",
       inputSchema: {
         question: z.string().describe("The search query or question about Vaadin. Will be used to query a vector database with hybrid search (semantic + keyword)."),
-        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", or "25".'),
+        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", "25", or "25.1".'),
         max_results: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 5)"),
         max_tokens: z.number().min(100).max(5000).optional().describe("Maximum number of tokens to return (default: 1500)"),
         ui_language: z.enum(['java', 'react', 'common']).optional().describe('The UI implementation language: "java" for Java-based views, "react" for React-based views, or "common" for both. If not specified, the agent should try to deduce the correct language from context or asking the user for clarification.')
@@ -200,7 +200,7 @@ function setupTools(server: McpServer, services: {
       description: "Returns the Java API documentation for a specific Vaadin component. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
       inputSchema: {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')"),
-        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", or "25".')
+        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", "25", or "25.1".')
       }
     },
     withAnalytics("get_component_java_api", async (args) => {
@@ -217,7 +217,7 @@ function setupTools(server: McpServer, services: {
       description: "Returns the React API documentation for a specific Vaadin component. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
       inputSchema: {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')"),
-        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", or "25".')
+        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", "25", or "25.1".')
       }
     },
     withAnalytics("get_component_react_api", async (args) => {
@@ -234,7 +234,7 @@ function setupTools(server: McpServer, services: {
       description: "Returns the Web Component/TypeScript API documentation for a specific Vaadin component by fetching from external TypeScript API docs. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
       inputSchema: {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')"),
-        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", or "25".')
+        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", "25", or "25.1".')
       }
     },
     withAnalytics("get_component_web_component_api", async (args) => {
@@ -251,7 +251,7 @@ function setupTools(server: McpServer, services: {
       description: "Returns the styling/theming documentation for a specific Vaadin component. Returns both Java and React styling documentation when available. The component name can be in any format (e.g., 'Button', 'button', 'vaadin-button').",
       inputSchema: {
         component_name: z.string().describe("The name of the component (e.g., 'Button', 'button', 'TextField', 'text-field')"),
-        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", or "25".')
+        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", "25", or "25.1".')
       }
     },
     withAnalytics("get_component_styling", async (args) => {

@@ -24,7 +24,8 @@ export function generateVaadinUrl(filePath: string, repoPath: string, version: s
       const docPath = match[1];
       // Remove index.adoc or .adoc extension
       const cleanPath = docPath.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
-      const versionPrefix = `v${version}/`;
+      // Use 'next' for 25.1 (development version), otherwise 'v{version}'
+      const versionPrefix = version === '25.1' ? 'next/' : `v${version}/`;
       return `https://vaadin.com/docs/${versionPrefix}${cleanPath}`;
     } else {
       // Fallback to GitHub URL if pattern doesn't match
