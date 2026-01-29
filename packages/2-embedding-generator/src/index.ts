@@ -10,7 +10,6 @@
 
 import path from 'path';
 import { config as dotenvConfig } from 'dotenv';
-import type { DocumentChunk } from 'core-types';
 
 // Core module exports
 export * from './document-loader.js';
@@ -155,15 +154,26 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
 }
 
 /**
+ * Clear the Pinecone index
+ */
+export async function clearIndex(config: { apiKey: string; indexName: string }): Promise<void> {
+  console.log('🗑️ Clearing Pinecone index...');
+  const upserter = createPineconeUpserter(config);
+  await upserter.clearIndex();
+  console.log('✅ Index cleared successfully');
+}
+
+/**
  * CLI interface for the embedding generator
  */
 export async function runCLI(): Promise<void> {
   // Load environment variables from .env file in project root
   const projectRoot = path.resolve(process.cwd(), '..', '..');
   dotenvConfig({ path: path.join(projectRoot, '.env') });
-  
+
   const args = process.argv.slice(2);
   const clearFlag = args.includes('--clear');
+  const clearOnlyFlag = args.includes('--clear-only');
 
   // Parse --version flag
   let version = '24';
@@ -172,21 +182,35 @@ export async function runCLI(): Promise<void> {
     version = args[versionIdx + 1];
   }
 
-  // Default to the AsciiDoc converter's output directory
-  const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), '..', '1-asciidoc-converter', 'dist', 'markdown', `v${version}`);
-  
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('❌ OPENAI_API_KEY environment variable is required');
-    process.exit(1);
-  }
-  
   if (!process.env.PINECONE_API_KEY) {
     console.error('❌ PINECONE_API_KEY environment variable is required');
     process.exit(1);
   }
-  
+
   if (!process.env.PINECONE_INDEX) {
     console.error('❌ PINECONE_INDEX environment variable is required');
+    process.exit(1);
+  }
+
+  // Handle --clear-only: just clear the index and exit
+  if (clearOnlyFlag) {
+    try {
+      await clearIndex({
+        apiKey: process.env.PINECONE_API_KEY,
+        indexName: process.env.PINECONE_INDEX
+      });
+      process.exit(0);
+    } catch (error) {
+      console.error('\n❌ Failed to clear index:', error);
+      process.exit(1);
+    }
+  }
+
+  // Default to the AsciiDoc converter's output directory
+  const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), '..', '1-asciidoc-converter', 'dist', 'markdown', `v${version}`);
+
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('❌ OPENAI_API_KEY environment variable is required');
     process.exit(1);
   }
 
@@ -216,7 +240,7 @@ export async function runCLI(): Promise<void> {
     console.log(`  Files processed: ${result.totalFiles}`);
     console.log(`  Chunks created: ${result.totalChunks}`);
     console.log(`  Total time: ${result.timings.total}ms`);
-    
+
     if (result.errors.length > 0) {
       console.log(`  Errors: ${result.errors.length}`);
       result.errors.forEach(error => console.log(`    - ${error}`));
