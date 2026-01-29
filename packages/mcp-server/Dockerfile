@@ -4,10 +4,15 @@ WORKDIR /app
 
 # Copy workspace configuration
 COPY package.json bun.lockb ./
+COPY packages/core-types/package.json packages/core-types/
 COPY packages/mcp-server/package.json packages/mcp-server/
 
 # Install all workspace dependencies
 RUN bun install
+
+# Copy core-types and build it first (mcp-server depends on it)
+COPY packages/core-types/ packages/core-types/
+RUN cd packages/core-types && bun run build
 
 # Copy mcp-server source code
 COPY packages/mcp-server/ packages/mcp-server/
