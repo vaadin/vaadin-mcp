@@ -36,6 +36,10 @@ export function extractSearchParams(args: any): Record<string, any> {
     params.framework = args.framework;
   }
 
+  if (args.vaadin_version) {
+    params.vaadin_version = args.vaadin_version;
+  }
+
   return params;
 }
 
@@ -79,6 +83,10 @@ export function extractComponentApiParams(args: any): Record<string, any> {
   if (args.component_name && typeof args.component_name === 'string') {
     // Log the actual component name (approved to track)
     params.component_name = args.component_name;
+  }
+
+  if (args.vaadin_version) {
+    params.vaadin_version = args.vaadin_version;
   }
 
   return params;
