@@ -306,8 +306,16 @@
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>Add the Vaadin MCP server to your project or global configuration.</p>
+          <p>Add the Vaadin MCP server using the CLI or manual configuration.</p>
 
+          <h3>Option 1: CLI Command (Recommended)</h3>
+          <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'claude-code-cli')">Copy</button>
+            <strong>Run in terminal:</strong>
+            <pre id="claude-code-cli">claude mcp add vaadin --transport http https://mcp.vaadin.com/</pre>
+          </div>
+
+          <h3>Option 2: Manual Configuration</h3>
           <div class="config-box">
             <button class="copy-button" onclick="copyConfig(this, 'claude-code-config')">Copy</button>
             <strong>Configuration:</strong>
@@ -315,7 +323,7 @@
   "mcpServers": {
     "vaadin": {
       "type": "http",
-      "url": "https://mcp.vaadin.com/docs"
+      "url": "https://mcp.vaadin.com/"
     }
   }
 }</pre>
@@ -353,7 +361,7 @@
   "mcpServers": {
     "vaadin": {
       "type": "http",
-      "url": "https://mcp.vaadin.com/docs"
+      "url": "https://mcp.vaadin.com/"
     }
   }
 }</pre>
@@ -391,7 +399,7 @@
   "mcpServers": {
     "vaadin": {
       "type": "http",
-      "url": "https://mcp.vaadin.com/docs"
+      "url": "https://mcp.vaadin.com/"
     }
   }
 }</pre>
@@ -431,7 +439,7 @@
       "command": "npx",
       "args": ["@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
       "env": {
-        "URI": "https://mcp.vaadin.com/docs",
+        "URI": "https://mcp.vaadin.com/",
         "MCP_NAME": "vaadin"
       }
     }
@@ -480,7 +488,7 @@
             <pre id="copilot-intellij">{
   "servers": {
     "vaadin": {
-      "url": "https://mcp.vaadin.com/docs"
+      "url": "https://mcp.vaadin.com/"
     }
   }
 }</pre>
@@ -532,7 +540,7 @@
   "servers": {
     "vaadin": {
       "type": "http",
-      "url": "https://mcp.vaadin.com/docs"
+      "url": "https://mcp.vaadin.com/"
     }
   }
 }</pre>
@@ -573,7 +581,7 @@
             <button class="copy-button" onclick="copyConfig(this, 'codex-config')">Copy</button>
             <strong>Configuration (~/.codex/config.toml):</strong>
             <pre id="codex-config">[mcp_servers.vaadin]
-url = "https://mcp.vaadin.com/docs"</pre>
+url = "https://mcp.vaadin.com/"</pre>
           </div>
 
           <div class="note">
@@ -613,7 +621,7 @@ url = "https://mcp.vaadin.com/docs"</pre>
             <pre id="gemini-config">{
   "mcpServers": {
     "vaadin": {
-      "httpUrl": "https://mcp.vaadin.com/docs"
+      "httpUrl": "https://mcp.vaadin.com/"
     }
   }
 }</pre>
@@ -648,7 +656,7 @@ url = "https://mcp.vaadin.com/docs"</pre>
           <p>Simply point it to our HTTP endpoint:</p>
           <div class="config-box">
             <strong>HTTP Endpoint:</strong>
-            <pre>https://mcp.vaadin.com/docs</pre>
+            <pre>https://mcp.vaadin.com/</pre>
           </div>
           <p>The exact configuration format depends on your specific tool. Look for settings like "MCP Server URL", "HTTP transport", or "Streamable HTTP" in your tool's documentation.</p>
 
@@ -662,7 +670,7 @@ url = "https://mcp.vaadin.com/docs"</pre>
       "command": "npx",
       "args": ["@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
       "env": {
-        "URI": "https://mcp.vaadin.com/docs",
+        "URI": "https://mcp.vaadin.com/",
         "MCP_NAME": "vaadin"
       }
     }

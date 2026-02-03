@@ -343,9 +343,9 @@ async function startServer() {
   app.get('/mcp', (req: Request, res: Response) => {
     res.status(404).json({
       error: 'Not Found',
-      message: 'The MCP server has moved. The new URL is https://mcp.vaadin.com/docs',
-      oldUrl: 'https://mcp.vaadin.com/docs/mcp',
-      newUrl: 'https://mcp.vaadin.com/docs',
+      message: 'The MCP server has moved. The new URL is https://mcp.vaadin.com/',
+      oldUrl: 'https://mcp.vaadin.com/mcp',
+      newUrl: 'https://mcp.vaadin.com/',
       timestamp: new Date().toISOString()
     });
   });
