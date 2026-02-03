@@ -306,8 +306,16 @@
           <span class="app-chevron">›</span>
         </summary>
         <div class="app-content">
-          <p>Add the Vaadin MCP server to your project or global configuration.</p>
+          <p>Add the Vaadin MCP server using the CLI or manual configuration.</p>
 
+          <h3>Option 1: CLI Command (Recommended)</h3>
+          <div class="config-box">
+            <button class="copy-button" onclick="copyConfig(this, 'claude-code-cli')">Copy</button>
+            <strong>Run in terminal:</strong>
+            <pre id="claude-code-cli">claude mcp add vaadin --transport http https://mcp.vaadin.com/docs</pre>
+          </div>
+
+          <h3>Option 2: Manual Configuration</h3>
           <div class="config-box">
             <button class="copy-button" onclick="copyConfig(this, 'claude-code-config')">Copy</button>
             <strong>Configuration:</strong>
