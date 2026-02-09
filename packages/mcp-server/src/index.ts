@@ -451,6 +451,30 @@ async function startServer() {
     logger.info(`🎯 Mock mode: ${config.features.mockPinecone ? 'ENABLED' : 'disabled'}`);
   });
 
+  // Daily cleanup of stale sessions (older than 24 hours)
+  const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+  const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+  const cleanupInterval = setInterval(async () => {
+    const now = Date.now();
+    let cleaned = 0;
+    for (const [id, session] of activeSessions) {
+      if (now - session.createdAt.getTime() > SESSION_MAX_AGE_MS) {
+        try {
+          await session.transport.close();
+          await session.server.close();
+        } catch (error) {
+          logger.error(`Error closing stale session ${id}:`, error);
+        }
+        activeSessions.delete(id);
+        cleaned++;
+      }
+    }
+    if (cleaned > 0) {
+      logger.info(`Cleaned up ${cleaned} stale session(s)`);
+    }
+  }, CLEANUP_INTERVAL_MS);
+  cleanupInterval.unref();
+
   // Graceful shutdown
   async function shutdown(signal: string) {
     logger.debug(`\n🛑 Received ${signal}, shutting down gracefully...`);
