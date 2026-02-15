@@ -192,6 +192,10 @@ Use **filesystem-based routing** in `src/main/frontend/views/`:
 
 **Approach**: Compose existing components and layouts before building custom ones from scratch.
 
+### Layout Sizing Rule
+
+For **VerticalLayout**: use `flex-grow` for vertical sizing and percentage/fixed for horizontal sizing. For **HorizontalLayout**: use `flex-grow` for horizontal sizing and percentage/fixed for vertical sizing. Mixing the two (e.g., percentage-based height inside a VerticalLayout) leads to unexpected results. Search the documentation for detailed layout troubleshooting.
+
 ## React @BrowserCallable Endpoints
 
 React projects use **type-safe communication** between React frontend and Java backend through `@BrowserCallable` endpoints.
