@@ -26,6 +26,7 @@ import {
 import { handleSearchTool, handleGetFullDocumentTool } from './tools/search-and-docs/index.js';
 import { handleGetVaadinVersionTool } from './tools/vaadin-version/index.js';
 import { handleGetVaadinPrimerTool } from './tools/vaadin-primer/index.js';
+import { handleGetThemeCssPropertiesTool } from './tools/theme-css-properties/index.js';
 import { LANDING_PAGE_HTML } from './tools/landing-page/index.js';
 import { initializeAnalytics, withAnalytics, trackSessionStarted, trackSessionClosed } from './analytics/index.js';
 import { logger } from './logger.js';
@@ -266,6 +267,22 @@ function setupTools(server: McpServer, services: {
     withAnalytics("get_component_styling", async (args) => {
       const argsWithVersion = { ...args, vaadin_version: args.vaadin_version };
       return await handleGetComponentStylingTool(argsWithVersion);
+    })
+  );
+
+  // Register get_theme_css_properties tool
+  server.registerTool(
+    "get_theme_css_properties",
+    {
+      title: "Get Theme CSS Properties",
+      description: "Returns CSS custom properties documentation for a specific Vaadin theme (Aura, Lumo, or Base styles). Use this to look up the correct CSS variables for the theme the application is using. Base style properties (--vaadin-*) are available in all themes.",
+      inputSchema: {
+        theme: z.enum(['aura', 'lumo', 'base']).describe('The theme to get CSS custom properties for: "aura" (Vaadin 25+ default), "lumo" (classic theme), or "base" (base styles available in all themes, Vaadin 25+ only).'),
+        vaadin_version: z.enum(SUPPORTED_VERSIONS).describe('Required. Vaadin version: "7", "8", "14", "24", "25", or "25.1".')
+      }
+    },
+    withAnalytics("get_theme_css_properties", async (args) => {
+      return await handleGetThemeCssPropertiesTool(args);
     })
   );
 }
