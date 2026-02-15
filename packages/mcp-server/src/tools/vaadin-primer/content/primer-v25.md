@@ -119,6 +119,18 @@ Vaadin 25 introduces **simplified CSS-based theming** - the `@Theme` annotation 
 - Dynamic runtime theme switching supported (load/unload stylesheets)
 - Use standard CSS imports to apply themes
 
+### CRITICAL: Theme-Specific CSS Custom Properties
+
+Aura and Lumo define **different, non-interchangeable** CSS custom properties. Using the wrong theme's variables causes silent styling failures.
+
+- **Lumo** uses `--lumo-*` properties (e.g., `--lumo-space-m`, `--lumo-primary-color`, `--lumo-border-radius-m`)
+- **Aura** uses `--aura-*` properties (e.g., `--aura-space-100`, `--aura-primary-color`, `--aura-border-radius`)
+- **Base styles** use `--vaadin-*` properties and are available in **all** themes (Aura, Lumo, and custom themes built on base)
+
+**Before using any theme-specific CSS variables, determine the active theme** by checking the project's theme configuration. Do NOT assume `--lumo-*` variables — they only work if Lumo is the active theme.
+
+Use the `get_theme_css_properties` tool to look up the correct CSS custom properties for the active theme. If the theme is unknown, use plain CSS values or ask the user which theme the project uses.
+
 **Note**: The Material theme has been **removed** in Vaadin 25. Search the documentation for current theming guidance.
 
 ## Built-in Security
