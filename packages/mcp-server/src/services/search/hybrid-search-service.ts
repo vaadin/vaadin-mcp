@@ -199,6 +199,8 @@ export class HybridSearchService {
    * Rerank results using Pinecone's native reranking
    */
   private async rerank(query: string, results: any[], topN: number): Promise<RetrievalResult[]> {
+    const originalOrder = results.slice(0, topN).map(r => r.id);
+
     try {
       if (!results || results.length === 0) {
         return [];
@@ -236,11 +238,18 @@ export class HybridSearchService {
         }
       }
 
-      logger.debug(`✅ Reranked to ${rerankedResults.length} results`);
+      const rerankedOrder = rerankedResults.map(r => r.chunk_id);
+      const orderChanged = originalOrder.length !== rerankedOrder.length || originalOrder.some((id, i) => id !== rerankedOrder[i]);
+      if (orderChanged) {
+        logger.info(`[rerank-eval] order changed: [${originalOrder.join(', ')}] -> [${rerankedOrder.join(', ')}]`);
+      } else {
+        logger.info(`[rerank-eval] order unchanged: [${originalOrder.join(', ')}]`);
+      }
+
       return rerankedResults;
 
     } catch (error) {
-      logger.error('Reranking failed, falling back to original order:', error);
+      logger.info(`[rerank-eval] rerank failed, using original order: [${originalOrder.join(', ')}]`);
       // Fallback to original order
       return results.slice(0, topN).map(result => this.convertToRetrievalResult(result));
     }
