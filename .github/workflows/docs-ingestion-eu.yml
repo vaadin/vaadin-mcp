@@ -1,0 +1,247 @@
+name: Vaadin Docs Ingestion (EU)
+
+env:
+  BUN_VERSION: "1.3.6"
+
+on:
+  schedule:
+    # Run daily at 3 AM UTC (1 hour after main pipeline)
+    - cron: '0 3 * * *'
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      clear_index:
+        description: 'Clear existing Pinecone index (slower but complete rebuild)'
+        required: false
+        default: false
+        type: boolean
+      version:
+        description: 'Vaadin version to ingest'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - '7'
+          - '8'
+          - '14'
+          - '24'
+          - '25'
+          - '25.1'
+
+jobs:
+  clear-index:
+    if: ${{ inputs.clear_index == true }}
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: built-packages
+          path: .
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Clear Pinecone EU index
+        env:
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY_EU }}
+          PINECONE_INDEX: ${{ secrets.PINECONE_INDEX_EU }}
+        run: |
+          cd packages/2-embedding-generator
+          bun run generate --clear-only
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install workspace dependencies
+        run: bun install
+
+      - name: Build packages
+        run: bun run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-packages
+          path: |
+            packages/*/dist/
+            packages/*/package.json
+            package.json
+            bun.lockb
+          retention-days: 1
+
+  ingest:
+    needs: [build, clear-index]
+    # Wait for clear-index only if it's running (when clear_index is true)
+    # Using always() with a condition to handle the case where clear-index is skipped
+    if: ${{ always() && needs.build.result == 'success' && (needs.clear-index.result == 'success' || needs.clear-index.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson((inputs.version == 'all' || inputs.version == '') && '["7", "8", "14", "24", "25", "25.1"]' || format('["{0}"]', inputs.version)) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: built-packages
+          path: .
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Cache Vaadin docs repository
+        uses: actions/cache@v4
+        with:
+          path: ./packages/1-asciidoc-converter/vaadin-docs
+          key: vaadin-docs-v${{ matrix.version }}-${{ github.run_id }}
+          restore-keys: |
+            vaadin-docs-v${{ matrix.version }}-
+
+      - name: Run ingestion for v${{ matrix.version }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY_EU }}
+          PINECONE_INDEX: ${{ secrets.PINECONE_INDEX_EU }}
+        run: |
+          VERSION="${{ matrix.version }}"
+          mkdir -p packages/1-asciidoc-converter/logs
+          mkdir -p packages/2-embedding-generator/logs
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+
+          echo "::group::Convert v${VERSION} AsciiDoc to Markdown"
+          echo "Converting AsciiDoc files for v${VERSION}..."
+          cd packages/1-asciidoc-converter
+          bun run convert --version "$VERSION" 2>&1 | tee "logs/asciidoc_conversion_v${VERSION}_${TIMESTAMP}.log"
+          convert_status=${PIPESTATUS[0]}
+          cd ../..
+          if [ $convert_status -ne 0 ]; then
+            echo "::error::AsciiDoc conversion failed for v${VERSION}. See logs for details."
+            exit 1
+          fi
+          echo "AsciiDoc conversion completed for v${VERSION}"
+          echo "::endgroup::"
+
+          echo "::group::Generate v${VERSION} Embeddings"
+          echo "Generating embeddings for v${VERSION}..."
+          cd packages/2-embedding-generator
+          bun run generate --version "$VERSION" 2>&1 | tee "logs/embedding_generation_v${VERSION}_${TIMESTAMP}.log"
+          generate_status=${PIPESTATUS[0]}
+          cd ../..
+          if [ $generate_status -ne 0 ]; then
+            echo "::error::Embedding generation failed for v${VERSION}. See logs for details."
+            exit 1
+          fi
+          echo "Embedding generation completed for v${VERSION}"
+          echo "::endgroup::"
+
+      - name: Upload conversion logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-eu-v${{ matrix.version }}
+          path: |
+            ./packages/1-asciidoc-converter/logs/
+            ./packages/2-embedding-generator/logs/
+          retention-days: 7
+          include-hidden-files: true
+
+      - name: Upload markdown artifacts (for debugging)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: converted-markdown-eu-v${{ matrix.version }}
+          path: ./packages/1-asciidoc-converter/dist/markdown/
+          retention-days: 3
+          include-hidden-files: true
+
+  summary:
+    needs: [clear-index, build, ingest]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create summary
+        run: |
+          VERSION="${{ inputs.version || 'all' }}"
+          echo "## Ingestion Pipeline Summary (EU)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Clear Index | ${{ needs.clear-index.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ingest | ${{ needs.ingest.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target:** EU Pinecone Index" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Clear Index:** ${{ inputs.clear_index || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Parallel Jobs:** ${{ inputs.version == 'all' || inputs.version == '' && '6' || '1' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: ${{ needs.ingest.result == 'failure' || needs.build.result == 'failure' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ inputs.version || 'all' }}';
+            const clearIndex = '${{ inputs.clear_index || 'false' }}';
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Docs Ingestion (EU) Failed: ${new Date().toISOString()}`,
+              body: `## Docs Ingestion Pipeline (EU) Failed
+
+            **Details:**
+            - Version: \`${version}\`
+            - Clear Index: \`${clearIndex}\`
+            - Build Result: \`${{ needs.build.result }}\`
+            - Ingest Result: \`${{ needs.ingest.result }}\`
+            - Workflow Run: [#${context.runId}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+
+            **Next Steps:**
+            1. Check the workflow logs for specific error details
+            2. Review the uploaded log artifacts for each version
+            3. Consider running with manual trigger to debug
+
+            **Common Issues:**
+            - API rate limits (OpenAI/Pinecone)
+            - Network connectivity issues
+            - Invalid environment variables
+            - Repository access problems
+            `
+            })
