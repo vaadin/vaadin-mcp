@@ -6,6 +6,8 @@
  */
 
 import { OpenAIEmbeddings } from '@langchain/openai';
+import { encodingForModel } from 'js-tiktoken';
+import type { Tiktoken } from 'js-tiktoken';
 import type { DocumentChunk } from 'core-types';
 
 /**
@@ -33,20 +35,24 @@ export interface ChunkWithEmbedding {
  */
 export class EmbeddingsGenerator {
   private embeddings: OpenAIEmbeddings;
+  private dimensions: number;
   private batchSize: number;
   private maxRetries: number;
   private retryDelay: number;
+  private tokenizer: Tiktoken;
 
   constructor(config: EmbeddingsConfig) {
+    this.dimensions = config.dimensions || 1536;
     this.embeddings = new OpenAIEmbeddings({
       openAIApiKey: config.openaiApiKey,
       modelName: config.modelName || 'text-embedding-3-small',
-      dimensions: config.dimensions || 1536
+      dimensions: this.dimensions
     });
 
     this.batchSize = config.batchSize || 50;
     this.maxRetries = config.maxRetries || 3;
     this.retryDelay = config.retryDelay || 1000;
+    this.tokenizer = encodingForModel('text-embedding-3-small');
   }
 
   /**
@@ -83,12 +89,22 @@ export class EmbeddingsGenerator {
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
         const embeddings = await this.embeddings.embedDocuments(texts);
-        
+
+        // Validate embedding dimensions (OpenAI can intermittently return wrong dimensions)
+        const invalidCount = embeddings.filter(e => e.length !== this.dimensions).length;
+        if (invalidCount > 0) {
+          const firstBad = embeddings.find(e => e.length !== this.dimensions)!;
+          throw new Error(
+            `Embedding dimension mismatch: got ${firstBad.length}, expected ${this.dimensions} ` +
+            `(${invalidCount} of ${embeddings.length} embeddings affected, likely OpenAI API issue)`
+          );
+        }
+
         const results: ChunkWithEmbedding[] = batch.map((chunk, index) => ({
           chunk,
           embedding: embeddings[index]
         }));
-        
+
         return results;
       } catch (error) {
         console.error(`Batch ${batchNumber} attempt ${attempt} failed:`, error);
@@ -128,38 +144,23 @@ export class EmbeddingsGenerator {
     // Add main content
     text += chunk.content;
     
-    // Truncate if too long (OpenAI has token limits)
-    return this.truncateText(text, 8192); // Conservative limit
+    // Truncate if too long (OpenAI has 8192 token limit, use 8000 for headroom)
+    return this.truncateToTokenLimit(text, 8000);
   }
 
   /**
-   * Truncates text to a maximum length
+   * Truncates text to a maximum token count using tiktoken.
+   * More accurate than character-based truncation since token counts
+   * vary depending on text content.
    */
-  private truncateText(text: string, maxLength: number): string {
-    if (text.length <= maxLength) {
+  truncateToTokenLimit(text: string, maxTokens: number): string {
+    const tokens = this.tokenizer.encode(text);
+    if (tokens.length <= maxTokens) {
       return text;
     }
-    
-    // Try to truncate at a sentence boundary
-    const truncated = text.substring(0, maxLength);
-    const lastSentenceEnd = Math.max(
-      truncated.lastIndexOf('.'),
-      truncated.lastIndexOf('!'),
-      truncated.lastIndexOf('?')
-    );
-    
-    if (lastSentenceEnd > maxLength * 0.8) {
-      return truncated.substring(0, lastSentenceEnd + 1);
-    }
-    
-    // Fall back to word boundary
-    const lastSpace = truncated.lastIndexOf(' ');
-    if (lastSpace > maxLength * 0.8) {
-      return truncated.substring(0, lastSpace);
-    }
-    
-    // Hard truncate as last resort
-    return truncated;
+
+    console.debug(`Truncating text from ${tokens.length} to ${maxTokens} tokens`);
+    return this.tokenizer.decode(tokens.slice(0, maxTokens));
   }
 
   /**
