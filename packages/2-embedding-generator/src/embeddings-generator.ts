@@ -42,17 +42,18 @@ export class EmbeddingsGenerator {
   private tokenizer: Tiktoken;
 
   constructor(config: EmbeddingsConfig) {
+    const modelName = config.modelName || 'text-embedding-3-small';
     this.dimensions = config.dimensions || 1536;
     this.embeddings = new OpenAIEmbeddings({
       openAIApiKey: config.openaiApiKey,
-      modelName: config.modelName || 'text-embedding-3-small',
+      modelName,
       dimensions: this.dimensions
     });
 
     this.batchSize = config.batchSize || 50;
     this.maxRetries = config.maxRetries || 3;
     this.retryDelay = config.retryDelay || 1000;
-    this.tokenizer = encodingForModel('text-embedding-3-small');
+    this.tokenizer = encodingForModel(modelName as Parameters<typeof encodingForModel>[0]);
   }
 
   /**
