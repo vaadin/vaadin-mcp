@@ -91,12 +91,17 @@ export function withAnalytics<T extends (...args: any[]) => Promise<any>>(
       // Extract result count if available
       const resultCount = result ? extractResultCount(result) : undefined;
 
+      // Extract session ID from the MCP SDK's RequestHandlerExtra (second argument)
+      const extra = args.length > 1 ? args[1] : undefined;
+      const sessionId = extra?.sessionId as string | undefined;
+
       // Build event properties
       const eventProperties = {
         success,
         execution_time_ms: executionTime,
         result_count: resultCount,
         ...extractedParams,
+        ...(sessionId ? { session_id: sessionId } : {}),
         ...((!success && error) ? { error_type: error.constructor.name } : {}),
       };
 
