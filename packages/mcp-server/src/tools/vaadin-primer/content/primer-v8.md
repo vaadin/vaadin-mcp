@@ -166,10 +166,11 @@ search_vaadin_docs(query: "your question", vaadin_version: "8")
 
 ### Upgrade Path
 
-1. **Vaadin 8 → Vaadin 14**: Major rewrite required (GWT → Web Components)
-   - Use the Multiplatform Runtime (MPR) for gradual migration
+1. **Vaadin 8 → Vaadin 23**: Major rewrite required (GWT → Web Components)
+   - Use the API-compatible Feature Pack components for smooth migration
+   - Fallback option: go to Vaadin 14 if Java 8 is needed first
    - Rewrite views using new component APIs
-2. **Vaadin 14 → Vaadin 24**: Smoother upgrade with mostly compatible APIs
+2. **Vaadin 23 → Vaadin 24**: Smoother upgrade with mostly compatible APIs
 
 ### Migration Strategies
 

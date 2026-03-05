@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { parseFrontmatter } from './document-loader.js';
 import { createChunker } from './chunker.js';
+import { createEmbeddingsGenerator, validateEmbeddingsConfig } from './embeddings-generator.js';
 import { Document } from '@langchain/core/documents';
 
 /**
@@ -60,6 +61,16 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
       name: 'Chunk Structure',
       description: 'Tests that chunks have simplified structure without parent_id',
       testFn: () => testChunkStructure(testDataDir)
+    },
+    {
+      name: 'Token-Based Truncation',
+      description: 'Tests that truncateToTokenLimit correctly truncates by token count',
+      testFn: () => testTokenTruncation()
+    },
+    {
+      name: 'Embedding Dimensions Config',
+      description: 'Tests that embedding generator stores expected dimension config',
+      testFn: () => testDimensionConfig()
     }
   ];
 
@@ -254,6 +265,67 @@ async function testChunkStructure(testDataDir: string): Promise<boolean> {
       chunk.metadata.file_path.length > 0
     );
   });
+}
+
+/**
+ * Tests token-based truncation
+ */
+async function testTokenTruncation(): Promise<boolean> {
+  // Use a dummy API key - we only need the tokenizer, not actual API calls
+  const generator = createEmbeddingsGenerator({ openaiApiKey: 'test-key' });
+
+  // Short text should pass through unchanged
+  const shortText = 'Hello world, this is a short text.';
+  const shortResult = generator.truncateToTokenLimit(shortText, 8000);
+  if (shortResult !== shortText) {
+    throw new Error('Short text was modified when it should not have been');
+  }
+
+  // Create text that exceeds token limit - each word is roughly 1 token
+  // Generate ~100 tokens of text and truncate to 50
+  const words = Array.from({ length: 100 }, (_, i) => `word${i}`);
+  const longText = words.join(' ');
+  const truncated = generator.truncateToTokenLimit(longText, 50);
+
+  // Truncated text should be shorter than original
+  if (truncated.length >= longText.length) {
+    throw new Error(`Truncation did not reduce text length: ${truncated.length} >= ${longText.length}`);
+  }
+
+  // Empty text should return empty
+  const emptyResult = generator.truncateToTokenLimit('', 8000);
+  if (emptyResult !== '') {
+    throw new Error('Empty text was not returned as empty');
+  }
+
+  console.debug('     Token truncation: short text preserved, long text truncated, empty text handled');
+  return true;
+}
+
+/**
+ * Tests embedding dimension configuration
+ */
+async function testDimensionConfig(): Promise<boolean> {
+  // Test default dimensions validation
+  const defaultResult = validateEmbeddingsConfig({ openaiApiKey: 'test-key' });
+  if (!defaultResult.valid) {
+    throw new Error(`Default config should be valid: ${defaultResult.errors.join(', ')}`);
+  }
+
+  // Test explicit 1536 dimensions
+  const result1536 = validateEmbeddingsConfig({ openaiApiKey: 'test-key', dimensions: 1536 });
+  if (!result1536.valid) {
+    throw new Error('1536 dimensions should be valid');
+  }
+
+  // Test invalid dimensions
+  const resultBad = validateEmbeddingsConfig({ openaiApiKey: 'test-key', dimensions: 384 });
+  if (resultBad.valid) {
+    throw new Error('384 dimensions should be invalid');
+  }
+
+  console.debug('     Dimension config: default valid, 1536 valid, 384 rejected');
+  return true;
 }
 
 /**
