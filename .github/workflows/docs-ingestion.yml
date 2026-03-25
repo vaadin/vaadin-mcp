@@ -27,7 +27,6 @@ on:
           - '14'
           - '24'
           - '25'
-          - '25.1'
           - '25.2'
 
 jobs:
@@ -101,7 +100,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ${{ fromJson((inputs.version == 'all' || inputs.version == '') && '["7", "8", "14", "24", "25", "25.1", "25.2"]' || format('["{0}"]', inputs.version)) }}
+        version: ${{ fromJson((inputs.version == 'all' || inputs.version == '') && '["7", "8", "14", "24", "25", "25.2"]' || format('["{0}"]', inputs.version)) }}
 
     steps:
       - name: Checkout repository
@@ -209,7 +208,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "- **Clear Index:** ${{ inputs.clear_index || 'false' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Parallel Jobs:** ${{ inputs.version == 'all' || inputs.version == '' && '7' || '1' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Parallel Jobs:** ${{ inputs.version == 'all' || inputs.version == '' && '6' || '1' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
 
       - name: Notify on failure
