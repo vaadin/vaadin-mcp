@@ -10,7 +10,6 @@ export interface ComponentData {
   react_component: string;
   java_class: string | null;
   npm_package: string;
-  documentation_url: string;
 }
 
 /**
