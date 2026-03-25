@@ -18,6 +18,13 @@ export const VERSION_BRANCHES: Record<VaadinVersion, string> = {
   '25.2': 'main',
 };
 
+/** Maps a version to its vaadin.com/docs URL path segment */
+export function getDocsVersionPath(version: string): string {
+  if (version === '25.2') return 'next';
+  if (version === '25') return 'latest';
+  return `v${version}`;
+}
+
 /**
  * Represents a single processed and chunked piece of documentation.
  * This is the core data structure to be stored in Pinecone's metadata payload.

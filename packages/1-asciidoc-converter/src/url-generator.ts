@@ -3,6 +3,7 @@
  */
 
 import path from 'path';
+import { getDocsVersionPath } from 'core-types';
 import type { ProcessedMetadata, Framework } from 'core-types';
 
 /**
@@ -24,8 +25,7 @@ export function generateVaadinUrl(filePath: string, repoPath: string, version: s
       const docPath = match[1];
       // Remove index.adoc or .adoc extension
       const cleanPath = docPath.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
-      // 25 is latest stable, 25.2 is next development version
-      const versionPrefix = version === '25' ? 'latest/' : version === '25.2' ? 'next/' : `v${version}/`;
+      const versionPrefix = getDocsVersionPath(version) + '/';
       return `https://vaadin.com/docs/${versionPrefix}${cleanPath}`;
     } else {
       // Fallback to GitHub URL if pattern doesn't match

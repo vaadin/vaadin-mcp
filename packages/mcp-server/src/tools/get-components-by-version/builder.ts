@@ -5,6 +5,7 @@
 import { toTitleCase, toPascalCase } from '../../utils/string-utils.js';
 import type { ComponentData, ComponentVersionData } from './types.js';
 import { fetchVersionsJson, fetchFlowComponentsTree } from './fetchers.js';
+import { getDocsVersionPath } from 'core-types';
 import { logger } from '../../logger.js';
 
 /**
@@ -23,10 +24,7 @@ export async function buildComponentVersionData(version: string): Promise<Compon
   // Extract major version for documentation URL
   const majorVersionMatch = version.match(/^(\d+(?:\.\d+)?)/);
   const majorVersion = majorVersionMatch ? majorVersionMatch[1] : '24';
-  // 25.2 is next (development), 25 is latest (stable), 24 is v24
-  const docsVersionPath = majorVersion.startsWith('25.2') ? 'next' :
-                          majorVersion === '25' ? 'latest' :
-                          majorVersion === '24' ? 'v24' : `v${majorVersion}`;
+  const docsVersionPath = getDocsVersionPath(majorVersion);
 
   // Process core components
   const components: ComponentData[] = [];
