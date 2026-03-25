@@ -48,6 +48,25 @@ const THEME_FILES: Record<string, Record<string, string[]>> = {
       'styling/themes/base/index.md',
     ],
   },
+  '25.2': {
+    aura: [
+      'styling/themes/aura/color.md',
+      'styling/themes/aura/typography.md',
+      'styling/themes/aura/other.md',
+      'styling/themes/aura/app-layout.md',
+    ],
+    lumo: [
+      'styling/themes/lumo/lumo-style-properties/color.md',
+      'styling/themes/lumo/lumo-style-properties/elevation.md',
+      'styling/themes/lumo/lumo-style-properties/interaction.md',
+      'styling/themes/lumo/lumo-style-properties/shape.md',
+      'styling/themes/lumo/lumo-style-properties/size-space.md',
+      'styling/themes/lumo/lumo-style-properties/typography.md',
+    ],
+    base: [
+      'styling/themes/base/index.md',
+    ],
+  },
   '24': {
     lumo: [
       'styling/lumo/lumo-style-properties/color.md',
@@ -106,8 +125,8 @@ export async function handleGetThemeCssPropertiesTool(args: { theme: string; vaa
     };
   }
 
-  // Look up the version config — for 25.1 use v25 markdown files
-  const markdownVersion = vaadin_version === '25.1' ? '25' : vaadin_version;
+  // Look up the version config — for 25.1/25.2 use v25 markdown files
+  const markdownVersion = (vaadin_version === '25.1' || vaadin_version === '25.2') ? '25' : vaadin_version;
   const versionFiles = THEME_FILES[vaadin_version] || THEME_FILES[markdownVersion];
   if (!versionFiles) {
     return {
