@@ -1,6 +1,5 @@
 ---
 framework: hilla
-source_url: https://vaadin.com/docs/forms/validation
 title: Form Validation
 processed_at: 2025-07-23T14:01:01.312Z
 ---

@@ -257,7 +257,6 @@ async function testChunkStructure(testDataDir: string): Promise<boolean> {
       typeof chunk.chunk_id === 'string' &&
       typeof chunk.content === 'string' &&
       typeof chunk.framework === 'string' &&
-      typeof chunk.source_url === 'string' &&
       // Note: relevance_score is only added during search, not in base DocumentChunk
       chunk.parent_id === null && // No hierarchical relationships
       chunk.metadata &&

@@ -231,7 +231,6 @@ async function main() {
     // Verify top-level fields
     assertTrue(typeof result.chunk_id === 'string', 'chunk_id should be a string');
     assertTrue(typeof result.framework === 'string', 'framework should be a string');
-    assertTrue(typeof result.source_url === 'string', 'source_url should be a string');
     assertTrue(typeof result.relevance_score === 'number', 'relevance_score should be a number');
     assertTrue(typeof result.content === 'string', 'content should be a string');
     assertTrue(result.content.length > 0, 'content should not be empty');
@@ -251,7 +250,6 @@ async function main() {
     // Verify top-level fields
     assertTrue(typeof chunk!.chunk_id === 'string', 'chunk_id should be a string');
     assertTrue(typeof chunk!.framework === 'string', 'framework should be a string');
-    assertTrue(typeof chunk!.source_url === 'string', 'source_url should be a string');
     assertTrue(typeof chunk!.relevance_score === 'number', 'relevance_score should be a number');
 
     // Verify metadata sub-object
@@ -261,7 +259,7 @@ async function main() {
 
   /**
    * Test 10: No redundant fields in metadata
-   * chunk_id, parent_id, framework, source_url, content should NOT be inside metadata
+   * chunk_id, parent_id, framework, content should NOT be inside metadata
    */
   async function testNoRedundantMetadataFields() {
     // Check search results
@@ -269,7 +267,7 @@ async function main() {
     assertTrue(results.length > 0, 'Should return results');
 
     const result = results[0];
-    const redundantFields = ['chunk_id', 'parent_id', 'framework', 'source_url', 'content'];
+    const redundantFields = ['chunk_id', 'parent_id', 'framework', 'content'];
     const foundRedundant = redundantFields.filter(field =>
       result.metadata && Object.prototype.hasOwnProperty.call(result.metadata, field)
     );
