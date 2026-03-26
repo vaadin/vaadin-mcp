@@ -48,7 +48,7 @@ Examples:
   bun run convert
   bun run convert --version all
   bun run convert --version 24
-  bun run convert --version 25
+  bun run convert --version 25.1
   bun run convert --output ./output --branch main
 `);
       process.exit(0);

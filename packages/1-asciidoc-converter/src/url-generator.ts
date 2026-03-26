@@ -3,13 +3,14 @@
  */
 
 import path from 'path';
+import { getDocsVersionPath } from 'core-types';
 import type { ProcessedMetadata, Framework } from 'core-types';
 
 /**
  * Generate a direct Vaadin docs URL from a file path
  * @param filePath - The path to the source file
  * @param repoPath - The path to the local repository
- * @param version - Vaadin major version (e.g. '24', '25'). Defaults to '24'.
+ * @param version - Vaadin version (e.g. '24', '25.1'). Defaults to '24'.
  * @returns The generated Vaadin.com URL
  */
 export function generateVaadinUrl(filePath: string, repoPath: string, version: string = '24'): string {
@@ -24,8 +25,7 @@ export function generateVaadinUrl(filePath: string, repoPath: string, version: s
       const docPath = match[1];
       // Remove index.adoc or .adoc extension
       const cleanPath = docPath.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
-      // Use 'next' for 25.1 (development version), otherwise 'v{version}'
-      const versionPrefix = version === '25.1' ? 'next/' : `v${version}/`;
+      const versionPrefix = getDocsVersionPath(version) + '/';
       return `https://vaadin.com/docs/${versionPrefix}${cleanPath}`;
     } else {
       // Fallback to GitHub URL if pattern doesn't match

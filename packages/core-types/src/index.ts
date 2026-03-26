@@ -1,12 +1,12 @@
 // Supported Vaadin versions
-export const SUPPORTED_VERSIONS = ['7', '8', '14', '24', '25', '25.1'] as const;
+export const SUPPORTED_VERSIONS = ['7', '8', '14', '24', '25.0', '25.1', '25.2'] as const;
 export type VaadinVersion = typeof SUPPORTED_VERSIONS[number];
 
 // Legacy versions (Java/Flow only, no Hilla)
 export const LEGACY_VERSIONS = ['7', '8', '14'] as const;
 
 // Modern versions (Flow + Hilla)
-export const MODERN_VERSIONS = ['24', '25', '25.1'] as const;
+export const MODERN_VERSIONS = ['24', '25.0', '25.1', '25.2'] as const;
 
 // Version to git branch mapping
 export const VERSION_BRANCHES: Record<VaadinVersion, string> = {
@@ -14,9 +14,17 @@ export const VERSION_BRANCHES: Record<VaadinVersion, string> = {
   '8': 'v8',
   '14': 'v14',
   '24': 'v24',
-  '25': 'v25.0',
-  '25.1': 'main',
+  '25.0': 'v25.0',
+  '25.1': 'v25.1',
+  '25.2': 'main',
 };
+
+/** Maps a version to its vaadin.com/docs URL path segment */
+export function getDocsVersionPath(version: string): string {
+  if (version === '25.2') return 'next';
+  if (version === '25.1') return 'latest';
+  return `v${version}`;
+}
 
 /**
  * Represents a single processed and chunked piece of documentation.

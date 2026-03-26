@@ -24,7 +24,7 @@ export interface ConversionResult {
  * @param config - Ingestion configuration
  * @param outputDir - Output directory for markdown files
  * @param framework - Optional specific framework to process for
- * @param version - Vaadin major version (e.g. '24', '25'). Defaults to '24'.
+ * @param version - Vaadin version (e.g. '24', '25.1'). Defaults to '24'.
  * @returns Conversion result
  */
 export async function convertFile(
@@ -119,7 +119,7 @@ export async function convertFile(
  * Convert all AsciiDoc files to Markdown with frontmatter
  * @param config - Ingestion configuration
  * @param outputDir - Output directory for markdown files
- * @param version - Vaadin major version (e.g. '24', '25'). Defaults to '24'.
+ * @param version - Vaadin version (e.g. '24', '25.1'). Defaults to '24'.
  * @returns Promise with conversion results
  */
 export async function convertDocumentation(
