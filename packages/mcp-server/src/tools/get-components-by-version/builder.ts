@@ -5,7 +5,6 @@
 import { toTitleCase, toPascalCase } from '../../utils/string-utils.js';
 import type { ComponentData, ComponentVersionData } from './types.js';
 import { fetchVersionsJson, fetchFlowComponentsTree } from './fetchers.js';
-import { getDocsVersionPath } from 'core-types';
 import { logger } from '../../logger.js';
 
 /**
@@ -20,11 +19,6 @@ export async function buildComponentVersionData(version: string): Promise<Compon
       return new Map<string, string>(); // Return empty map on error
     })
   ]);
-
-  // Extract major version for documentation URL
-  const majorVersionMatch = version.match(/^(\d+(?:\.\d+)?)/);
-  const majorVersion = majorVersionMatch ? majorVersionMatch[1] : '24';
-  const docsVersionPath = getDocsVersionPath(majorVersion);
 
   // Process core components
   const components: ComponentData[] = [];
@@ -42,8 +36,7 @@ export async function buildComponentVersionData(version: string): Promise<Compon
       name: toTitleCase(componentKey),
       react_component: toPascalCase(componentKey),
       java_class: javaClassMap.get(componentKey) || null,
-      npm_package: info.npmName || `@vaadin/${componentKey}`,
-      documentation_url: `https://vaadin.com/docs/${docsVersionPath}/components/${componentKey}`
+      npm_package: info.npmName || `@vaadin/${componentKey}`
     });
   }
 

@@ -126,7 +126,6 @@ function formatSearchResults(results: RetrievalResult[]): string {
 
     // Format metadata as markdown front matter
     output += `----\n`;
-    output += `Source: ${result.source_url}\n`;
     output += `Framework: ${result.framework}\n`;
     output += `Chunk ID: ${result.chunk_id}\n`;
 
@@ -171,7 +170,6 @@ function formatFullDocuments(results: Array<{ document?: any; filePath: string; 
       output += `----\n`;
       output += `File Path: ${result.filePath}\n`;
       output += `Framework: ${result.document.metadata?.framework || 'unknown'}\n`;
-      output += `Source URL: ${result.document.metadata?.source_url || 'N/A'}\n`;
       output += `----\n\n`;
       output += `### Complete Documentation\n\n${result.document.content}\n\n`;
     }

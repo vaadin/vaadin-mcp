@@ -56,9 +56,6 @@ export async function handleGetComponentJavaApiTool(args: any) {
     let output = `# ${metadata?.title || args.component_name} - Java API\n\n`;
     output += `**Component:** ${args.component_name}\n`;
     output += `**Framework:** Java\n`;
-    if (metadata?.source_url) {
-      output += `**Documentation URL:** ${metadata.source_url}\n`;
-    }
     output += `\n---\n\n${markdownContent}`;
 
     return {
@@ -148,9 +145,6 @@ export async function handleGetComponentReactApiTool(args: any) {
     let output = `# ${metadata?.title || args.component_name} - React API\n\n`;
     output += `**Component:** ${args.component_name}\n`;
     output += `**Framework:** React\n`;
-    if (metadata?.source_url) {
-      output += `**Documentation URL:** ${metadata.source_url}\n`;
-    }
     output += `\n---\n\n${markdownContent}`;
 
     return {
@@ -361,12 +355,9 @@ export async function handleGetComponentStylingTool(args: any) {
     // Add Java styling if available
     if (flowFileLocation) {
       const content = fs.readFileSync(flowFileLocation.fullPath, 'utf8');
-      const { metadata, content: markdownContent } = parseFrontmatter(content);
+      const { content: markdownContent } = parseFrontmatter(content);
 
       output += `## Java Styling\n\n`;
-      if (metadata?.source_url) {
-        output += `**Documentation URL:** ${metadata.source_url}\n\n`;
-      }
       output += `${markdownContent}\n\n`;
       output += `---\n\n`;
     }
@@ -374,12 +365,9 @@ export async function handleGetComponentStylingTool(args: any) {
     // Add React styling if available
     if (hillaFileLocation) {
       const content = fs.readFileSync(hillaFileLocation.fullPath, 'utf8');
-      const { metadata, content: markdownContent } = parseFrontmatter(content);
+      const { content: markdownContent } = parseFrontmatter(content);
 
       output += `## React Styling\n\n`;
-      if (metadata?.source_url) {
-        output += `**Documentation URL:** ${metadata.source_url}\n\n`;
-      }
       output += `${markdownContent}\n\n`;
     }
 

@@ -538,29 +538,25 @@ const DOCUMENT_TEST_SCENARIOS = [
             name: 'Button',
             react_component: 'Button',
             java_class: 'com.vaadin.flow.component.button.Button',
-            npm_package: '@vaadin/button',
-            documentation_url: 'https://vaadin.com/docs/latest/components/button'
+            npm_package: '@vaadin/button'
           },
           {
             name: 'Checkbox',
             react_component: 'Checkbox',
             java_class: 'com.vaadin.flow.component.checkbox.Checkbox',
-            npm_package: '@vaadin/checkbox',
-            documentation_url: 'https://vaadin.com/docs/latest/components/checkbox'
+            npm_package: '@vaadin/checkbox'
           },
           {
             name: 'Checkbox Group',
             react_component: 'CheckboxGroup',
             java_class: 'com.vaadin.flow.component.checkbox.CheckboxGroup',
-            npm_package: '@vaadin/checkbox-group',
-            documentation_url: 'https://vaadin.com/docs/latest/components/checkbox-group'
+            npm_package: '@vaadin/checkbox-group'
           },
           {
             name: 'Date Picker',
             react_component: 'DatePicker',
             java_class: 'com.vaadin.flow.component.datepicker.DatePicker',
-            npm_package: '@vaadin/date-picker',
-            documentation_url: 'https://vaadin.com/docs/latest/components/date-picker'
+            npm_package: '@vaadin/date-picker'
           }
         ];
 
@@ -585,15 +581,14 @@ const DOCUMENT_TEST_SCENARIOS = [
           comp.name &&
           comp.react_component &&
           comp.java_class !== undefined && // Can be null for client-only components
-          comp.npm_package &&
-          comp.documentation_url
+          comp.npm_package
         );
 
         if (!hasValidStructure) {
           return {
             name: this.name,
             passed: false,
-            error: 'Components missing required fields (name, react_component, java_class, npm_package, documentation_url)',
+            error: 'Components missing required fields (name, react_component, java_class, npm_package)',
             duration: Date.now() - startTime
           };
         }
@@ -648,15 +643,13 @@ const DOCUMENT_TEST_SCENARIOS = [
             name: 'Button',
             react_component: 'Button',
             java_class: 'com.vaadin.flow.component.button.Button',
-            npm_package: '@vaadin/button',
-            documentation_url: 'https://vaadin.com/docs/v25/components/button'
+            npm_package: '@vaadin/button'
           },
           {
             name: 'Grid',
             react_component: 'Grid',
             java_class: 'com.vaadin.flow.component.grid.Grid',
-            npm_package: '@vaadin/grid',
-            documentation_url: 'https://vaadin.com/docs/v25/components/grid'
+            npm_package: '@vaadin/grid'
           }
         ];
 
@@ -667,18 +660,13 @@ const DOCUMENT_TEST_SCENARIOS = [
           components: mockComponents
         };
 
-        // Validate documentation URLs use correct version path (v25 not latest)
-        const hasCorrectUrls = result.components.every((comp: any) =>
-          comp.documentation_url.includes('/v25/')
-        );
-
-        if (!hasCorrectUrls) {
+        // Validate basic structure
+        if (!result.components || result.components.length === 0) {
           return {
             name: this.name,
             passed: false,
-            error: 'Documentation URLs do not use correct version path',
-            duration: Date.now() - startTime,
-            details: { urls: result.components.map((c: any) => c.documentation_url) }
+            error: 'No components returned',
+            duration: Date.now() - startTime
           };
         }
 
@@ -688,8 +676,7 @@ const DOCUMENT_TEST_SCENARIOS = [
           duration: Date.now() - startTime,
           details: {
             version: result.version,
-            componentsCount: result.components_count,
-            urlsCorrect: hasCorrectUrls
+            componentsCount: result.components_count
           }
         };
 
