@@ -8,7 +8,7 @@ import { LEGACY_VERSIONS, type Framework } from 'core-types';
  * Detect the framework from the file name, content, and version
  * @param filePath - The path to the source file
  * @param content - The content of the file
- * @param version - Optional Vaadin major version (e.g., '7', '8', '14', '24', '25')
+ * @param version - Optional Vaadin version (e.g., '7', '8', '14', '24', '25.1')
  * @returns The detected framework ('flow', 'hilla', or 'common')
  */
 export function detectFramework(filePath: string, content: string, version?: string): Framework {

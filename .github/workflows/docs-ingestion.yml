@@ -26,7 +26,8 @@ on:
           - '8'
           - '14'
           - '24'
-          - '25'
+          - '25.0'
+          - '25.1'
           - '25.2'
 
 jobs:
@@ -100,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ${{ fromJson((inputs.version == 'all' || inputs.version == '') && '["7", "8", "14", "24", "25", "25.2"]' || format('["{0}"]', inputs.version)) }}
+        version: ${{ fromJson((inputs.version == 'all' || inputs.version == '') && '["7", "8", "14", "24", "25.0", "25.1", "25.2"]' || format('["{0}"]', inputs.version)) }}
 
     steps:
       - name: Checkout repository

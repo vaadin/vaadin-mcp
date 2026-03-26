@@ -10,7 +10,7 @@ import type { ProcessedMetadata, Framework } from 'core-types';
  * Generate a direct Vaadin docs URL from a file path
  * @param filePath - The path to the source file
  * @param repoPath - The path to the local repository
- * @param version - Vaadin major version (e.g. '24', '25'). Defaults to '24'.
+ * @param version - Vaadin version (e.g. '24', '25.1'). Defaults to '24'.
  * @returns The generated Vaadin.com URL
  */
 export function generateVaadinUrl(filePath: string, repoPath: string, version: string = '24'): string {
