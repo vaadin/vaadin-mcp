@@ -9,16 +9,19 @@ import { logger } from '../../logger.js';
 
 /** Infrastructure, internal, and non-UI entries in versions.json that should not be listed as components */
 const NON_UI_COMPONENTS = new Set([
+  'aura',
   'browserless-test',
   'flow',
   'flow-cdi',
   'flow-components',
   'hilla',
+  'icons',
   'input-container',
   'item',
   'lit-renderer',
   'mpr-v7',
   'mpr-v8',
+  'overlay',
   'vaadin-aura-theme',
   'vaadin-development-mode-detector',
   'vaadin-lumo-styles',
