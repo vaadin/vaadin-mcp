@@ -114,6 +114,23 @@ export function extractPrimerParams(args: any): Record<string, any> {
 }
 
 /**
+ * Extract properties from get_theme_css_properties arguments
+ */
+export function extractThemeCssPropertiesParams(args: any): Record<string, any> {
+  const params: Record<string, any> = {};
+
+  if (args.theme && typeof args.theme === 'string') {
+    params.theme = args.theme;
+  }
+
+  if (args.vaadin_version && typeof args.vaadin_version === 'string') {
+    params.vaadin_version = args.vaadin_version;
+  }
+
+  return params;
+}
+
+/**
  * Main extractor function that routes to appropriate extractor based on tool name
  */
 export function extractToolParams(toolName: string, args: any): Record<string, any> {
@@ -138,6 +155,9 @@ export function extractToolParams(toolName: string, args: any): Record<string, a
 
     case 'get_vaadin_primer':
       return extractPrimerParams(args);
+
+    case 'get_theme_css_properties':
+      return extractThemeCssPropertiesParams(args);
 
     default:
       logger.warn(`📊 Analytics: Unknown tool name "${toolName}", no parameter extraction`);
