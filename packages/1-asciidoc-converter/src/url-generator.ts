@@ -89,7 +89,13 @@ export function generateFrontmatter(metadata: ProcessedMetadata): string {
   
   const frontmatterLines = Object.entries(frontmatterData)
     .filter(([_, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => `${key}: ${value}`);
+    .map(([key, value]) => {
+      // Quote vaadin_version to prevent YAML parsing "25.0" as a float (which drops the ".0")
+      if (key === 'vaadin_version') {
+        return `${key}: "${value}"`;
+      }
+      return `${key}: ${value}`;
+    });
   
   return `---\n${frontmatterLines.join('\n')}\n---\n\n`;
 } 
