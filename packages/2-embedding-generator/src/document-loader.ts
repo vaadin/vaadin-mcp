@@ -190,6 +190,9 @@ function parseYamlFrontmatter(yaml: string): Frontmatter {
       frontmatter[key] = true;
     } else if (value === 'false') {
       frontmatter[key] = false;
+    } else if (key === 'vaadin_version') {
+      // Always keep vaadin_version as a string to preserve "25.0" (Number("25.0") drops the ".0")
+      frontmatter[key] = value;
     } else if (!isNaN(Number(value)) && value !== '') {
       // Handle numeric values
       frontmatter[key] = Number(value);
