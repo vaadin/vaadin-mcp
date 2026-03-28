@@ -62,6 +62,40 @@ export async function trackToolCall(
 }
 
 /**
+ * Track a session started event
+ */
+export async function trackSessionStarted(sessionId: string): Promise<void> {
+  if (!enabled || !initialized) {
+    return;
+  }
+
+  try {
+    await track('session_started', { session_id: sessionId }, {
+      device_id: 'vaadin-mcp-server'
+    });
+  } catch (error) {
+    logger.error('📊 Analytics: Failed to track session started:', error);
+  }
+}
+
+/**
+ * Track a session closed event
+ */
+export async function trackSessionClosed(sessionId: string): Promise<void> {
+  if (!enabled || !initialized) {
+    return;
+  }
+
+  try {
+    await track('session_closed', { session_id: sessionId }, {
+      device_id: 'vaadin-mcp-server'
+    });
+  } catch (error) {
+    logger.error('📊 Analytics: Failed to track session closed:', error);
+  }
+}
+
+/**
  * Check if analytics is enabled
  */
 export function isAnalyticsEnabled(): boolean {
