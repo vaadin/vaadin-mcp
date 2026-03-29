@@ -1,6 +1,5 @@
 ---
 framework: flow
-source_url: https://vaadin.com/docs/forms/binding
 title: Fields & Binding
 processed_at: 2025-07-23T14:01:01.312Z
 ---

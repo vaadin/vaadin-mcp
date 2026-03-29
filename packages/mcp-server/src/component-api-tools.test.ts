@@ -82,7 +82,7 @@ function setupTestFixtures() {
   // Create button/index-flow.md
   const flowContent = `---
 framework: flow
-source_url: https://vaadin.com/docs/components/button
+
 title: Button
 page-links:
 - 'API: https://cdn.vaadin.com/vaadin-web-components/24.5.0/#/elements/vaadin-button[TypeScript] / https://vaadin.com/api/platform/24.5.0/com/vaadin/flow/component/button/Button.html[Java]'
@@ -103,7 +103,7 @@ button.addClickListener(e -> Notification.show("Clicked!"));
   // Create button/index-hilla.md
   const hillaContent = `---
 framework: hilla
-source_url: https://vaadin.com/docs/components/button
+
 title: Button
 ---
 
@@ -123,7 +123,7 @@ import { Button } from '@vaadin/react-components';
   // Create button/styling-flow.md
   const flowStylingContent = `---
 framework: flow
-source_url: https://vaadin.com/docs/components/button/styling
+
 title: Button Styling
 ---
 
@@ -144,7 +144,7 @@ Use Lumo theme variants to style buttons.
   // Create button/styling-hilla.md
   const hillaStylingContent = `---
 framework: hilla
-source_url: https://vaadin.com/docs/components/button/styling
+
 title: Button Styling
 ---
 
@@ -208,7 +208,7 @@ async function testNormalizeComponentName() {
 async function testParseFrontmatter() {
   const contentWithFrontmatter = `---
 framework: flow
-source_url: https://vaadin.com/docs/components/button
+
 title: Button
 ---
 
@@ -219,7 +219,6 @@ This is the content.`;
   const result = parseFrontmatter(contentWithFrontmatter);
 
   assertEqual(result.metadata.framework, 'flow', 'Should parse framework');
-  assertEqual(result.metadata.source_url, 'https://vaadin.com/docs/components/button', 'Should parse source_url');
   assertEqual(result.metadata.title, 'Button', 'Should parse title');
   assertTrue(result.content.includes('# Button Component'), 'Content should not include frontmatter');
   assertFalse(result.content.includes('framework: flow'), 'Content should not include frontmatter fields');
@@ -277,7 +276,6 @@ async function testReadActualComponentDocs() {
     // Verify structure
     assertTrue(content.length > 0, 'Content should not be empty');
     assertEqual(metadata.framework, 'flow', 'Button framework should be flow');
-    assertTrue(metadata.source_url !== undefined, 'Button should have source_url in metadata');
     assertTrue(markdownContent.length > 0, 'Markdown content should not be empty');
     assertTrue(markdownContent.includes('Button') || markdownContent.includes('button'), 'Content should mention button');
   } finally {

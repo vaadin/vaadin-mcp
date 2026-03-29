@@ -2,40 +2,7 @@
  * URL generation utilities for Vaadin documentation
  */
 
-import path from 'path';
-import { getDocsVersionPath } from 'core-types';
-import type { ProcessedMetadata, Framework } from 'core-types';
-
-/**
- * Generate a direct Vaadin docs URL from a file path
- * @param filePath - The path to the source file
- * @param repoPath - The path to the local repository
- * @param version - Vaadin version (e.g. '24', '25.1'). Defaults to '24'.
- * @returns The generated Vaadin.com URL
- */
-export function generateVaadinUrl(filePath: string, repoPath: string, version: string = '24'): string {
-  // Get the source path relative to repo root
-  const sourcePath = filePath.replace(repoPath, '');
-
-  // Generate direct Vaadin docs URL
-  if (sourcePath && sourcePath.includes('articles/')) {
-    // Extract the path after 'articles/'
-    const match = sourcePath.match(/articles\/(.+)/);
-    if (match) {
-      const docPath = match[1];
-      // Remove index.adoc or .adoc extension
-      const cleanPath = docPath.replace(/\/index\.adoc$/, '').replace(/\.adoc$/, '');
-      const versionPrefix = getDocsVersionPath(version) + '/';
-      return `https://vaadin.com/docs/${versionPrefix}${cleanPath}`;
-    } else {
-      // Fallback to GitHub URL if pattern doesn't match
-      return `https://github.com/vaadin/docs/blob/main/${sourcePath}`;
-    }
-  } else {
-    // Fallback to GitHub URL if not in articles directory
-    return `https://github.com/vaadin/docs/blob/main/${sourcePath}`;
-  }
-}
+import type { ProcessedMetadata } from 'core-types';
 
 /**
  * Extract metadata from AsciiDoc content

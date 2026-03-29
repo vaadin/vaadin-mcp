@@ -34,7 +34,7 @@ const MOCK_SEARCH_RESULTS: RetrievalResult[] = [
     parent_id: null,
     framework: 'flow',
     content: '# Data Binding in Flow\n\nThis guide explains how to bind form fields to data objects in Vaadin Flow applications.',
-    source_url: 'https://vaadin.com/docs/building-apps/forms-data/add-form/fields-and-binding/flow',
+
     metadata: {
       title: 'Fields & Binding',
       heading: 'Data Binding in Flow',
@@ -48,7 +48,7 @@ const MOCK_SEARCH_RESULTS: RetrievalResult[] = [
     parent_id: null,
     framework: 'common',
     content: '# Form Validation\n\nForm validation ensures data integrity and provides user feedback.',
-    source_url: 'https://vaadin.com/docs/building-apps/forms-data/add-form/validation',
+
     metadata: {
       title: 'Form Validation',
       heading: 'Form Validation',
@@ -62,7 +62,7 @@ const MOCK_SEARCH_RESULTS: RetrievalResult[] = [
     parent_id: null,
     framework: 'hilla',
     content: '# Button Component in Hilla\n\nButtons trigger actions in your Hilla application.',
-    source_url: 'https://vaadin.com/docs/components/button',
+
     metadata: {
       title: 'Button',
       heading: 'Button Component in Hilla',
@@ -113,8 +113,7 @@ binder.forField(emailField)
 \`\`\``,
     metadata: {
       title: 'Fields & Binding',
-      framework: 'flow',
-      source_url: 'https://vaadin.com/docs/building-apps/forms-data/add-form/fields-and-binding/flow'
+      framework: 'flow'
     },
     full_path: 'building-apps/forms-data/add-form/fields-and-binding/flow.md'
   },
@@ -148,8 +147,7 @@ Clear, actionable error messages help users:
 - Internationalization support`,
     metadata: {
       title: 'Form Validation',
-      framework: 'common',
-      source_url: 'https://vaadin.com/docs/building-apps/forms-data/add-form/validation'
+      framework: 'common'
     },
     full_path: 'building-apps/forms-data/add-form/validation.md'
   },
@@ -193,8 +191,7 @@ Built-in accessibility features:
 - ARIA attributes`,
     metadata: {
       title: 'Button',
-      framework: 'common',
-      source_url: 'https://vaadin.com/docs/components/button'
+      framework: 'common'
     },
     full_path: 'components/button.md'
   }
@@ -284,7 +281,6 @@ const DOCUMENT_TEST_SCENARIOS = [
           result.hasOwnProperty('file_path') &&
           result.framework &&
           result.content &&
-          result.source_url &&
           typeof result.relevance_score === 'number'
         );
 

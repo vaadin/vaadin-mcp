@@ -1,6 +1,5 @@
 ---
 framework: common
-source_url: https://vaadin.com/docs/components/button
 title: Button Component
 processed_at: 2025-07-23T14:01:01.312Z
 ---

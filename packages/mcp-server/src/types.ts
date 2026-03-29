@@ -30,11 +30,6 @@ export interface DocumentChunk {
   content: string;
 
   /**
-   * The full URL to the source documentation page from which this chunk was derived.
-   */
-  source_url: string;
-
-  /**
    * Additional metadata, such as the original heading title.
    */
   metadata?: {

@@ -178,7 +178,6 @@ export class PineconeSearchProvider implements SearchProvider {
         parent_id: match.metadata.parent_id || null,
         framework: validFramework,
         content: String(match.metadata.content || ''),
-        source_url: String(match.metadata.source_url || ''),
         metadata: {
           title: String(match.metadata.title || 'Untitled'),
           heading: String(match.metadata.heading || ''),
