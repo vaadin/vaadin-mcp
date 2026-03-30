@@ -128,10 +128,10 @@ export class PineconeSparseProvider {
       const denseIndex = this.pinecone.index(this.sparseIndexName.replace('-sparse', ''));
 
       // Get embedding using the same method as the dense provider
-      const { OpenAIEmbeddings } = await import('@langchain/openai');
-      const embeddings = new OpenAIEmbeddings({
-        apiKey: process.env.OPENAI_API_KEY!,
-        model: 'text-embedding-3-small',
+      const { MistralAIEmbeddings } = await import('@langchain/mistralai');
+      const embeddings = new MistralAIEmbeddings({
+        apiKey: process.env.MISTRAL_API_KEY!,
+        model: 'mistral-embed',
       });
 
       const embedResponse = await embeddings.embedQuery(keywordQuery);

@@ -61,21 +61,21 @@ export interface EmbeddingGenerationResult {
 export async function generateEmbeddings(config: EmbeddingGenerationConfig): Promise<EmbeddingGenerationResult> {
   const startTime = Date.now();
   const errors: string[] = [];
-
+  
   console.log('🚀 Starting simplified embedding generation pipeline...');
   console.log(`📁 Processing markdown directory: ${config.markdownDir}`);
-
+  
   try {
     // Step 1: Load documents
     console.log('\n📖 Step 1: Loading markdown documents...');
     const loadingStart = Date.now();
-
+    
     const loader = createDirectoryLoader(config.markdownDir, {
       recursive: true,
       baseDir: path.dirname(config.markdownDir)  // Parent dir so file_path includes version prefix (e.g. "v24/")
     });
     const documents = await loader.load();
-
+    
     const loadingTime = Date.now() - loadingStart;
     console.log(`✅ Loaded ${documents.length} documents (${loadingTime}ms)`);
 
@@ -86,7 +86,7 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     // Step 2: Chunk documents with file_path metadata
     console.log('\n✂️ Step 2: Chunking documents...');
     const chunkingStart = Date.now();
-
+    
     const chunker = createChunker({
       maxChunkSize: config.chunking?.maxChunkSize,
       chunkOverlap: config.chunking?.chunkOverlap,
@@ -94,43 +94,43 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     });
 
     const documentChunks = await chunker.processDocuments(documents);
-
+    
     const chunkingTime = Date.now() - chunkingStart;
     console.log(`✅ Created ${documentChunks.length} chunks across ${documents.length} files (${chunkingTime}ms)`);
 
     // Step 3: Generate embeddings
     console.log('\n🧠 Step 3: Generating embeddings...');
     const embeddingStart = Date.now();
-
+    
     const embeddingsGenerator = createEmbeddingsGenerator(config.embeddings);
     const chunksWithEmbeddings = await embeddingsGenerator.generateEmbeddings(documentChunks);
-
+    
     const embeddingTime = Date.now() - embeddingStart;
     console.log(`✅ Generated embeddings for ${chunksWithEmbeddings.length} chunks (${embeddingTime}ms)`);
 
     // Step 4: Upload to Pinecone (Dense + Sparse)
     console.log('\n📡 Step 4: Uploading to Pinecone (Dense + Sparse)...');
     const pineconeStart = Date.now();
-
+    
     const pineconeUpserter = createPineconeUpserter(config.pinecone);
-
+    
     if (config.clearExistingIndex) {
       console.log('🗑️ Clearing existing Pinecone index...');
       await pineconeUpserter.clearIndex();
       console.log('✅ Index cleared');
     }
-
+    
     await pineconeUpserter.upsertChunks(chunksWithEmbeddings);
-
+    
     const pineconeTime = Date.now() - pineconeStart;
     console.log(`✅ Uploaded ${chunksWithEmbeddings.length} chunks to Pinecone (${pineconeTime}ms)`);
 
     // Final results
     const totalTime = Date.now() - startTime;
-
+    
     console.log('\n🎉 Embedding generation completed successfully!');
     console.log(`📊 Summary: ${documentChunks.length} chunks from ${documents.length} files in ${totalTime}ms`);
-
+    
     return {
       totalChunks: documentChunks.length,
       totalFiles: documents.length,
@@ -148,7 +148,7 @@ export async function generateEmbeddings(config: EmbeddingGenerationConfig): Pro
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`❌ Embedding generation failed: ${errorMessage}`);
     errors.push(errorMessage);
-
+    
     throw error;
   }
 }
@@ -209,17 +209,17 @@ export async function runCLI(): Promise<void> {
   // Default to the AsciiDoc converter's output directory
   const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), '..', '1-asciidoc-converter', 'dist', 'markdown', `v${version}`);
 
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('❌ OPENAI_API_KEY environment variable is required');
+  if (!process.env.MISTRAL_API_KEY) {
+    console.error('❌ MISTRAL_API_KEY environment variable is required');
     process.exit(1);
   }
 
   const config: EmbeddingGenerationConfig = {
     markdownDir,
     embeddings: {
-      apiKey: process.env.OPENAI_API_KEY,
-      modelName: 'text-embedding-3-small',
-      dimensions: 1536,
+      apiKey: process.env.MISTRAL_API_KEY,
+      modelName: 'mistral-embed',
+      dimensions: 1024,
       batchSize: 50
     },
     pinecone: {

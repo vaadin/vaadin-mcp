@@ -131,7 +131,7 @@ jobs:
 
       - name: Run ingestion for v${{ matrix.version }}
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_INDEX: ${{ secrets.PINECONE_INDEX || 'vaadin-docs' }}
         run: |
@@ -239,7 +239,7 @@ jobs:
             3. Consider running with manual trigger to debug
 
             **Common Issues:**
-            - API rate limits (OpenAI/Pinecone)
+            - API rate limits (Mistral/Pinecone)
             - Network connectivity issues
             - Invalid environment variables
             - Repository access problems

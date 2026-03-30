@@ -18,9 +18,9 @@ export const config = {
     index: process.env.PINECONE_INDEX || 'vaadin-docs',
   },
 
-  // OpenAI configuration
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY,
+  // Mistral configuration
+  mistral: {
+    apiKey: process.env.MISTRAL_API_KEY,
   },
 
   // Search settings
