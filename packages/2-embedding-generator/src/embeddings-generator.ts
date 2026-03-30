@@ -6,7 +6,7 @@
  */
 
 import { MistralAIEmbeddings } from '@langchain/mistralai';
-import { encodingForModel } from 'js-tiktoken';
+import { getEncoding } from 'js-tiktoken';
 import type { Tiktoken } from 'js-tiktoken';
 import type { DocumentChunk } from 'core-types';
 
@@ -52,7 +52,9 @@ export class EmbeddingsGenerator {
     this.batchSize = config.batchSize || 50;
     this.maxRetries = config.maxRetries || 3;
     this.retryDelay = config.retryDelay || 1000;
-    this.tokenizer = encodingForModel('gpt-4' as Parameters<typeof encodingForModel>[0]);
+    // Mistral uses its own tokenizer (mistral-common, Python-only).
+    // cl100k_base is a close enough approximation for truncation with headroom.
+    this.tokenizer = getEncoding('cl100k_base');
   }
 
   /**
