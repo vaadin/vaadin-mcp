@@ -1,12 +1,12 @@
 /**
  * Embeddings Generator
- * 
- * Generates embeddings using OpenAI's text-embedding-3-small model
+ *
+ * Generates embeddings using Mistral's mistral-embed model
  * for document chunks with batching and error handling.
  */
 
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { encodingForModel } from 'js-tiktoken';
+import { MistralAIEmbeddings } from '@langchain/mistralai';
+import { getEncoding } from 'js-tiktoken';
 import type { Tiktoken } from 'js-tiktoken';
 import type { DocumentChunk } from 'core-types';
 
@@ -34,7 +34,7 @@ export interface ChunkWithEmbedding {
  * Generates embeddings for document chunks
  */
 export class EmbeddingsGenerator {
-  private embeddings: OpenAIEmbeddings;
+  private embeddings: MistralAIEmbeddings;
   private dimensions: number;
   private batchSize: number;
   private maxRetries: number;
@@ -42,18 +42,19 @@ export class EmbeddingsGenerator {
   private tokenizer: Tiktoken;
 
   constructor(config: EmbeddingsConfig) {
-    const modelName = config.modelName || 'text-embedding-3-small';
-    this.dimensions = config.dimensions || 1536;
-    this.embeddings = new OpenAIEmbeddings({
-      openAIApiKey: config.apiKey,
-      modelName,
-      dimensions: this.dimensions
+    const modelName = config.modelName || 'mistral-embed';
+    this.dimensions = config.dimensions || 1024;
+    this.embeddings = new MistralAIEmbeddings({
+      apiKey: config.apiKey,
+      model: modelName,
     });
 
     this.batchSize = config.batchSize || 50;
     this.maxRetries = config.maxRetries || 3;
     this.retryDelay = config.retryDelay || 1000;
-    this.tokenizer = encodingForModel(modelName as Parameters<typeof encodingForModel>[0]);
+    // Mistral uses its own tokenizer (mistral-common, Python-only).
+    // cl100k_base is a close enough approximation for truncation with headroom.
+    this.tokenizer = getEncoding('cl100k_base');
   }
 
   /**
@@ -91,13 +92,13 @@ export class EmbeddingsGenerator {
       try {
         const embeddings = await this.embeddings.embedDocuments(texts);
 
-        // Validate embedding dimensions (OpenAI can intermittently return wrong dimensions)
+        // Validate embedding dimensions
         const invalidCount = embeddings.filter(e => e.length !== this.dimensions).length;
         if (invalidCount > 0) {
           const firstBad = embeddings.find(e => e.length !== this.dimensions)!;
           throw new Error(
             `Embedding dimension mismatch: got ${firstBad.length}, expected ${this.dimensions} ` +
-            `(${invalidCount} of ${embeddings.length} embeddings affected, likely OpenAI API issue)`
+            `(${invalidCount} of ${embeddings.length} embeddings affected)`
           );
         }
 
@@ -145,7 +146,7 @@ export class EmbeddingsGenerator {
     // Add main content
     text += chunk.content;
 
-    // Truncate if too long (OpenAI has 8192 token limit, use 8000 for headroom)
+    // Truncate if too long (Mistral has 8K token context, use 8000 for headroom)
     return this.truncateToTokenLimit(text, 8000);
   }
 
@@ -197,19 +198,19 @@ export function validateEmbeddingsConfig(config: Partial<EmbeddingsConfig>): {
   const errors: string[] = [];
 
   if (!config.apiKey) {
-    errors.push('API key is required');
+    errors.push('Mistral API key is required');
   }
 
   if (config.batchSize !== undefined && (config.batchSize < 1 || config.batchSize > 100)) {
     errors.push('Batch size must be between 1 and 100');
   }
 
-  if (config.dimensions !== undefined && ![1536, 3072].includes(config.dimensions)) {
-    errors.push('Dimensions must be 1536 or 3072 for text-embedding-3-small');
+  if (config.dimensions !== undefined && config.dimensions !== 1024) {
+    errors.push('Dimensions must be 1024 for mistral-embed');
   }
 
   return {
     valid: errors.length === 0,
     errors
   };
-} 
+}

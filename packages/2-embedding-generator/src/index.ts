@@ -209,17 +209,17 @@ export async function runCLI(): Promise<void> {
   // Default to the AsciiDoc converter's output directory
   const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), '..', '1-asciidoc-converter', 'dist', 'markdown', `v${version}`);
 
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('❌ OPENAI_API_KEY environment variable is required');
+  if (!process.env.MISTRAL_API_KEY) {
+    console.error('❌ MISTRAL_API_KEY environment variable is required');
     process.exit(1);
   }
 
   const config: EmbeddingGenerationConfig = {
     markdownDir,
     embeddings: {
-      apiKey: process.env.OPENAI_API_KEY,
-      modelName: 'text-embedding-3-small',
-      dimensions: 1536,
+      apiKey: process.env.MISTRAL_API_KEY,
+      modelName: 'mistral-embed',
+      dimensions: 1024,
       batchSize: 50
     },
     pinecone: {

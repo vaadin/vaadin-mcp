@@ -312,10 +312,10 @@ async function testDimensionConfig(): Promise<boolean> {
     throw new Error(`Default config should be valid: ${defaultResult.errors.join(', ')}`);
   }
 
-  // Test explicit 1536 dimensions
-  const result1536 = validateEmbeddingsConfig({ apiKey: 'test-key', dimensions: 1536 });
-  if (!result1536.valid) {
-    throw new Error('1536 dimensions should be valid');
+  // Test explicit 1024 dimensions
+  const result1024 = validateEmbeddingsConfig({ apiKey: 'test-key', dimensions: 1024 });
+  if (!result1024.valid) {
+    throw new Error('1024 dimensions should be valid');
   }
 
   // Test invalid dimensions
@@ -324,7 +324,7 @@ async function testDimensionConfig(): Promise<boolean> {
     throw new Error('384 dimensions should be invalid');
   }
 
-  console.debug('     Dimension config: default valid, 1536 valid, 384 rejected');
+  console.debug('     Dimension config: default valid, 1024 valid, 384 rejected');
   return true;
 }
 

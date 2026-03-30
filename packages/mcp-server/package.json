@@ -41,7 +41,7 @@
     "@amplitude/analytics-node": "^1.5.22",
     "@langchain/community": "0.3.48",
     "@langchain/core": "0.3.66",
-    "@langchain/openai": "^0.3.0",
+    "@langchain/mistralai": "^0.1.1",
     "@langchain/pinecone": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.17.0",
     "@pinecone-database/pinecone": "^5.1.0",
@@ -49,7 +49,6 @@
     "dotenv": "^17.2.1",
     "express": "^4.18.2",
     "langchain": "0.3.30",
-    "openai": "^4.86.1",
     "yaml": "^2.8.2",
     "zod": "^3.22.4"
   },
