@@ -289,16 +289,16 @@ async function startServer() {
   await initializeServices();
 
   const app = express();
-  
+
   // Configure CORS to support browser-based MCP clients
   app.use(cors({
     origin: '*', // Configure appropriately for production
     exposedHeaders: ['Mcp-Session-Id'],
     allowedHeaders: ['Content-Type', 'mcp-session-id'],
   }));
-  
+
   app.use(express.json());
-  
+
   // Health check endpoint
   app.get('/health', (req: Request, res: Response) => {
     res.json({ 
@@ -321,17 +321,17 @@ async function startServer() {
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined, // Stateless mode
       });
-      
+
       // Clean up when request is closed
       res.on('close', () => {
         logger.debug('Request closed');
         transport.close();
         server.close();
       });
-      
+
       // Connect server to transport
       await server.connect(transport);
-      
+
       // Handle the request
       await transport.handleRequest(req, res, req.body);
     } catch (error) {

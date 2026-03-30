@@ -36,13 +36,13 @@ export class MarkdownWithFrontmatterLoader extends BaseDocumentLoader {
   async load(): Promise<Document[]> {
     const content = await fs.promises.readFile(this.filePath, { encoding: this.encoding as BufferEncoding });
     const { frontmatter, content: markdownContent } = parseFrontmatter(content);
-    
+
     // Compute relative file path if baseDir is provided
     let relativePath = this.filePath;
     if (this.baseDir) {
       relativePath = path.relative(this.baseDir, this.filePath);
     }
-    
+
     const metadata: ProcessedMetadata = {
       framework: frontmatter.framework || 'common',
       source_url: frontmatter.source_url || '',
@@ -101,23 +101,23 @@ export class DirectoryMarkdownLoader extends BaseDocumentLoader {
 
   private async findMarkdownFiles(dir: string): Promise<string[]> {
     const files: string[] = [];
-    
+
     if (!fs.existsSync(dir)) {
       return files;
     }
-    
+
     const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      
+
       if (entry.isDirectory() && this.options.recursive !== false) {
         files.push(...await this.findMarkdownFiles(fullPath));
       } else if (entry.isFile() && this.shouldIncludeFile(entry.name)) {
         files.push(fullPath);
       }
     }
-    
+
     return files;
   }
 
@@ -125,11 +125,11 @@ export class DirectoryMarkdownLoader extends BaseDocumentLoader {
     if (!fileName.endsWith('.md')) {
       return false;
     }
-    
+
     if (this.options.includePattern) {
       return this.options.includePattern.test(fileName);
     }
-    
+
     return true;
   }
 }
@@ -143,17 +143,17 @@ export function parseFrontmatter(content: string): {
 } {
   const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
   const match = content.match(frontmatterRegex);
-  
+
   if (!match) {
     return {
       frontmatter: {},
       content: content
     };
   }
-  
+
   const [, frontmatterText, markdownContent] = match;
   const frontmatter = parseYamlFrontmatter(frontmatterText);
-  
+
   return {
     frontmatter,
     content: markdownContent.trim()
@@ -166,27 +166,27 @@ export function parseFrontmatter(content: string): {
 function parseYamlFrontmatter(yaml: string): Frontmatter {
   const frontmatter: Frontmatter = {};
   const lines = yaml.split('\n');
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) {
       continue;
     }
-    
+
     const colonIndex = trimmed.indexOf(':');
     if (colonIndex === -1) {
       continue;
     }
-    
+
     const key = trimmed.substring(0, colonIndex).trim();
     let value = trimmed.substring(colonIndex + 1).trim();
-    
+
     // Remove quotes if present
     if ((value.startsWith('"') && value.endsWith('"')) || 
         (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
-    
+
     // Handle boolean values
     if (value === 'true') {
       frontmatter[key] = true;
@@ -202,7 +202,7 @@ function parseYamlFrontmatter(yaml: string): Frontmatter {
       frontmatter[key] = value;
     }
   }
-  
+
   return frontmatter;
 }
 

@@ -19,7 +19,7 @@ const git = simpleGit();
  */
 export async function cloneOrPullRepo(config: IngestionConfig, branch?: string): Promise<boolean> {
   const targetBranch = branch || config.repository.branch || 'main';
-  
+
   try {
     // Check if repo already exists locally
     if (fs.existsSync(config.repository.localPath)) {
@@ -57,19 +57,19 @@ export async function cloneOrPullRepo(config: IngestionConfig, branch?: string):
 function shouldIncludeFile(filePath: string, articlesDir: string, includePatterns: string[]): boolean {
   // Include patterns are relative to the articles directory
   const relativePath = path.relative(articlesDir, filePath);
-  
+
   // If no include patterns are specified, include all files
   if (!includePatterns || includePatterns.length === 0) {
     return true;
   }
-  
+
   // Check if the file matches any of the include patterns
   for (const pattern of includePatterns) {
     if (minimatch(relativePath, pattern)) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -83,10 +83,10 @@ function shouldIncludeFile(filePath: string, articlesDir: string, includePattern
 function shouldExcludeFile(filePath: string, articlesDir: string, excludePatterns: string[]): boolean {
   // Exclude patterns are relative to the articles directory
   const relativePath = path.relative(articlesDir, filePath);
-  
+
   // Get the filename without the directory
   const filename = path.basename(relativePath);
-  
+
   // Check if the file matches any of the exclude patterns
   if (excludePatterns) {
     for (const pattern of excludePatterns) {
@@ -100,7 +100,7 @@ function shouldExcludeFile(filePath: string, articlesDir: string, excludePattern
       }
     }
   }
-  
+
   return false;
 }
 
@@ -114,7 +114,7 @@ export function getAsciiDocFiles(config: IngestionConfig): string[] {
   const articlesDir = path.join(config.repository.localPath, 'articles');
   let excludedCount = 0;
   let notIncludedCount = 0;
-  
+
   function getFiles(dir: string) {
     try {
       const items = fs.readdirSync(dir);
@@ -142,13 +142,13 @@ export function getAsciiDocFiles(config: IngestionConfig): string[] {
       console.error(`Error reading directory ${dir}:`, error);
     }
   }
-  
+
   if (fs.existsSync(articlesDir)) {
     getFiles(articlesDir);
     console.debug(`Found ${files.length} AsciiDoc files (not included: ${notIncludedCount} files based on include patterns, excluded: ${excludedCount} files based on exclude patterns)`);
   } else {
     console.error(`Articles directory not found: ${articlesDir}`);
   }
-  
+
   return files;
 } 

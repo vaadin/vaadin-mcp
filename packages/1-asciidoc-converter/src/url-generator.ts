@@ -48,17 +48,17 @@ export function parseMetadata(content: string): {
 } {
   const metadataRegex = /^---\n([\s\S]*?)\n---/;
   const match = content.match(metadataRegex);
-  
+
   if (!match) {
     return { 
       content, 
       metadata: {} 
     };
   }
-  
+
   const metadataStr = match[1];
   const metadata: Record<string, string> = {};
-  
+
   // Parse key-value pairs
   metadataStr.split('\n').forEach(line => {
     const [key, ...valueParts] = line.split(':');
@@ -66,10 +66,10 @@ export function parseMetadata(content: string): {
       metadata[key.trim()] = valueParts.join(':').trim();
     }
   });
-  
+
   // Remove front matter from content
   const cleanContent = content.replace(match[0], '').trim();
-  
+
   return { 
     content: cleanContent, 
     metadata 
@@ -86,7 +86,7 @@ export function generateFrontmatter(metadata: ProcessedMetadata): string {
     ...metadata,
     processed_at: new Date().toISOString()
   };
-  
+
   const frontmatterLines = Object.entries(frontmatterData)
     .filter(([_, value]) => value !== undefined && value !== null)
     .map(([key, value]) => {
@@ -96,6 +96,6 @@ export function generateFrontmatter(metadata: ProcessedMetadata): string {
       }
       return `${key}: ${value}`;
     });
-  
+
   return `---\n${frontmatterLines.join('\n')}\n---\n\n`;
 } 

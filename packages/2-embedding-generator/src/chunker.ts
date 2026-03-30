@@ -65,20 +65,20 @@ export class MarkdownChunker {
   async chunkDocument(document: Document): Promise<BasicChunk[]> {
     const filePath = document.metadata.file_path || '';
     const baseId = this.generateBaseId(filePath);
-    
+
     // First, split using markdown splitter
     const chunks = await this.markdownSplitter.splitDocuments([document]);
-    
+
     // Process each chunk
     const basicChunks: BasicChunk[] = [];
-    
+
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       const level = this.determineHeaderLevel(chunk.pageContent);
-      
+
       // If chunk is too large, further split it
       const subChunks = await this.splitLargeChunk(chunk);
-      
+
       for (let j = 0; j < subChunks.length; j++) {
         const subChunk = subChunks[j];
         const chunkId = this.config.generateChunkIds !== false 
@@ -104,7 +104,7 @@ export class MarkdownChunker {
         basicChunks.push(basicChunk);
       }
     }
-    
+
     return basicChunks;
   }
 
@@ -132,13 +132,13 @@ export class MarkdownChunker {
    */
   async processDocuments(documents: Document[]): Promise<DocumentChunk[]> {
     const allChunks: DocumentChunk[] = [];
-    
+
     for (const document of documents) {
       const basicChunks = await this.chunkDocument(document);
       const documentChunks = basicChunks.map(chunk => this.convertToDocumentChunk(chunk));
       allChunks.push(...documentChunks);
     }
-    
+
     return allChunks;
   }
 
@@ -185,11 +185,11 @@ export class MarkdownChunker {
    */
   private async splitLargeChunk(chunk: Document): Promise<Document[]> {
     const maxSize = this.config.maxChunkSize || 1000;
-    
+
     if (chunk.pageContent.length <= maxSize) {
       return [chunk];
     }
-    
+
     // Use text splitter for large chunks
     return await this.textSplitter.splitDocuments([chunk]);
   }

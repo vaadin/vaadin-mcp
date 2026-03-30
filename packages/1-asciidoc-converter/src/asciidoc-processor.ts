@@ -44,21 +44,21 @@ registerReducer().then(result => {
 function getFrameworkAttributes(framework: Framework, repoPath: string): Record<string, any> {
   // Import config here to avoid circular dependencies
   const { asciidocConfig } = require('./config');
-  
+
   const attributes: Record<string, any> = {
     // Basic AsciiDoc attributes from config
     ...asciidocConfig.attributes,
-    
+
     // Vaadin-specific attributes
     'root': repoPath,
     'articles': path.join(repoPath, 'articles'),
     'imagesdir': 'images',
-    
+
     // Framework-specific attributes
     'flow': framework === 'flow',
     'react': framework === 'hilla'
   };
-  
+
   return attributes;
 }
 
@@ -71,27 +71,27 @@ function getFrameworkAttributes(framework: Framework, repoPath: string): Record<
 function fixRelativePaths(markdown: string, repoPath: string): string {
   // Find the articles directory path
   const articlesPath = path.join(repoPath, 'articles');
-  
+
   // Convert absolute paths to relative paths
   // This handles both Windows and Unix paths
   const absolutePathRegex = new RegExp(articlesPath.replace(/[/\\]/g, '[/\\\\]'), 'g');
-  
+
   // Replace absolute paths with relative paths
   // For links like: /full/path/to/articles/components/button
   // Convert to: components/button
   let fixedMarkdown = markdown.replace(absolutePathRegex, '');
-  
+
   // Handle image paths - remove leading slashes from image paths
   // Convert: images//full/path/... to images/...
   fixedMarkdown = fixedMarkdown.replace(/images\/\/[^)]+?\/articles\//g, 'images/');
-  
+
   // Handle regular links - remove leading slashes and convert to relative paths
   // Convert: ](/full/path/to/articles/styling) to: (styling)
   fixedMarkdown = fixedMarkdown.replace(/\]\([^)]*\/articles\//g, '](');
-  
+
   // Handle remaining double slashes in paths
   fixedMarkdown = fixedMarkdown.replace(/\/\/+/g, '/');
-  
+
   return fixedMarkdown;
 }
 
@@ -112,7 +112,7 @@ export async function processAsciiDoc(
   try {
     // Set the base directory for includes
     const baseDir = path.dirname(filePath);
-    
+
     // Get framework-specific attributes
     const attributes = getFrameworkAttributes(framework, repoPath);
 
@@ -120,7 +120,7 @@ export async function processAsciiDoc(
     if (!reducerRegistered) {
       await registerReducer();
     }
-    
+
     // Load and process the AsciiDoc content with asciidoctor
     // This will handle includes if reducer is registered
     const doc = Asciidoctor.load(content, {
@@ -128,10 +128,10 @@ export async function processAsciiDoc(
       attributes: attributes,
       base_dir: baseDir
     });
-    
+
     // Get the processed source (with includes expanded if reducer is working)
     const asciidocContent = doc.getSource();
-    
+
     // Use downdoc to convert AsciiDoc to Markdown
     const markdown = downdoc(asciidocContent, { 
       attributes: {
@@ -139,10 +139,10 @@ export async function processAsciiDoc(
         'markdown-list-indent': 2
       }
     });
-    
+
     // Fix relative paths in the generated markdown
     const fixedMarkdown = fixRelativePaths(markdown, repoPath);
-    
+
     return fixedMarkdown;
   } catch (error) {
     console.error('Error processing AsciiDoc:', error);
@@ -163,6 +163,6 @@ export function extractTitle(content: string): string | undefined {
     // Remove any badges from the title
     return h1Match[1].replace(/\[badge-[^\]]+\]#[^#]+#/g, '').trim();
   }
-  
+
   return undefined;
 } 

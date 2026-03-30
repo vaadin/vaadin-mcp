@@ -128,18 +128,18 @@ export const actualFileTests = [
  */
 export function runFrameworkDetectionTests(): { passed: number; failed: number; details: any[] } {
   console.debug('\n🧪 Running Framework Detection Tests...\n');
-  
+
   const results = {
     passed: 0,
     failed: 0,
     details: [] as any[]
   };
-  
+
   // Test with actual files first
   console.debug('Testing with actual files:');
   for (const testCase of actualFileTests) {
     const fullPath = path.join(process.cwd(), testCase.file);
-    
+
     if (!fs.existsSync(fullPath)) {
       console.debug(`❌ ${testCase.name} - File not found: ${fullPath}`);
       results.failed++;
@@ -150,15 +150,15 @@ export function runFrameworkDetectionTests(): { passed: number; failed: number; 
       });
       continue;
     }
-    
+
     const content = fs.readFileSync(fullPath, 'utf8');
     const detectedFramework = detectFramework(testCase.file, content);
     const detectedIsComponent = isComponentFile(testCase.file);
-    
+
     const frameworkMatch = detectedFramework === testCase.expected;
     const componentMatch = testCase.isComponent === detectedIsComponent;
     const passed = frameworkMatch && componentMatch;
-    
+
     if (passed) {
       results.passed++;
       console.debug(`✅ ${testCase.name} - Framework: ${detectedFramework}`);
@@ -169,7 +169,7 @@ export function runFrameworkDetectionTests(): { passed: number; failed: number; 
         console.debug(`   Expected component file, but isComponentFile() returned false`);
       }
     }
-    
+
     results.details.push({
       name: testCase.name,
       passed,
@@ -177,17 +177,17 @@ export function runFrameworkDetectionTests(): { passed: number; failed: number; 
       actual: { framework: detectedFramework, isComponent: detectedIsComponent }
     });
   }
-  
+
   // Test with synthetic content cases
   console.debug('\nTesting with synthetic content:');
   for (const testCase of frameworkDetectionTests) {
     const detectedFramework = detectFramework(testCase.filePath, testCase.content);
     const detectedIsComponent = isComponentFile(testCase.filePath);
-    
+
     const frameworkMatch = detectedFramework === testCase.expectedFramework;
     const componentMatch = detectedIsComponent === testCase.isComponent;
     const passed = frameworkMatch && componentMatch;
-    
+
     if (passed) {
       results.passed++;
       console.debug(`✅ ${testCase.name}`);
@@ -197,7 +197,7 @@ export function runFrameworkDetectionTests(): { passed: number; failed: number; 
       console.debug(`   Expected framework: ${testCase.expectedFramework}, got: ${detectedFramework}`);
       console.debug(`   Expected isComponent: ${testCase.isComponent}, got: ${detectedIsComponent}`);
     }
-    
+
     results.details.push({
       name: testCase.name,
       passed,
@@ -205,7 +205,7 @@ export function runFrameworkDetectionTests(): { passed: number; failed: number; 
       actual: { framework: detectedFramework, isComponent: detectedIsComponent }
     });
   }
-  
+
   return results;
 }
 
@@ -215,13 +215,13 @@ export function runFrameworkDetectionTests(): { passed: number; failed: number; 
  */
 export async function runConversionTests(): Promise<{ passed: number; failed: number; details: any[] }> {
   console.debug('\n🔄 Running Conversion Tests...\n');
-  
+
   const results = {
     passed: 0,
     failed: 0,
     details: [] as any[]
   };
-  
+
   try {
     // Check if our test files exist
     console.debug('Checking test data files...');
@@ -233,7 +233,7 @@ export async function runConversionTests(): Promise<{ passed: number; failed: nu
       'forms/complex-example.adoc',
       'components/button.adoc'
     ];
-    
+
     let foundFiles = 0;
     for (const testFile of expectedTestFiles) {
       const fullPath = path.join(testDataDir, testFile);
@@ -250,14 +250,14 @@ export async function runConversionTests(): Promise<{ passed: number; failed: nu
         });
       }
     }
-    
+
     if (foundFiles === 0) {
       throw new Error('No test data files found. Test data may not be set up correctly.');
     }
-    
+
     console.debug(`\n✅ Found ${foundFiles}/${expectedTestFiles.length} test files`);
     results.passed += foundFiles;
-    
+
     // Test framework detection accuracy
     console.debug('\nTesting framework detection on actual files...');
     for (const testCase of actualFileTests) {
@@ -272,7 +272,7 @@ export async function runConversionTests(): Promise<{ passed: number; failed: nu
           console.debug(`✗ ${testCase.name}: expected ${testCase.expected}, got ${detected}`);
           results.failed++;
         }
-        
+
         results.details.push({
           file: testCase.file,
           expectedFramework: testCase.expected,
@@ -281,7 +281,7 @@ export async function runConversionTests(): Promise<{ passed: number; failed: nu
         });
       }
     }
-    
+
   } catch (error) {
     console.error('❌ Conversion test failed:', error);
     results.failed++;
@@ -289,7 +289,7 @@ export async function runConversionTests(): Promise<{ passed: number; failed: nu
       error: error instanceof Error ? error.message : String(error)
     });
   }
-  
+
   return results;
 }
 
@@ -298,29 +298,29 @@ export async function runConversionTests(): Promise<{ passed: number; failed: nu
  */
 export async function runAllTests(): Promise<void> {
   console.debug('🚀 Starting AsciiDoc Converter Test Suite\n');
-  
+
   // Run framework detection tests
   const frameworkResults = runFrameworkDetectionTests();
-  
+
   // Run conversion tests  
   const conversionResults = await runConversionTests();
-  
+
   // Summary
   console.debug('\n📊 Test Summary:');
   console.debug(`Framework Detection: ${frameworkResults.passed}/${frameworkResults.passed + frameworkResults.failed} passed`);
   console.debug(`Conversion Tests: ${conversionResults.passed}/${conversionResults.passed + conversionResults.failed} passed`);
-  
+
   const totalPassed = frameworkResults.passed + conversionResults.passed;
   const totalFailed = frameworkResults.failed + conversionResults.failed;
   const successRate = Math.round((totalPassed / (totalPassed + totalFailed)) * 100);
-  
+
   console.debug(`\n🎯 Overall: ${totalPassed}/${totalPassed + totalFailed} tests passed (${successRate}%)`);
-  
+
   if (totalFailed === 0) {
     console.debug('\n🎉 All tests passed!');
   } else {
     console.debug(`\n⚠️  ${totalFailed} tests failed`);
-    
+
     // Show failed test details
     console.debug('\nFailed tests:');
     [...frameworkResults.details, ...conversionResults.details]
