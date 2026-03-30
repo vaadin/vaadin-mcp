@@ -21,18 +21,6 @@ export const config = {
   // OpenAI configuration
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
-    // Configuration for checking if questions are relevant to Vaadin/Java
-    relevanceChecker: {
-      model: 'gpt-4.1-nano',
-      temperature: 0,
-      maxTokens: 400,
-    },
-    // Configuration for generating answers (both streaming and non-streaming)
-    answerGenerator: {
-      model: 'gpt-4.1',
-      temperature: 0,
-      maxTokens: 1500,
-    },
   },
 
   // Search settings

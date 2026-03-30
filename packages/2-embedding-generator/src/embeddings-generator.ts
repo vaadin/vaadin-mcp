@@ -14,7 +14,7 @@ import type { DocumentChunk } from 'core-types';
  * Configuration for embeddings generation
  */
 export interface EmbeddingsConfig {
-  openaiApiKey: string;
+  apiKey: string;
   modelName?: string;
   batchSize?: number;
   dimensions?: number;
@@ -45,7 +45,7 @@ export class EmbeddingsGenerator {
     const modelName = config.modelName || 'text-embedding-3-small';
     this.dimensions = config.dimensions || 1536;
     this.embeddings = new OpenAIEmbeddings({
-      openAIApiKey: config.openaiApiKey,
+      openAIApiKey: config.apiKey,
       modelName,
       dimensions: this.dimensions
     });
@@ -196,8 +196,8 @@ export function validateEmbeddingsConfig(config: Partial<EmbeddingsConfig>): {
 } {
   const errors: string[] = [];
 
-  if (!config.openaiApiKey) {
-    errors.push('OpenAI API key is required');
+  if (!config.apiKey) {
+    errors.push('API key is required');
   }
 
   if (config.batchSize !== undefined && (config.batchSize < 1 || config.batchSize > 100)) {
