@@ -86,7 +86,7 @@ export class EmbeddingsGenerator {
     console.debug(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} chunks)`);
 
     const texts = batch.map(chunk => this.prepareTextForEmbedding(chunk));
-    
+
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
         const embeddings = await this.embeddings.embedDocuments(texts);
@@ -109,16 +109,16 @@ export class EmbeddingsGenerator {
         return results;
       } catch (error) {
         console.error(`Batch ${batchNumber} attempt ${attempt} failed:`, error);
-        
+
         if (attempt === this.maxRetries) {
           throw new Error(`Failed to generate embeddings for batch ${batchNumber} after ${this.maxRetries} attempts: ${error}`);
         }
-        
+
         // Wait before retrying
         await this.sleep(this.retryDelay * attempt);
       }
     }
-    
+
     return [];
   }
 
@@ -127,24 +127,24 @@ export class EmbeddingsGenerator {
    */
   private prepareTextForEmbedding(chunk: DocumentChunk): string {
     let text = '';
-    
+
     // Add title and heading context if available
     if (chunk.metadata?.title) {
       text += `Title: ${chunk.metadata.title}\n`;
     }
-    
+
     if (chunk.metadata?.heading) {
       text += `Heading: ${chunk.metadata.heading}\n`;
     }
-    
+
     // Add framework context
     if (chunk.framework && chunk.framework !== 'common') {
       text += `Framework: ${chunk.framework}\n`;
     }
-    
+
     // Add main content
     text += chunk.content;
-    
+
     // Truncate if too long (OpenAI has 8192 token limit, use 8000 for headroom)
     return this.truncateToTokenLimit(text, 8000);
   }
