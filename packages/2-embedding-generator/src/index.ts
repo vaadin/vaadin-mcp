@@ -217,7 +217,7 @@ export async function runCLI(): Promise<void> {
   const config: EmbeddingGenerationConfig = {
     markdownDir,
     embeddings: {
-      openaiApiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY,
       modelName: 'text-embedding-3-small',
       dimensions: 1536,
       batchSize: 50

@@ -272,7 +272,7 @@ async function testChunkStructure(testDataDir: string): Promise<boolean> {
  */
 async function testTokenTruncation(): Promise<boolean> {
   // Use a dummy API key - we only need the tokenizer, not actual API calls
-  const generator = createEmbeddingsGenerator({ openaiApiKey: 'test-key' });
+  const generator = createEmbeddingsGenerator({ apiKey: 'test-key' });
 
   // Short text should pass through unchanged
   const shortText = 'Hello world, this is a short text.';
@@ -307,19 +307,19 @@ async function testTokenTruncation(): Promise<boolean> {
  */
 async function testDimensionConfig(): Promise<boolean> {
   // Test default dimensions validation
-  const defaultResult = validateEmbeddingsConfig({ openaiApiKey: 'test-key' });
+  const defaultResult = validateEmbeddingsConfig({ apiKey: 'test-key' });
   if (!defaultResult.valid) {
     throw new Error(`Default config should be valid: ${defaultResult.errors.join(', ')}`);
   }
 
   // Test explicit 1536 dimensions
-  const result1536 = validateEmbeddingsConfig({ openaiApiKey: 'test-key', dimensions: 1536 });
+  const result1536 = validateEmbeddingsConfig({ apiKey: 'test-key', dimensions: 1536 });
   if (!result1536.valid) {
     throw new Error('1536 dimensions should be valid');
   }
 
   // Test invalid dimensions
-  const resultBad = validateEmbeddingsConfig({ openaiApiKey: 'test-key', dimensions: 384 });
+  const resultBad = validateEmbeddingsConfig({ apiKey: 'test-key', dimensions: 384 });
   if (resultBad.valid) {
     throw new Error('384 dimensions should be invalid');
   }
