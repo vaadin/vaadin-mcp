@@ -110,7 +110,7 @@ packages/
 
 2. **Embedding Generator** processes Markdown into vector embeddings
    - Hierarchical chunking using `MarkdownHeaderTextSplitter` from LangChain
-   - Generates Mistral embeddings
+   - Generates embeddings (Mistral or OpenAI, auto-detected from API key)
    - Stores in Pinecone with metadata (framework, version, file_path, etc.)
    - Also populates sparse index for keyword search
 
@@ -198,7 +198,7 @@ Detection logic:
 ### Key Dependencies
 - **MCP SDK**: `@modelcontextprotocol/sdk` - Model Context Protocol implementation
 - **Pinecone**: `@pinecone-database/pinecone` - Vector database for embeddings
-- **Mistral**: `@langchain/mistralai` - Embedding generation
+- **Embeddings**: `@langchain/mistralai` + `@langchain/openai` - Embedding generation (provider auto-detected from API key)
 - **LangChain**: `@langchain/*` - Document processing, chunking, embeddings
 - **Express**: HTTP server for MCP transport
 - **AsciiDoctor**: AsciiDoc to HTML conversion
@@ -209,7 +209,8 @@ Detection logic:
 
 **Required for Production**:
 ```bash
-MISTRAL_API_KEY=your_key         # Mistral embeddings
+MISTRAL_API_KEY=your_key         # Mistral embeddings (set one, not both)
+OPENAI_API_KEY=your_key          # OpenAI embeddings (set one, not both)
 PINECONE_API_KEY=your_key        # Pinecone vector DB
 PINECONE_INDEX=vaadin-docs       # Pinecone index name
 ```

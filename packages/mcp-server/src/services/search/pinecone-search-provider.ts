@@ -1,8 +1,10 @@
 /**
- * Production search provider using real Pinecone and Mistral services
+ * Production search provider using real Pinecone and auto-detected embedding provider
  */
 
 import { MistralAIEmbeddings } from '@langchain/mistralai';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import type { Embeddings } from '@langchain/core/embeddings';
 import { PineconeStore } from '@langchain/pinecone';
 import { Pinecone } from '@pinecone-database/pinecone';
 import type { RetrievalResult } from '../../types.js';
@@ -10,9 +12,25 @@ import { config } from '../../config.js';
 import type { SearchProvider, SemanticResult, KeywordResult } from './search-interfaces.js';
 import { logger } from '../../logger.js';
 
+function createEmbeddings(): Embeddings {
+  if (config.embedding.provider === 'mistral') {
+    logger.debug('Using Mistral embeddings for search');
+    return new MistralAIEmbeddings({
+      apiKey: config.embedding.apiKey,
+      model: config.embedding.model,
+    });
+  } else {
+    logger.debug('Using OpenAI embeddings for search');
+    return new OpenAIEmbeddings({
+      openAIApiKey: config.embedding.apiKey,
+      modelName: config.embedding.model,
+    });
+  }
+}
+
 export class PineconeSearchProvider implements SearchProvider {
   private pinecone: Pinecone;
-  private embeddings: MistralAIEmbeddings;
+  private embeddings: Embeddings;
   private pineconeIndex: any;
   private vectorStore: PineconeStore;
 
@@ -22,11 +40,8 @@ export class PineconeSearchProvider implements SearchProvider {
       apiKey: config.pinecone.apiKey!,
     });
 
-    // Initialize Mistral embeddings
-    this.embeddings = new MistralAIEmbeddings({
-      apiKey: process.env.MISTRAL_API_KEY,
-      model: 'mistral-embed',
-    });
+    // Initialize embeddings (auto-detected from env)
+    this.embeddings = createEmbeddings();
 
     // Initialize Pinecone index
     this.pineconeIndex = this.pinecone.index(config.pinecone.index!);

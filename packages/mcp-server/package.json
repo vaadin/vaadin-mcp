@@ -42,6 +42,7 @@
     "@langchain/community": "0.3.48",
     "@langchain/core": "0.3.66",
     "@langchain/mistralai": "^0.1.1",
+    "@langchain/openai": "^0.3.0",
     "@langchain/pinecone": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.17.0",
     "@pinecone-database/pinecone": "^5.1.0",
