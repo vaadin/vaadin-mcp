@@ -209,17 +209,34 @@ export async function runCLI(): Promise<void> {
   // Default to the AsciiDoc converter's output directory
   const markdownDir = process.env.MARKDOWN_DIR || path.join(process.cwd(), '..', '1-asciidoc-converter', 'dist', 'markdown', `v${version}`);
 
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('❌ OPENAI_API_KEY environment variable is required');
+  // Auto-detect embedding provider from available API keys.
+  // Exactly one of MISTRAL_API_KEY or OPENAI_API_KEY must be set.
+  if (process.env.MISTRAL_API_KEY && process.env.OPENAI_API_KEY) {
+    console.error('❌ Both MISTRAL_API_KEY and OPENAI_API_KEY are set. Set exactly one to select the embedding provider.');
+    process.exit(1);
+  }
+
+  let embeddingProvider: 'mistral' | 'openai';
+  let embeddingApiKey: string;
+
+  if (process.env.MISTRAL_API_KEY) {
+    embeddingProvider = 'mistral';
+    embeddingApiKey = process.env.MISTRAL_API_KEY;
+    console.log('🔑 Using Mistral embeddings (mistral-embed, 1024 dimensions)');
+  } else if (process.env.OPENAI_API_KEY) {
+    embeddingProvider = 'openai';
+    embeddingApiKey = process.env.OPENAI_API_KEY;
+    console.log('🔑 Using OpenAI embeddings (text-embedding-3-small, 1536 dimensions)');
+  } else {
+    console.error('❌ Either MISTRAL_API_KEY or OPENAI_API_KEY environment variable is required');
     process.exit(1);
   }
 
   const config: EmbeddingGenerationConfig = {
     markdownDir,
     embeddings: {
-      apiKey: process.env.OPENAI_API_KEY,
-      modelName: 'text-embedding-3-small',
-      dimensions: 1536,
+      apiKey: embeddingApiKey,
+      provider: embeddingProvider,
       batchSize: 50
     },
     pinecone: {

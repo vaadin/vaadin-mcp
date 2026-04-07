@@ -272,7 +272,7 @@ async function testChunkStructure(testDataDir: string): Promise<boolean> {
  */
 async function testTokenTruncation(): Promise<boolean> {
   // Use a dummy API key - we only need the tokenizer, not actual API calls
-  const generator = createEmbeddingsGenerator({ apiKey: 'test-key' });
+  const generator = createEmbeddingsGenerator({ apiKey: 'test-key', provider: 'mistral' });
 
   // Short text should pass through unchanged
   const shortText = 'Hello world, this is a short text.';
@@ -303,28 +303,46 @@ async function testTokenTruncation(): Promise<boolean> {
 }
 
 /**
- * Tests embedding dimension configuration
+ * Tests embedding dimension configuration for both providers
  */
 async function testDimensionConfig(): Promise<boolean> {
-  // Test default dimensions validation
-  const defaultResult = validateEmbeddingsConfig({ apiKey: 'test-key' });
-  if (!defaultResult.valid) {
-    throw new Error(`Default config should be valid: ${defaultResult.errors.join(', ')}`);
+  // Test Mistral defaults
+  const mistralDefault = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'mistral' });
+  if (!mistralDefault.valid) {
+    throw new Error(`Mistral default config should be valid: ${mistralDefault.errors.join(', ')}`);
   }
 
-  // Test explicit 1536 dimensions
-  const result1536 = validateEmbeddingsConfig({ apiKey: 'test-key', dimensions: 1536 });
-  if (!result1536.valid) {
-    throw new Error('1536 dimensions should be valid');
+  // Test explicit 1024 dimensions for Mistral
+  const mistral1024 = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'mistral', dimensions: 1024 });
+  if (!mistral1024.valid) {
+    throw new Error('Mistral with 1024 dimensions should be valid');
   }
 
-  // Test invalid dimensions
-  const resultBad = validateEmbeddingsConfig({ apiKey: 'test-key', dimensions: 384 });
-  if (resultBad.valid) {
-    throw new Error('384 dimensions should be invalid');
+  // Test invalid dimensions for Mistral
+  const mistralBad = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'mistral', dimensions: 1536 });
+  if (mistralBad.valid) {
+    throw new Error('Mistral with 1536 dimensions should be invalid');
   }
 
-  console.debug('     Dimension config: default valid, 1536 valid, 384 rejected');
+  // Test OpenAI defaults
+  const openaiDefault = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'openai' });
+  if (!openaiDefault.valid) {
+    throw new Error(`OpenAI default config should be valid: ${openaiDefault.errors.join(', ')}`);
+  }
+
+  // Test explicit 1536 dimensions for OpenAI
+  const openai1536 = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'openai', dimensions: 1536 });
+  if (!openai1536.valid) {
+    throw new Error('OpenAI with 1536 dimensions should be valid');
+  }
+
+  // Test invalid dimensions for OpenAI
+  const openaiBad = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'openai', dimensions: 1024 });
+  if (openaiBad.valid) {
+    throw new Error('OpenAI with 1024 dimensions should be invalid');
+  }
+
+  console.debug('     Dimension config: Mistral 1024 valid, OpenAI 1536 valid, cross-provider rejected');
   return true;
 }
 

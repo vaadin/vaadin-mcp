@@ -127,12 +127,21 @@ export class PineconeSparseProvider {
       // Use the dense index for keyword search since we don't have a separate sparse index
       const denseIndex = this.pinecone.index(this.sparseIndexName.replace('-sparse', ''));
 
-      // Get embedding using the same method as the dense provider
-      const { OpenAIEmbeddings } = await import('@langchain/openai');
-      const embeddings = new OpenAIEmbeddings({
-        apiKey: process.env.OPENAI_API_KEY!,
-        model: 'text-embedding-3-small',
-      });
+      // Get embedding using the same provider as configured
+      let embeddings;
+      if (config.embedding.provider === 'mistral') {
+        const { MistralAIEmbeddings } = await import('@langchain/mistralai');
+        embeddings = new MistralAIEmbeddings({
+          apiKey: config.embedding.apiKey,
+          model: config.embedding.model,
+        });
+      } else {
+        const { OpenAIEmbeddings } = await import('@langchain/openai');
+        embeddings = new OpenAIEmbeddings({
+          openAIApiKey: config.embedding.apiKey,
+          modelName: config.embedding.model,
+        });
+      }
 
       const embedResponse = await embeddings.embedQuery(keywordQuery);
 
