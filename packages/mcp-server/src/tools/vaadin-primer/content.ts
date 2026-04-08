@@ -17,8 +17,8 @@ const PRIMER_FILES: Record<string, string> = {
   '14': 'primer-v14.md',
   '24': 'primer-v24.md',
   '25.0': 'primer-v25.md',
-  '25.1': 'primer-v25.md',
-  '25.2': 'primer-v25.md',
+  '25.1': 'primer-v25.1.md',
+  '25.2': 'primer-v25.1.md',
 };
 
 const contentCache: Record<string, string> = {};
