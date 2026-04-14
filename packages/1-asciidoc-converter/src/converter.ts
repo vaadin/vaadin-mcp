@@ -43,19 +43,19 @@ export async function convertFile(
 
   try {
     console.log(`Converting ${filePath}${framework ? ` for ${framework}` : ''}`);
-    
+
     // Read file content
     const content = fs.readFileSync(filePath, 'utf8');
-    
+
     // Parse existing metadata and clean content
     const { content: cleanContent, metadata: existingMetadata } = parseMetadata(content);
-    
+
     // Detect framework if not specified (pass version for legacy version handling)
     const detectedFramework = framework || detectFramework(filePath, cleanContent, version);
-    
+
     // Extract title from content
     const title = extractTitle(cleanContent);
-    
+
     // Create processed metadata
     const processedMetadata: ProcessedMetadata = {
       framework: detectedFramework,
@@ -63,7 +63,7 @@ export async function convertFile(
       vaadin_version: version,
       ...existingMetadata
     };
-    
+
     // Process AsciiDoc to Markdown
     const markdownContent = await processAsciiDoc(
       cleanContent,
@@ -71,13 +71,13 @@ export async function convertFile(
       detectedFramework,
       config.repository.localPath
     );
-    
+
     // Generate frontmatter
     const frontmatter = generateFrontmatter(processedMetadata);
-    
+
     // Combine frontmatter and content
     const finalContent = frontmatter + markdownContent;
-    
+
     // Generate output path (preserve directory structure)
     const relativePath = path.relative(
       path.join(config.repository.localPath, 'articles'),
@@ -89,25 +89,25 @@ export async function convertFile(
       outputDir,
       outputFileName.replace('.md', `${frameworkSuffix}.md`)
     );
-    
+
     // Ensure output directory exists
     const outputFileDir = path.dirname(outputFile);
     fs.mkdirSync(outputFileDir, { recursive: true });
-    
+
     // Write the markdown file
     fs.writeFileSync(outputFile, finalContent, 'utf8');
-    
+
     result.outputFiles.push(outputFile);
     result.framework.push(detectedFramework);
     result.success = true;
-    
+
     console.log(`✓ Converted ${filePath} → ${outputFile}`);
-    
+
   } catch (error) {
     console.error(`✗ Failed to convert ${filePath}:`, error);
     result.error = error instanceof Error ? error.message : String(error);
   }
-  
+
   return result;
 }
 
@@ -125,30 +125,30 @@ export async function convertDocumentation(
 ): Promise<ConversionResult[]> {
   const defaultOutputDir = path.join(process.cwd(), `packages/1-asciidoc-converter/dist/markdown/v${version}`);
   const targetOutputDir = outputDir || defaultOutputDir;
-  
+
   console.log('Starting AsciiDoc to Markdown conversion...');
   console.log(`Output directory: ${targetOutputDir}`);
-  
+
   // Clone or pull the repository
   const repoSuccess = await cloneOrPullRepo(config);
   if (!repoSuccess) {
     throw new Error('Failed to clone or pull repository');
   }
-  
+
   // Get all AsciiDoc files
   const files = getAsciiDocFiles(config);
   if (files.length === 0) {
     throw new Error('No AsciiDoc files found');
   }
-  
+
   console.log(`Found ${files.length} AsciiDoc files to convert`);
-  
+
   // Clean output directory
   if (fs.existsSync(targetOutputDir)) {
     fs.rmSync(targetOutputDir, { recursive: true, force: true });
   }
   fs.mkdirSync(targetOutputDir, { recursive: true });
-  
+
   // Process each file
   const results: ConversionResult[] = [];
 
@@ -168,16 +168,16 @@ export async function convertDocumentation(
       results.push(result);
     }
   }
-  
+
   // Summary
   const successful = results.filter(r => r.success).length;
   const failed = results.filter(r => !r.success).length;
   const totalOutputFiles = results.reduce((sum, r) => sum + r.outputFiles.length, 0);
-  
+
   console.log(`\nConversion complete!`);
   console.log(`✓ ${successful} successful conversions`);
   console.log(`✗ ${failed} failed conversions`);
   console.log(`📁 ${totalOutputFiles} markdown files created in ${targetOutputDir}`);
-  
+
   return results;
 } 

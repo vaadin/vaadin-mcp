@@ -39,7 +39,7 @@ Always validate data on the server for security:
 ```java
 @Endpoint
 public class PersonEndpoint {
-    
+
     public void savePerson(@Valid PersonData person) {
         // Validation is automatically applied
         personService.save(person);
@@ -50,11 +50,11 @@ public class PersonData {
     @NotEmpty(message = "First name is required")
     @Size(min = 2, max = 50, message = "Name must be 2-50 characters")
     private String firstName;
-    
+
     @NotEmpty(message = "Last name is required") 
     @Size(min = 2, max = 50, message = "Name must be 2-50 characters")
     private String lastName;
-    
+
     @NotEmpty(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;

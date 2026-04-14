@@ -40,7 +40,7 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
   results: TestResult[];
 }> {
   console.debug('🧪 Running Simplified Embedding Generator Test Suite...\n');
-  
+
   const testCases: TestCase[] = [
     {
       name: 'Frontmatter Parsing',
@@ -81,13 +81,13 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
   for (const testCase of testCases) {
     console.debug(`🔍 Running: ${testCase.name}`);
     console.debug(`   ${testCase.description}`);
-    
+
     const startTime = Date.now();
-    
+
     try {
       const success = await testCase.testFn();
       const duration = Date.now() - startTime;
-      
+
       if (success) {
         console.debug(`   ✅ PASSED (${duration}ms)`);
         passed++;
@@ -109,7 +109,7 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
         duration 
       });
     }
-    
+
     console.debug('');
   }
 
@@ -126,16 +126,16 @@ export async function runTestSuite(testDataDir: string = './test-data'): Promise
  */
 async function testFrontmatterParsing(testDataDir: string): Promise<boolean> {
   const testFile = path.join(testDataDir, 'forms.md');
-  
+
   if (!fs.existsSync(testFile)) {
     throw new Error(`Test file not found: ${testFile}`);
   }
-  
+
   const fileContent = fs.readFileSync(testFile, 'utf-8');
   const { frontmatter, content } = parseFrontmatter(fileContent);
-  
+
   console.debug(`     📄 Parsed frontmatter with ${Object.keys(frontmatter).length} fields`);
-  
+
   // Should have basic frontmatter fields
   return Object.keys(frontmatter).length > 0 && content.length > 0;
 }
@@ -145,14 +145,14 @@ async function testFrontmatterParsing(testDataDir: string): Promise<boolean> {
  */
 async function testDocumentChunking(testDataDir: string): Promise<boolean> {
   const testFile = path.join(testDataDir, 'forms/binding.md');
-  
+
   if (!fs.existsSync(testFile)) {
     throw new Error(`Test file not found: ${testFile}`);
   }
-  
+
   const fileContent = fs.readFileSync(testFile, 'utf-8');
   const { frontmatter, content } = parseFrontmatter(fileContent);
-  
+
   const document = new Document({
     pageContent: content,
     metadata: {
@@ -160,12 +160,12 @@ async function testDocumentChunking(testDataDir: string): Promise<boolean> {
       file_path: 'forms/binding.md'
     }
   });
-  
+
   const chunker = createChunker();
   const chunks = await chunker.processDocuments([document]);
-  
+
   console.debug(`     ✂️ Created ${chunks.length} chunks with proper structure`);
-  
+
   // Should create at least one chunk with proper structure
   return chunks.length > 0 && 
          chunks.every(chunk => 
@@ -182,16 +182,16 @@ async function testDocumentChunking(testDataDir: string): Promise<boolean> {
  */
 async function testFilePathMetadata(testDataDir: string): Promise<boolean> {
   const documents: Document[] = [];
-  
+
   // Load multiple test documents
   const testFiles = ['forms.md', 'forms/binding.md', 'forms/validation.md'];
-  
+
   for (const testFile of testFiles) {
     const fullPath = path.join(testDataDir, testFile);
     if (fs.existsSync(fullPath)) {
       const fileContent = fs.readFileSync(fullPath, 'utf-8');
       const { frontmatter, content } = parseFrontmatter(fileContent);
-      
+
       documents.push(new Document({
         pageContent: content,
         metadata: {
@@ -201,26 +201,26 @@ async function testFilePathMetadata(testDataDir: string): Promise<boolean> {
       }));
     }
   }
-  
+
   if (documents.length === 0) {
     throw new Error('No test documents found');
   }
-  
+
   const chunker = createChunker();
   const chunks = await chunker.processDocuments(documents);
-  
+
   console.debug(`     📁 Processed ${documents.length} documents into ${chunks.length} chunks`);
-  
+
   // All chunks should have file_path metadata
   const hasValidFilePaths = chunks.every(chunk => 
     chunk.metadata?.file_path && 
     typeof chunk.metadata.file_path === 'string' &&
     chunk.metadata.file_path.length > 0
   );
-  
+
   // Should have chunks from different files
   const uniqueFilePaths = new Set(chunks.map(chunk => chunk.metadata?.file_path));
-  
+
   return hasValidFilePaths && uniqueFilePaths.size > 1;
 }
 
@@ -229,14 +229,14 @@ async function testFilePathMetadata(testDataDir: string): Promise<boolean> {
  */
 async function testChunkStructure(testDataDir: string): Promise<boolean> {
   const testFile = path.join(testDataDir, 'forms/binding.md');
-  
+
   if (!fs.existsSync(testFile)) {
     throw new Error(`Test file not found: ${testFile}`);
   }
-  
+
   const fileContent = fs.readFileSync(testFile, 'utf-8');
   const { frontmatter, content } = parseFrontmatter(fileContent);
-  
+
   const document = new Document({
     pageContent: content,
     metadata: {
@@ -244,12 +244,12 @@ async function testChunkStructure(testDataDir: string): Promise<boolean> {
       file_path: 'forms/binding.md'
     }
   });
-  
+
   const chunker = createChunker();
   const chunks = await chunker.processDocuments([document]);
-  
+
   console.debug(`     🏗️ Validated structure of ${chunks.length} chunks`);
-  
+
   // All chunks should have simplified structure
   return chunks.every(chunk => {
     return (
@@ -271,7 +271,7 @@ async function testChunkStructure(testDataDir: string): Promise<boolean> {
  */
 async function testTokenTruncation(): Promise<boolean> {
   // Use a dummy API key - we only need the tokenizer, not actual API calls
-  const generator = createEmbeddingsGenerator({ openaiApiKey: 'test-key' });
+  const generator = createEmbeddingsGenerator({ apiKey: 'test-key', provider: 'mistral' });
 
   // Short text should pass through unchanged
   const shortText = 'Hello world, this is a short text.';
@@ -302,28 +302,46 @@ async function testTokenTruncation(): Promise<boolean> {
 }
 
 /**
- * Tests embedding dimension configuration
+ * Tests embedding dimension configuration for both providers
  */
 async function testDimensionConfig(): Promise<boolean> {
-  // Test default dimensions validation
-  const defaultResult = validateEmbeddingsConfig({ openaiApiKey: 'test-key' });
-  if (!defaultResult.valid) {
-    throw new Error(`Default config should be valid: ${defaultResult.errors.join(', ')}`);
+  // Test Mistral defaults
+  const mistralDefault = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'mistral' });
+  if (!mistralDefault.valid) {
+    throw new Error(`Mistral default config should be valid: ${mistralDefault.errors.join(', ')}`);
   }
 
-  // Test explicit 1536 dimensions
-  const result1536 = validateEmbeddingsConfig({ openaiApiKey: 'test-key', dimensions: 1536 });
-  if (!result1536.valid) {
-    throw new Error('1536 dimensions should be valid');
+  // Test explicit 1024 dimensions for Mistral
+  const mistral1024 = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'mistral', dimensions: 1024 });
+  if (!mistral1024.valid) {
+    throw new Error('Mistral with 1024 dimensions should be valid');
   }
 
-  // Test invalid dimensions
-  const resultBad = validateEmbeddingsConfig({ openaiApiKey: 'test-key', dimensions: 384 });
-  if (resultBad.valid) {
-    throw new Error('384 dimensions should be invalid');
+  // Test invalid dimensions for Mistral
+  const mistralBad = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'mistral', dimensions: 1536 });
+  if (mistralBad.valid) {
+    throw new Error('Mistral with 1536 dimensions should be invalid');
   }
 
-  console.debug('     Dimension config: default valid, 1536 valid, 384 rejected');
+  // Test OpenAI defaults
+  const openaiDefault = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'openai' });
+  if (!openaiDefault.valid) {
+    throw new Error(`OpenAI default config should be valid: ${openaiDefault.errors.join(', ')}`);
+  }
+
+  // Test explicit 1536 dimensions for OpenAI
+  const openai1536 = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'openai', dimensions: 1536 });
+  if (!openai1536.valid) {
+    throw new Error('OpenAI with 1536 dimensions should be valid');
+  }
+
+  // Test invalid dimensions for OpenAI
+  const openaiBad = validateEmbeddingsConfig({ apiKey: 'test-key', provider: 'openai', dimensions: 1024 });
+  if (openaiBad.valid) {
+    throw new Error('OpenAI with 1024 dimensions should be invalid');
+  }
+
+  console.debug('     Dimension config: Mistral 1024 valid, OpenAI 1536 valid, cross-provider rejected');
   return true;
 }
 
@@ -341,7 +359,7 @@ export function printTestResults(results: {
   console.debug(`  Passed: ${results.passed}`);
   console.debug(`  Failed: ${results.failed}`);
   console.debug(`  Success Rate: ${((results.passed / results.totalTests) * 100).toFixed(1)}%`);
-  
+
   if (results.failed > 0) {
     console.debug('\n❌ Failed Tests:');
     results.results
@@ -359,7 +377,7 @@ export async function main(): Promise<void> {
   try {
     const results = await runTestSuite();
     printTestResults(results);
-    
+
     if (results.failed > 0) {
       process.exit(1);
     }

@@ -18,21 +18,11 @@ export const config = {
     index: process.env.PINECONE_INDEX || 'vaadin-docs',
   },
 
-  // OpenAI configuration
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY,
-    // Configuration for checking if questions are relevant to Vaadin/Java
-    relevanceChecker: {
-      model: 'gpt-4.1-nano',
-      temperature: 0,
-      maxTokens: 400,
-    },
-    // Configuration for generating answers (both streaming and non-streaming)
-    answerGenerator: {
-      model: 'gpt-4.1',
-      temperature: 0,
-      maxTokens: 1500,
-    },
+  // Embedding provider configuration (auto-detected from available API keys)
+  embedding: {
+    provider: (process.env.MISTRAL_API_KEY ? 'mistral' : 'openai') as 'mistral' | 'openai',
+    apiKey: (process.env.MISTRAL_API_KEY || process.env.OPENAI_API_KEY)!,
+    model: process.env.MISTRAL_API_KEY ? 'mistral-embed' : 'text-embedding-3-small',
   },
 
   // Search settings
@@ -64,6 +54,12 @@ export function validateConfig() {
     }
     if (!config.pinecone.index) {
       throw new Error('Missing required environment variable: PINECONE_INDEX');
+    }
+    if (process.env.MISTRAL_API_KEY && process.env.OPENAI_API_KEY) {
+      throw new Error('Both MISTRAL_API_KEY and OPENAI_API_KEY are set. Set exactly one to select the embedding provider.');
+    }
+    if (!config.embedding.apiKey) {
+      throw new Error('Missing required environment variable: either MISTRAL_API_KEY or OPENAI_API_KEY');
     }
   }
 }

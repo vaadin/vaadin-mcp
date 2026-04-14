@@ -7,13 +7,13 @@
 | Requirement | Version |
 |-------------|---------|
 | **Java** | 21+ |
-| **Spring Boot** | 4.x |
+| **Spring Boot** | **4.0.4 or newer** (4.0.0–4.0.3 are not compatible) |
 | **Spring Framework** | 7.x |
 | **Jakarta EE** | 11 |
 | **Node.js** | 24+ (auto-handled by Vaadin) |
 | **Gradle** | 8.14+ (if using Gradle) |
 
-**Note**: Spring Boot 3.x and Spring Framework 6.x are **no longer supported** in Vaadin 25.
+**CRITICAL**: Spring Boot **4.0.4 or newer** is required. Earlier 4.0.x versions (4.0.0–4.0.3) have known compatibility issues with Vaadin 25.1+. Spring Boot 3.x and Spring Framework 6.x are **no longer supported**.
 
 ## What's New in Vaadin 25
 
@@ -346,7 +346,7 @@ const createTask = async (request: CreateTaskRequest) => {
 ## Migration from Vaadin 24
 
 If migrating from Vaadin 24, note these key changes:
-- Update to **Java 21** and **Spring Boot 4**
+- Update to **Java 21** and **Spring Boot 4.0.4+** (avoid 4.0.0–4.0.3)
 - Replace Material theme with Aura or Lumo
 - Add explicit theme selection (no default theme)
 - Add `hilla-spring-boot-starter` if using React views

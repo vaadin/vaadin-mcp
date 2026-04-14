@@ -17,23 +17,23 @@ public class PersonForm extends VerticalLayout {
     private TextField firstName = new TextField("First Name");
     private TextField lastName = new TextField("Last Name");
     private EmailField email = new EmailField("Email");
-    
+
     private Binder<Person> binder = new Binder<>(Person.class);
-    
+
     public PersonForm() {
         add(firstName, lastName, email);
         bindFields();
     }
-    
+
     private void bindFields() {
         binder.forField(firstName)
             .asRequired("First name is required")
             .bind(Person::getFirstName, Person::setFirstName);
-            
+
         binder.forField(lastName)
             .asRequired("Last name is required")
             .bind(Person::getLastName, Person::setLastName);
-            
+
         binder.forField(email)
             .asRequired("Email is required")
             .withValidator(new EmailValidator("Invalid email"))

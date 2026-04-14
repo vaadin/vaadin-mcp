@@ -94,7 +94,7 @@ export function extractComponentApiParams(args: any): Record<string, any> {
 
 /**
  * Extract properties for tools with no parameters
- * Used by: get_vaadin_version
+ * Used by: get_latest_vaadin_version, get_supported_vaadin_versions
  */
 export function extractNoParams(_args: any): Record<string, any> {
   return {};
@@ -105,6 +105,23 @@ export function extractNoParams(_args: any): Record<string, any> {
  */
 export function extractPrimerParams(args: any): Record<string, any> {
   const params: Record<string, any> = {};
+
+  if (args.vaadin_version && typeof args.vaadin_version === 'string') {
+    params.vaadin_version = args.vaadin_version;
+  }
+
+  return params;
+}
+
+/**
+ * Extract properties from get_theme_css_properties arguments
+ */
+export function extractThemeCssPropertiesParams(args: any): Record<string, any> {
+  const params: Record<string, any> = {};
+
+  if (args.theme && typeof args.theme === 'string') {
+    params.theme = args.theme;
+  }
 
   if (args.vaadin_version && typeof args.vaadin_version === 'string') {
     params.vaadin_version = args.vaadin_version;
@@ -133,11 +150,15 @@ export function extractToolParams(toolName: string, args: any): Record<string, a
     case 'get_component_styling':
       return extractComponentApiParams(args);
 
-    case 'get_vaadin_version':
+    case 'get_latest_vaadin_version':
+    case 'get_supported_vaadin_versions':
       return extractNoParams(args);
 
     case 'get_vaadin_primer':
       return extractPrimerParams(args);
+
+    case 'get_theme_css_properties':
+      return extractThemeCssPropertiesParams(args);
 
     default:
       logger.warn(`📊 Analytics: Unknown tool name "${toolName}", no parameter extraction`);

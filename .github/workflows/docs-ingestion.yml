@@ -239,7 +239,7 @@ jobs:
             3. Consider running with manual trigger to debug
 
             **Common Issues:**
-            - API rate limits (OpenAI/Pinecone)
+            - API rate limits (Mistral/Pinecone)
             - Network connectivity issues
             - Invalid environment variables
             - Repository access problems

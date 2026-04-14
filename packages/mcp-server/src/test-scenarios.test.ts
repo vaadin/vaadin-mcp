@@ -209,10 +209,10 @@ class MockMCPTestClient {
   async searchVaadinDocs(question: string, framework: string = 'common', maxResults: number = 5): Promise<RetrievalResult[]> {
     // Simulate async behavior
     await new Promise(resolve => setTimeout(resolve, 10));
-    
+
     // Filter mock results based on question and framework
     let results = [...MOCK_SEARCH_RESULTS];
-    
+
     // Simple question matching - check if question terms appear in content
     if (question.trim()) {
       const questionTerms = question.toLowerCase().split(/\s+/);
@@ -224,14 +224,14 @@ class MockMCPTestClient {
         )
       );
     }
-    
+
     // Framework filtering
     if (framework === 'flow') {
       results = results.filter(r => r.framework === 'flow' || r.framework === 'common');
     } else if (framework === 'hilla') {
       results = results.filter(r => r.framework === 'hilla' || r.framework === 'common');
     }
-    
+
     // Limit results
     return results.slice(0, maxResults);
   }
@@ -242,7 +242,7 @@ class MockMCPTestClient {
   async get_full_document(filePaths: string[]): Promise<any[]> {
     // Simulate async behavior
     await new Promise(resolve => setTimeout(resolve, 5));
-    
+
     const results: any[] = [];
     for (const filePath of filePaths) {
       const document = MOCK_DOCUMENTS[filePath];
@@ -262,10 +262,10 @@ const DOCUMENT_TEST_SCENARIOS = [
     name: 'Basic search returns results with file_path information',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
-      
+
       try {
         const results = await client.searchVaadinDocs('form binding', 'flow');
-        
+
         if (!results || results.length === 0) {
           return {
             name: this.name,
@@ -319,11 +319,11 @@ const DOCUMENT_TEST_SCENARIOS = [
     name: 'Document retrieval workflow',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
-      
+
       try {
         // Step 1: Search for specific content
         const searchResults = await client.searchVaadinDocs('binding', 'flow', 5);
-        
+
         if (!searchResults || searchResults.length === 0) {
           return {
             name: this.name,
@@ -335,7 +335,7 @@ const DOCUMENT_TEST_SCENARIOS = [
 
         // Step 2: Find a result with a file_path
         const resultWithFile = searchResults.find(result => result.file_path);
-        
+
         if (!resultWithFile) {
           return {
             name: this.name,
@@ -349,7 +349,7 @@ const DOCUMENT_TEST_SCENARIOS = [
         // Step 3: Retrieve the complete document
         const documents = await client.get_full_document([resultWithFile.file_path!]);
         const fullDocument = documents[0];
-        
+
         if (!fullDocument) {
           return {
             name: this.name,
@@ -386,7 +386,7 @@ const DOCUMENT_TEST_SCENARIOS = [
     name: 'Framework filtering with document results',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
-      
+
       try {
         // Test both frameworks
         const [flowResults, hillaResults] = await Promise.all([
@@ -739,11 +739,11 @@ const DOCUMENT_TEST_SCENARIOS = [
     name: 'Document content completeness',
     async test(client: MockMCPTestClient): Promise<TestResult> {
       const startTime = Date.now();
-      
+
       try {
         // Start with a search to find specific content
         const searchResults = await client.searchVaadinDocs('button', '', 3);
-        
+
         if (!searchResults || searchResults.length === 0) {
           return {
             name: this.name,
@@ -755,7 +755,7 @@ const DOCUMENT_TEST_SCENARIOS = [
 
         // Get full documents for all results that have file_path
         const documentsRetrieved = [];
-        
+
         for (const result of searchResults) {
           if (result.file_path) {
             const documents = await client.get_full_document([result.file_path]);
@@ -817,18 +817,18 @@ async function runTest(scenario: any, client: MockMCPTestClient): Promise<TestRe
  */
 export async function runHierarchicalTests(config: TestConfig): Promise<void> {
   logger.info('🧪 Running MCP Server Document-Based Test Scenarios (Mock Data)...\n');
-  
+
   const client = new MockMCPTestClient(config);
   const results: TestResult[] = [];
-  
+
   for (const scenario of DOCUMENT_TEST_SCENARIOS) {
     if (config.verbose) {
       logger.info(`  Running: ${scenario.name}`);
     }
-    
+
     const result = await runTest(scenario, client);
     results.push(result);
-    
+
     if (config.verbose) {
       logger.info(`    ${result.passed ? '✅' : '❌'} ${result.name} (${result.duration}ms)`);
       if (!result.passed && result.error) {
@@ -839,22 +839,22 @@ export async function runHierarchicalTests(config: TestConfig): Promise<void> {
       }
     }
   }
-  
+
   const passedTests = results.filter(r => r.passed).length;
   const failedTests = results.length - passedTests;
-  
+
   logger.info('\n📊 Document-Based Test Results:');
   logger.info(`  ✅ Passed: ${passedTests}`);
   logger.info(`  ❌ Failed: ${failedTests}`);
   logger.info(`  📝 Total: ${results.length}`);
-  
+
   if (failedTests > 0) {
     logger.info('\n⚠️ Failed Tests:');
     results.filter(r => !r.passed).forEach(result => {
       logger.info(`  - ${result.name}: ${result.error}`);
     });
   }
-  
+
   const overallSuccess = failedTests === 0;
   logger.info(`\n🎯 Overall Result: ${overallSuccess ? '✅ SUCCESS' : '❌ FAILURE'}`);
 }
