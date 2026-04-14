@@ -16,7 +16,6 @@ import type { ProcessedMetadata, Framework } from 'core-types';
  */
 export interface Frontmatter {
   framework?: Framework;
-  source_url?: string;
   title?: string;
   [key: string]: any;
 }
@@ -45,7 +44,6 @@ export class MarkdownWithFrontmatterLoader extends BaseDocumentLoader {
 
     const metadata: ProcessedMetadata = {
       framework: frontmatter.framework || 'common',
-      source_url: frontmatter.source_url || '',
       title: frontmatter.title,
       ...frontmatter,
       // Store relative path instead of absolute path

@@ -237,7 +237,7 @@ async function main() {
     assertTrue(result.metadata !== undefined, 'Metadata should exist');
     assertTrue(typeof result.chunk_id === 'string', 'chunk_id should be string');
     assertTrue(typeof result.framework === 'string', 'framework should be string');
-    assertTrue(typeof result.source_url === 'string', 'source_url should be string');
+    assertTrue(typeof result.chunk_id === 'string', 'chunk_id should be string');
 
     // Check score range
     assertTrue(result.relevance_score >= 0, 'Score should be non-negative');

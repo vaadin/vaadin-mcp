@@ -257,7 +257,6 @@ export class PineconeUpserter {
     const metadata: RecordMetadata = {
       chunk_id: chunk.chunk_id,
       framework: chunk.framework,
-      source_url: chunk.source_url,
       content: chunk.content,
     };
 

@@ -19,13 +19,6 @@ export const VERSION_BRANCHES: Record<VaadinVersion, string> = {
   '25.2': 'main',
 };
 
-/** Maps a version to its vaadin.com/docs URL path segment */
-export function getDocsVersionPath(version: string): string {
-  if (version === '25.2') return 'next';
-  if (version === '25.1') return 'latest';
-  return `v${version}`;
-}
-
 /**
  * Represents a single processed and chunked piece of documentation.
  * This is the core data structure to be stored in Pinecone's metadata payload.
@@ -55,11 +48,6 @@ export interface DocumentChunk {
    * The actual text content of the chunk.
    */
   content: string;
-
-  /**
-   * The full URL to the source documentation page from which this chunk was derived.
-   */
-  source_url: string;
 
   /**
    * The Vaadin major version this chunk applies to.
@@ -110,7 +98,6 @@ export type Framework = 'flow' | 'hilla' | 'common';
  */
 export interface ProcessedMetadata {
   framework: Framework;
-  source_url: string;
   title?: string;
   vaadin_version?: string;
   [key: string]: any;

@@ -30,7 +30,6 @@ export interface BasicChunk {
   heading?: string;
   metadata: {
     framework: Framework;
-    source_url: string;
     title?: string;
     file_path: string;
     [key: string]: any;
@@ -93,7 +92,6 @@ export class MarkdownChunker {
           metadata: {
             ...document.metadata,
             framework: document.metadata.framework || 'common',
-            source_url: document.metadata.source_url || '',
             title: document.metadata.title,
             file_path: filePath,
             heading: this.extractHeading(subChunk.pageContent),
@@ -117,7 +115,6 @@ export class MarkdownChunker {
       parent_id: null, // No longer using hierarchical relationships
       framework: basicChunk.metadata.framework,
       content: basicChunk.content,
-      source_url: basicChunk.metadata.source_url,
       metadata: {
         ...basicChunk.metadata,
         title: basicChunk.metadata.title,
