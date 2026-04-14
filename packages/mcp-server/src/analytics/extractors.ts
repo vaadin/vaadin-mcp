@@ -94,7 +94,7 @@ export function extractComponentApiParams(args: any): Record<string, any> {
 
 /**
  * Extract properties for tools with no parameters
- * Used by: get_vaadin_version
+ * Used by: get_latest_vaadin_version, get_supported_vaadin_versions
  */
 export function extractNoParams(_args: any): Record<string, any> {
   return {};
@@ -150,7 +150,8 @@ export function extractToolParams(toolName: string, args: any): Record<string, a
     case 'get_component_styling':
       return extractComponentApiParams(args);
 
-    case 'get_vaadin_version':
+    case 'get_latest_vaadin_version':
+    case 'get_supported_vaadin_versions':
       return extractNoParams(args);
 
     case 'get_vaadin_primer':

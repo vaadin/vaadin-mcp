@@ -23,7 +23,7 @@ import {
   handleGetComponentStylingTool
 } from './tools/component-api/index.js';
 import { handleSearchTool, handleGetFullDocumentTool } from './tools/search-and-docs/index.js';
-import { handleGetVaadinVersionTool } from './tools/vaadin-version/index.js';
+import { handleGetLatestVaadinVersionTool, handleGetSupportedVaadinVersionsTool } from './tools/vaadin-version/index.js';
 import { handleGetVaadinPrimerTool } from './tools/vaadin-primer/index.js';
 import { handleGetThemeCssPropertiesTool } from './tools/theme-css-properties/index.js';
 import { LANDING_PAGE_HTML } from './tools/landing-page/index.js';
@@ -165,16 +165,29 @@ function setupTools(server: McpServer, services: {
     })
   );
 
-  // Register get_vaadin_version tool
+  // Register get_latest_vaadin_version tool
   server.registerTool(
-    "get_vaadin_version",
+    "get_latest_vaadin_version",
     {
-      title: "Get Vaadin Version",
-      description: "Returns the latest stable version of Vaadin Core as a simple JSON object. This is useful when setting up new projects, checking for updates, or when helping with dependency management. Returns: {version, released}.",
+      title: "Get Latest Vaadin Version",
+      description: "Returns the latest stable version of Vaadin as a simple JSON object. This is useful when setting up new projects, checking for updates, or when helping with dependency management. Returns: {version, released}.",
       inputSchema: {}
     },
-    withAnalytics("get_vaadin_version", async () => {
-      return await handleGetVaadinVersionTool();
+    withAnalytics("get_latest_vaadin_version", async () => {
+      return await handleGetLatestVaadinVersionTool();
+    })
+  );
+
+  // Register get_supported_vaadin_versions tool
+  server.registerTool(
+    "get_supported_vaadin_versions",
+    {
+      title: "Get Supported Vaadin Versions",
+      description: "Returns the latest stable release for each supported Vaadin major version (25, 24, 23, 14, 8, 7) with version number, release date, and whether it requires a commercial license. Useful for migration planning and understanding which versions are available.",
+      inputSchema: {}
+    },
+    withAnalytics("get_supported_vaadin_versions", async () => {
+      return await handleGetSupportedVaadinVersionsTool();
     })
   );
 
