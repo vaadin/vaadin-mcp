@@ -71,7 +71,7 @@ Download the ZIP, unzip it, and open the project.
 https://start.vaadin.com/skeleton
 ```
 
-**Note**: start.vaadin.com generates Vaadin 25 projects (it does not support older versions).
+**Note**: start.vaadin.com generates projects for the latest Vaadin version (it does not support older versions).
 
 **Run**: `./mvnw spring-boot:run` → http://localhost:8080
 

@@ -33,21 +33,13 @@ Vaadin is a **full-stack platform** for building business web applications in Ja
 
 ### Project Creation & Setup
 
-**Note**: [start.vaadin.com](https://start.vaadin.com) only supports Vaadin 25. For Vaadin 24 projects, use one of these approaches:
+**Note**: [start.vaadin.com](https://start.vaadin.com) only supports the latest Vaadin version. For Vaadin 24 projects, clone from GitHub:
 
-**Option 1: Clone from GitHub**
 ```bash
 git clone https://github.com/vaadin/skeleton-starter-flow-spring.git
 cd skeleton-starter-flow-spring
 git checkout v24
 ```
-
-**Option 2: Modify a V25 project**
-Download from start.vaadin.com, then update `pom.xml` to use Vaadin 24 (use the `get_latest_vaadin_version` or `get_supported_vaadin_versions` tool to find the latest version number):
-```xml
-<vaadin.version>LATEST_V24</vaadin.version>
-```
-Also ensure Spring Boot 3.x compatibility.
 
 **Requirements**:
 - Java 17 or 21
