@@ -7,7 +7,7 @@ import * as path from 'node:path';
 import { LEGACY_VERSIONS, type IngestionConfig, type ProcessedMetadata, type Framework } from 'core-types';
 import { cloneOrPullRepo, getAsciiDocFiles } from './repository-manager.js';
 import { detectFramework, isComponentFile } from './framework-detector.js';
-import { generateVaadinUrl, parseMetadata, generateFrontmatter } from './url-generator.js';
+import { parseMetadata, generateFrontmatter } from './url-generator.js';
 import { processAsciiDoc, extractTitle } from './asciidoc-processor.js';
 
 export interface ConversionResult {
@@ -56,13 +56,9 @@ export async function convertFile(
     // Extract title from content
     const title = extractTitle(cleanContent);
 
-    // Generate source URL
-    const sourceUrl = generateVaadinUrl(filePath, config.repository.localPath, version);
-
     // Create processed metadata
     const processedMetadata: ProcessedMetadata = {
       framework: detectedFramework,
-      source_url: sourceUrl,
       title,
       vaadin_version: version,
       ...existingMetadata

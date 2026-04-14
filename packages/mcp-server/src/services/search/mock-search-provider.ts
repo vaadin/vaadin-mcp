@@ -17,7 +17,6 @@ const MOCK_PINECONE_DATA = [
       chunk_id: 'forms-index',
       parent_id: null,
       framework: 'common',
-      source_url: 'https://vaadin.com/docs/latest/forms',
       title: 'Forms Overview',
       heading: 'Introduction to Forms'
     },
@@ -30,7 +29,6 @@ const MOCK_PINECONE_DATA = [
       chunk_id: 'forms-binding-1',
       parent_id: 'forms-index',
       framework: 'flow',
-      source_url: 'https://vaadin.com/docs/latest/flow/forms/binding',
       title: 'Form Data Binding',
       heading: 'Basic Binding Concepts'
     },
@@ -43,7 +41,6 @@ const MOCK_PINECONE_DATA = [
       chunk_id: 'forms-validation-1',
       parent_id: 'forms-index',
       framework: 'hilla',
-      source_url: 'https://vaadin.com/docs/latest/hilla/forms/validation',
       title: 'Form Validation',
       heading: 'Validation Strategies'
     },
@@ -56,7 +53,6 @@ const MOCK_PINECONE_DATA = [
       chunk_id: 'grid-basic-1',
       parent_id: null,
       framework: 'common',
-      source_url: 'https://vaadin.com/docs/latest/components/grid',
       title: 'Grid Component',
       heading: 'Grid Basics'
     },
@@ -69,7 +65,6 @@ const MOCK_PINECONE_DATA = [
       chunk_id: 'button-styling-1',
       parent_id: 'components-button',
       framework: 'common',
-      source_url: 'https://vaadin.com/docs/latest/components/button',
       title: 'Button Styling',
       heading: 'Theme Variants'
     },
@@ -82,7 +77,6 @@ const MOCK_PINECONE_DATA = [
       chunk_id: 'grid-columns-flow',
       parent_id: 'grid-basic-1',
       framework: 'flow',
-      source_url: 'https://vaadin.com/docs/latest/flow/components/grid/columns',
       title: 'Grid Columns - Flow',
       heading: 'Column Configuration'
     },
@@ -95,7 +89,6 @@ const MOCK_PINECONE_DATA = [
       chunk_id: 'grid-columns-hilla',
       parent_id: 'grid-basic-1',
       framework: 'hilla',
-      source_url: 'https://vaadin.com/docs/latest/hilla/components/grid/columns',
       title: 'Grid Columns - Hilla',
       heading: 'TypeScript Column Setup'
     },
@@ -246,7 +239,6 @@ export class MockSearchProvider implements SearchProvider {
       parent_id: item.metadata.parent_id,
       framework: item.metadata.framework as 'flow' | 'hilla' | 'common',
       content: item.content,
-      source_url: item.metadata.source_url,
       metadata: {
         title: item.metadata.title,
         heading: item.metadata.heading,
