@@ -3,8 +3,8 @@
  * Tests the normalizeComponentName, findComponentFile, and parseFrontmatter functions
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { normalizeComponentName, findComponentFile, parseFrontmatter } from './component-api-helpers.js';
 import { logger } from './logger.js';
 

@@ -8,7 +8,7 @@
  * - Storing in Pinecone with file_path metadata for document retrieval
  */
 
-import path from 'path';
+import * as path from 'node:path';
 import { config as dotenvConfig } from 'dotenv';
 
 // Core module exports

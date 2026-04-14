@@ -5,8 +5,9 @@
 
 import asciidoctor from 'asciidoctor';
 import downdoc from 'downdoc';
-import path from 'path';
+import * as path from 'node:path';
 import type { Framework, ProcessedMetadata } from 'core-types';
+import { asciidocConfig } from './config.js';
 
 // Initialize Asciidoctor
 const Asciidoctor = asciidoctor();
@@ -42,9 +43,6 @@ registerReducer().then(result => {
  * @returns Configured attributes object
  */
 function getFrameworkAttributes(framework: Framework, repoPath: string): Record<string, any> {
-  // Import config here to avoid circular dependencies
-  const { asciidocConfig } = require('./config');
-
   const attributes: Record<string, any> = {
     // Basic AsciiDoc attributes from config
     ...asciidocConfig.attributes,

@@ -7,8 +7,8 @@
 
 import { Document } from '@langchain/core/documents';
 import { BaseDocumentLoader } from '@langchain/core/document_loaders/base';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import type { ProcessedMetadata, Framework } from 'core-types';
 
 /**

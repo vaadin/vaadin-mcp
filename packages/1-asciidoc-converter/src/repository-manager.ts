@@ -2,9 +2,9 @@
  * Repository operations for managing and retrieving Vaadin documentation files
  */
 
-import simpleGit from 'simple-git';
-import fs from 'fs';
-import path from 'path';
+import { simpleGit } from 'simple-git';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { minimatch } from 'minimatch';
 import type { IngestionConfig } from 'core-types';
 

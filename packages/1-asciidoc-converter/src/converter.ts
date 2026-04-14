@@ -2,8 +2,8 @@
  * Main converter that orchestrates the AsciiDoc to Markdown conversion process
  */
 
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { LEGACY_VERSIONS, type IngestionConfig, type ProcessedMetadata, type Framework } from 'core-types';
 import { cloneOrPullRepo, getAsciiDocFiles } from './repository-manager.js';
 import { detectFramework, isComponentFile } from './framework-detector.js';

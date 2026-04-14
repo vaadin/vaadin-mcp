@@ -2,7 +2,7 @@
  * URL generation utilities for Vaadin documentation
  */
 
-import path from 'path';
+import * as path from 'node:path';
 import { getDocsVersionPath } from 'core-types';
 import type { ProcessedMetadata, Framework } from 'core-types';
 

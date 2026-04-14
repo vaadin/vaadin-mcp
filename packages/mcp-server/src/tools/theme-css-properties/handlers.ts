@@ -2,7 +2,7 @@
  * Handler for get_theme_css_properties tool
  */
 
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import { findComponentFile, parseFrontmatter } from '../../component-api-helpers.js';
 import { logger } from '../../logger.js';
 

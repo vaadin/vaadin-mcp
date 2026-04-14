@@ -7,7 +7,7 @@
 import { convertDocumentation } from './converter.js';
 import { config, VERSION_BRANCHES } from './config.js';
 import { SUPPORTED_VERSIONS, type VaadinVersion } from 'core-types';
-import path from 'path';
+import * as path from 'node:path';
 
 async function main() {
   console.log('🔄 Starting AsciiDoc to Markdown conversion...\n');
