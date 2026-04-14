@@ -15,10 +15,10 @@ import type { IngestionConfig } from 'core-types';
 export { convertDocumentation, type ConversionResult } from './converter.js';
 
 // Individual module exports for advanced usage
-export * from './framework-detector';
-export * from './url-generator';
-export * from './asciidoc-processor';
-export * from './repository-manager';
+export * from './framework-detector.js';
+export * from './url-generator.js';
+export * from './asciidoc-processor.js';
+export * from './repository-manager.js';
 
 // Re-export types for convenience
 export type { IngestionConfig, ProcessedMetadata, Framework } from 'core-types'; 

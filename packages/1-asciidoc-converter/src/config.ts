@@ -2,7 +2,7 @@
  * Configuration settings for the AsciiDoc converter
  */
 
-import path from 'path';
+import * as path from 'node:path';
 import type { IngestionConfig } from 'core-types';
 export { VERSION_BRANCHES } from 'core-types';
 

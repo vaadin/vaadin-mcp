@@ -2,7 +2,7 @@
  * Configuration settings for the Vaadin docs MCP server
  */
 
-import { logger } from "./logger";
+import { logger } from "./logger.js";
 
 export const config = {
   // Server settings

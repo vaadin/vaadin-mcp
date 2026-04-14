@@ -2,11 +2,11 @@
  * Test runner for the AsciiDoc converter
  */
 
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import type { IngestionConfig, Framework } from 'core-types';
-import { detectFramework, isComponentFile } from './framework-detector';
-import { convertDocumentation } from './converter';
+import { detectFramework, isComponentFile } from './framework-detector.js';
+import { convertDocumentation } from './converter.js';
 
 export interface TestCase {
   name: string;

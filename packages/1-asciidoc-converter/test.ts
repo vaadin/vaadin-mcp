@@ -4,7 +4,7 @@
  * Test script for the AsciiDoc converter package
  */
 
-import { runAllTests } from './src/test-runner';
+import { runAllTests } from './src/test-runner.js';
 
 // Run all tests
 runAllTests().catch(error => {

@@ -3,10 +3,10 @@
  * Handles retrieval of complete documentation markdown files
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import YAML from 'yaml';
-import { logger } from '../../logger';
+import { logger } from '../../logger.js';
 
 export interface DocumentResult {
   file_path: string;
