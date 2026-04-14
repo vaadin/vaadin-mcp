@@ -4,8 +4,8 @@
  * Validates chunking logic, file_path metadata, and overall pipeline functionality.
  */
 
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { parseFrontmatter } from './document-loader.js';
 import { createChunker } from './chunker.js';
 import { createEmbeddingsGenerator, validateEmbeddingsConfig } from './embeddings-generator.js';

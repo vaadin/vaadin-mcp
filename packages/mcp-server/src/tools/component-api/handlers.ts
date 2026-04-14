@@ -2,7 +2,7 @@
  * Handlers for component API tools
  */
 
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import { LEGACY_VERSIONS } from 'core-types';
 import { normalizeComponentName, findComponentFile, parseFrontmatter } from '../../component-api-helpers.js';
 import { logger } from '../../logger.js';
