@@ -20,7 +20,7 @@
     "start:mcp": "bun run --filter='mcp-server' start"
   },
   "devDependencies": {
-    "typescript": "^5.8.2",
+    "typescript": "^6.0.0",
     "@types/node": "^22.13.8"
   },
   "packageManager": "bun@1.0.0",
