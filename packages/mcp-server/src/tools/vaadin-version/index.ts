@@ -2,4 +2,4 @@
  * Vaadin version tool exports
  */
 
-export { handleGetVaadinVersionTool } from './handlers.js';
+export { handleGetLatestVaadinVersionTool, handleGetSupportedVaadinVersionsTool } from './handlers.js';
