@@ -118,21 +118,22 @@ src/
 ```
 
 ### Dependencies (Maven)
+Use the `get_supported_vaadin_versions` tool to find the latest version number for Vaadin 8.
 ```xml
 <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>vaadin-server</artifactId>
-    <version>8.14.x</version>
+    <version>LATEST_V8</version>
 </dependency>
 <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>vaadin-client-compiled</artifactId>
-    <version>8.14.x</version>
+    <version>LATEST_V8</version>
 </dependency>
 <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>vaadin-themes</artifactId>
-    <version>8.14.x</version>
+    <version>LATEST_V8</version>
 </dependency>
 ```
 

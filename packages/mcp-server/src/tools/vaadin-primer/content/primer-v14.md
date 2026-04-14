@@ -94,13 +94,14 @@ src/
 ```
 
 ### Dependencies (Maven)
+Use the `get_supported_vaadin_versions` tool to find the latest version number for Vaadin 14.
 ```xml
 <dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-bom</artifactId>
-            <version>14.10.x</version>
+            <version>LATEST_V14</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -150,9 +151,9 @@ search_vaadin_docs(query: "your question", vaadin_version: "14")
 
 The upgrade from Vaadin 14 to 24 is relatively straightforward compared to earlier major version jumps:
 
-**1. Update Dependencies**
+**1. Update Dependencies** (use the `get_supported_vaadin_versions` tool to find the latest version number)
 ```xml
-<vaadin.version>24.x.x</vaadin.version>
+<vaadin.version>LATEST_V24</vaadin.version>
 ```
 
 **2. Java Version**

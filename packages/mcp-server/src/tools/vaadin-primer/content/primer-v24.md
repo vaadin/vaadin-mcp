@@ -43,9 +43,9 @@ git checkout v24
 ```
 
 **Option 2: Modify a V25 project**
-Download from start.vaadin.com, then update `pom.xml` to use Vaadin 24:
+Download from start.vaadin.com, then update `pom.xml` to use Vaadin 24 (use the `get_latest_vaadin_version` or `get_supported_vaadin_versions` tool to find the latest version number):
 ```xml
-<vaadin.version>24.8.0</vaadin.version>
+<vaadin.version>LATEST_V24</vaadin.version>
 ```
 Also ensure Spring Boot 3.x compatibility.
 
@@ -221,7 +221,7 @@ const createTask = async (request: CreateTaskRequest) => {
 
 ## Key Dependencies
 
-**Core**: `vaadin-spring-boot-starter` dependency + `vaadin-bom` for version management
+**Core**: `vaadin-spring-boot-starter` dependency + `vaadin-bom` for version management. Use the `get_supported_vaadin_versions` tool to find the latest version number.
 
 ```xml
 <dependencyManagement>
@@ -229,7 +229,7 @@ const createTask = async (request: CreateTaskRequest) => {
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-bom</artifactId>
-            <version>24.x.x</version>
+            <version>LATEST_V24</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>

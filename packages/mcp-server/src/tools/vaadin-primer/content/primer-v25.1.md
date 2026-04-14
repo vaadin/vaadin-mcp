@@ -295,7 +295,7 @@ const createTask = async (request: CreateTaskRequest) => {
 
 ## Key Dependencies
 
-**Core**: `vaadin-spring-boot-starter` dependency + `vaadin-bom` for version management
+**Core**: `vaadin-spring-boot-starter` dependency + `vaadin-bom` for version management. Use the `get_latest_vaadin_version` or `get_supported_vaadin_versions` tool to find the latest version number.
 
 ```xml
 <dependencyManagement>
@@ -303,7 +303,7 @@ const createTask = async (request: CreateTaskRequest) => {
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-bom</artifactId>
-            <version>25.x.x</version>
+            <version>LATEST_V25</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
