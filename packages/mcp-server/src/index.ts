@@ -10,9 +10,7 @@
 
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
-import { randomUUID } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { SUPPORTED_VERSIONS } from 'core-types';
 import { config, validateConfig } from './config.js';
 import { z } from 'zod';
@@ -33,6 +31,7 @@ import { logger } from './logger.js';
 import { getSearchService } from './services/search/search-factory.js';
 import { DocumentService } from './services/document/document-service.js';
 import type { HybridSearchService } from './services/search/hybrid-search-service.js';
+import { createStatefulTransport, type ActiveSession } from './session.js';
 
 /**
  * Search result interface (legacy compatibility)
@@ -54,11 +53,6 @@ let hybridSearchService: HybridSearchService | null = null;
 let documentService: DocumentService | null = null;
 
 // Active MCP sessions (stateful mode)
-interface ActiveSession {
-  server: McpServer;
-  transport: StreamableHTTPServerTransport;
-  createdAt: Date;
-}
 const activeSessions = new Map<string, ActiveSession>();
 
 /**
@@ -359,31 +353,10 @@ async function startServer() {
         search: hybridSearchService!,
         document: documentService!,
       });
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        onsessioninitialized: (id: string) => {
-          activeSessions.set(id, { server, transport, createdAt: new Date() });
-          logger.info(`Session started: ${id}`);
-          trackSessionStarted(id);
-        },
-        onsessionclosed: (id: string) => {
-          activeSessions.delete(id);
-          logger.info(`Session closed: ${id}`);
-          trackSessionClosed(id);
-        },
+      const transport = createStatefulTransport(server, activeSessions, {
+        onStart: trackSessionStarted,
+        onEnd: trackSessionClosed,
       });
-
-      // Clean up map entry on transport close (unexpected disconnect).
-      // Do NOT call server.close() here: the SDK's Protocol.connect composes
-      // this callback with its own _onclose which handles protocol cleanup.
-      // Calling server.close() would re-enter transport.close() and recurse.
-      transport.onclose = () => {
-        const id = transport.sessionId;
-        if (id && activeSessions.has(id)) {
-          activeSessions.delete(id);
-          logger.debug(`Session cleaned up on transport close: ${id}`);
-        }
-      };
 
       await server.connect(transport);
       await transport.handleRequest(req, res, req.body);
