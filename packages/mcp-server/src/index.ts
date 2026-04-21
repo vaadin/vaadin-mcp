@@ -11,7 +11,6 @@
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { SUPPORTED_VERSIONS } from 'core-types';
 import { config, validateConfig } from './config.js';
 import { z } from 'zod';
@@ -27,11 +26,12 @@ import { handleGetLatestVaadinVersionTool, handleGetSupportedVaadinVersionsTool 
 import { handleGetVaadinPrimerTool } from './tools/vaadin-primer/index.js';
 import { handleGetThemeCssPropertiesTool } from './tools/theme-css-properties/index.js';
 import { LANDING_PAGE_HTML } from './tools/landing-page/index.js';
-import { initializeAnalytics, withAnalytics } from './analytics/index.js';
+import { initializeAnalytics, withAnalytics, trackSessionStarted, trackSessionClosed } from './analytics/index.js';
 import { logger } from './logger.js';
 import { getSearchService } from './services/search/search-factory.js';
 import { DocumentService } from './services/document/document-service.js';
 import type { HybridSearchService } from './services/search/hybrid-search-service.js';
+import { createStatefulTransport, type ActiveSession } from './session.js';
 
 /**
  * Search result interface (legacy compatibility)
@@ -51,6 +51,9 @@ export interface SearchResult {
 // Global service instances (initialized once, shared across requests)
 let hybridSearchService: HybridSearchService | null = null;
 let documentService: DocumentService | null = null;
+
+// Active MCP sessions (stateful mode)
+const activeSessions = new Map<string, ActiveSession>();
 
 /**
  * Initialize all services at startup
@@ -322,30 +325,40 @@ async function startServer() {
     });
   });
 
-  // Stateless MCP endpoint
+  // Stateful MCP endpoint
   app.post('/', async (req: Request, res: Response) => {
     try {
-      // Create new server and transport instances for each request (stateless)
-      // But pass shared service instances
+      const sessionId = req.headers['mcp-session-id'] as string | undefined;
+
+      // If session ID is provided, route to existing session
+      if (sessionId) {
+        const session = activeSessions.get(sessionId);
+        if (!session) {
+          res.status(404).json({
+            jsonrpc: '2.0',
+            error: {
+              code: -32000,
+              message: 'Session not found. The session may have expired or been closed.',
+            },
+            id: null,
+          });
+          return;
+        }
+        await session.transport.handleRequest(req, res, req.body);
+        return;
+      }
+
+      // No session ID — create new server + transport (new session)
       const server = createMcpServer({
         search: hybridSearchService!,
         document: documentService!,
       });
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: undefined, // Stateless mode
+      const transport = createStatefulTransport(server, activeSessions, {
+        onStart: trackSessionStarted,
+        onEnd: trackSessionClosed,
       });
 
-      // Clean up when request is closed
-      res.on('close', () => {
-        logger.debug('Request closed');
-        transport.close();
-        server.close();
-      });
-
-      // Connect server to transport
       await server.connect(transport);
-
-      // Handle the request
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
       logger.error('Error handling MCP request:', error);
@@ -362,15 +375,35 @@ async function startServer() {
     }
   });
 
-  // SSE notifications not supported in stateless mode
+  // GET handler: SSE for existing sessions, landing page for browsers
   app.get('/', async (req: Request, res: Response) => {
-    logger.debug('Received GET MCP request - returning setup page');
+    const sessionId = req.headers['mcp-session-id'] as string | undefined;
+
+    if (sessionId) {
+      const session = activeSessions.get(sessionId);
+      if (!session) {
+        res.status(404).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32000,
+            message: 'Session not found.',
+          },
+          id: null,
+        });
+        return;
+      }
+      await session.transport.handleRequest(req, res);
+      return;
+    }
+
+    // No session ID — serve landing page (browser access)
+    logger.debug('Received GET request without session ID - returning setup page');
     res.setHeader('Content-Type', 'text/html');
     res.send(LANDING_PAGE_HTML);
   });
 
   // Legacy MCP endpoint - inform about new URL
-  app.get('/mcp', (req: Request, res: Response) => {
+  app.get('/mcp', (_req: Request, res: Response) => {
     res.status(404).json({
       error: 'Not Found',
       message: 'The MCP server has moved. The new URL is https://mcp.vaadin.com/docs',
@@ -380,17 +413,36 @@ async function startServer() {
     });
   });
 
-  // Session termination not needed in stateless mode
+  // DELETE handler: session termination
   app.delete('/', async (req: Request, res: Response) => {
-    logger.debug('Received DELETE MCP request');
-    res.writeHead(405).end(JSON.stringify({
-      jsonrpc: "2.0",
-      error: {
-        code: -32000,
-        message: "Method not allowed. This server operates in stateless mode."
-      },
-      id: null
-    }));
+    const sessionId = req.headers['mcp-session-id'] as string | undefined;
+
+    if (!sessionId) {
+      res.status(400).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Missing mcp-session-id header.',
+        },
+        id: null,
+      });
+      return;
+    }
+
+    const session = activeSessions.get(sessionId);
+    if (!session) {
+      res.status(404).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Session not found.',
+        },
+        id: null,
+      });
+      return;
+    }
+
+    await session.transport.handleRequest(req, res);
   });
 
   // Start the server
@@ -399,21 +451,54 @@ async function startServer() {
     logger.info(`🚀 Vaadin Documentation MCP Server listening on port ${port}`);
     logger.info(`📍 MCP endpoint: http://localhost:${port}/`);
     logger.info(`🏥 Health check: http://localhost:${port}/health`);
-    logger.info(`🔧 Transport: Streamable HTTP (stateless mode)`);
+    logger.info(`🔧 Transport: Streamable HTTP (stateful mode)`);
     logger.info(`🔍 Search: Hybrid (Pinecone + Reranking)`);
     logger.info(`🎯 Mock mode: ${config.features.mockPinecone ? 'ENABLED' : 'disabled'}`);
   });
 
-  // Graceful shutdown
-  process.on('SIGINT', () => {
-    logger.debug('\n🛑 Received SIGINT, shutting down gracefully...');
-    process.exit(0);
-  });
+  // Daily cleanup of stale sessions (older than 24 hours)
+  const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+  const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+  const cleanupInterval = setInterval(async () => {
+    const now = Date.now();
+    let cleaned = 0;
+    for (const [id, session] of activeSessions) {
+      if (now - session.createdAt.getTime() > SESSION_MAX_AGE_MS) {
+        try {
+          await session.transport.close();
+          await session.server.close();
+        } catch (error) {
+          logger.error(`Error closing stale session ${id}:`, error);
+        }
+        activeSessions.delete(id);
+        cleaned++;
+      }
+    }
+    if (cleaned > 0) {
+      logger.info(`Cleaned up ${cleaned} stale session(s)`);
+    }
+  }, CLEANUP_INTERVAL_MS);
+  cleanupInterval.unref();
 
-  process.on('SIGTERM', () => {
-    logger.debug('\n🛑 Received SIGTERM, shutting down gracefully...');
+  // Graceful shutdown
+  async function shutdown(signal: string) {
+    logger.debug(`\n🛑 Received ${signal}, shutting down gracefully...`);
+    logger.info(`Closing ${activeSessions.size} active session(s)...`);
+    for (const [id, session] of activeSessions) {
+      try {
+        await session.transport.close();
+        await session.server.close();
+        logger.debug(`Closed session ${id}`);
+      } catch (error) {
+        logger.error(`Error closing session ${id}:`, error);
+      }
+    }
+    activeSessions.clear();
     process.exit(0);
-  });
+  }
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 // Start the server
