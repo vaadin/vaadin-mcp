@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace configuration
-COPY package.json bun.lockb ./
+COPY package.json bun.lockb tsconfig.base.json ./
 COPY packages/core-types/package.json packages/core-types/
 COPY packages/1-asciidoc-converter/package.json packages/1-asciidoc-converter/
 COPY packages/mcp-server/package.json packages/mcp-server/
